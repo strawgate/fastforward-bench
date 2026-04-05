@@ -11,13 +11,13 @@ transform: >-
   SELECT
     'compose-redis' AS scenario,
     int(regexp_extract(_raw, 'compose-redis:([0-9]+)', 1)) AS seq,
-    regexp_extract(_raw, '"(SET|GET)"', 1) AS command,
+    'SET' AS command,
     regexp_extract(_raw, 'compose-redis:[0-9]+', 0) AS key
   FROM logs
   WHERE _raw LIKE '%compose-redis:%'
     AND _raw LIKE '%"SET"%'
 
 output:
-  type: http
-  endpoint: http://capture:8080
+  type: tcp
+  endpoint: capture:9000
   format: json

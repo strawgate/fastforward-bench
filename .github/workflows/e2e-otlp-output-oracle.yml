@@ -1,0 +1,53 @@
+name: E2E / otlp-output-oracle
+
+on:
+  workflow_call:
+    inputs:
+      memagent_ref:
+        description: memagent branch, tag, or SHA to test
+        required: false
+        type: string
+        default: master
+  workflow_dispatch:
+    inputs:
+      memagent_ref:
+        description: memagent branch, tag, or SHA to test
+        required: false
+        type: string
+        default: master
+
+permissions:
+  contents: read
+
+jobs:
+  otlp-output-oracle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      MEMAGENT_REF: ${{ inputs.memagent_ref || 'master' }}
+      E2E_RESULTS_DIR: ${{ github.workspace }}/tests/e2e/results/otlp-output-oracle
+      MEMAGENT_REPO_ROOT: ${{ github.workspace }}/memagent
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
+        with:
+          repository: strawgate/memagent
+          ref: ${{ env.MEMAGENT_REF }}
+          path: memagent
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Run scenario
+        run: tests/e2e/run-scenario.sh otlp-output-oracle
+      - if: always()
+        uses: ./.github/actions/collect-e2e-artifacts
+        with:
+          results-dir: ${{ env.E2E_RESULTS_DIR }}
+      - if: always()
+        uses: ./.github/actions/publish-e2e-summary
+        with:
+          summary-file: ${{ env.E2E_RESULTS_DIR }}/summary.md
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: otlp-output-oracle
+          path: ${{ env.E2E_RESULTS_DIR }}
+          retention-days: 7

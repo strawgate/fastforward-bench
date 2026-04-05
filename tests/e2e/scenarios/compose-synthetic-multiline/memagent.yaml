@@ -13,6 +13,6 @@ transform: >-
   WHERE scenario = 'compose-synthetic-multiline'
 
 output:
-  type: http
-  endpoint: http://capture:8080
+  type: tcp
+  endpoint: capture:9000
   format: json

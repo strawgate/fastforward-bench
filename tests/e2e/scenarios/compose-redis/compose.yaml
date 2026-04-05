@@ -1,12 +1,12 @@
 services:
   capture:
     image: python:3.12-alpine
-    command: ["python", "/workspace/tests/e2e/lib/capture_http.py", "--port", "8080", "--output-dir", "/artifacts"]
+    command: ["python", "/workspace/tests/e2e/lib/capture_tcp.py", "--port", "9000", "--output-dir", "/artifacts"]
     volumes:
       - ${REPO_ROOT:?}:/workspace:ro
       - ${E2E_RESULTS_DIR:?}:/artifacts
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
+      test: ["CMD", "python", "-c", "import socket; s = socket.create_connection(('127.0.0.1', 9000), 1); s.close()"]
       interval: 2s
       timeout: 2s
       retries: 20

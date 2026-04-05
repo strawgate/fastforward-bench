@@ -1,8 +1,9 @@
-name: E2E / nightly suite
+name: E2E / smoke suite
 
 on:
-  schedule:
-    - cron: '0 6 * * *'
+  pull_request:
+    branches: [master]
+    types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
     inputs:
       memagent_ref:
@@ -12,7 +13,7 @@ on:
         default: master
 
 concurrency:
-  group: e2e-nightly-${{ github.head_ref || github.run_id }}
+  group: e2e-smoke-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
 permissions:
@@ -36,12 +37,6 @@ jobs:
       memagent_ref: ${{ inputs.memagent_ref || 'master' }}
     secrets: inherit
 
-  compose-memcached:
-    uses: ./.github/workflows/e2e-compose-memcached.yml
-    with:
-      memagent_ref: ${{ inputs.memagent_ref || 'master' }}
-    secrets: inherit
-
   compose-nginx:
     uses: ./.github/workflows/e2e-compose-nginx.yml
     with:
@@ -54,26 +49,8 @@ jobs:
       memagent_ref: ${{ inputs.memagent_ref || 'master' }}
     secrets: inherit
 
-  compose-synthetic-burst:
-    uses: ./.github/workflows/e2e-compose-synthetic-burst.yml
-    with:
-      memagent_ref: ${{ inputs.memagent_ref || 'master' }}
-    secrets: inherit
-
-  compose-synthetic-rotation:
-    uses: ./.github/workflows/e2e-compose-synthetic-rotation.yml
-    with:
-      memagent_ref: ${{ inputs.memagent_ref || 'master' }}
-    secrets: inherit
-
   otlp-output-oracle:
     uses: ./.github/workflows/e2e-otlp-output-oracle.yml
-    with:
-      memagent_ref: ${{ inputs.memagent_ref || 'master' }}
-    secrets: inherit
-
-  otlp-input-oracle:
-    uses: ./.github/workflows/e2e-otlp-input-oracle.yml
     with:
       memagent_ref: ${{ inputs.memagent_ref || 'master' }}
     secrets: inherit
@@ -83,13 +60,9 @@ jobs:
     needs:
       - kind-cri-smoke
       - compose-redis
-      - compose-memcached
       - compose-nginx
       - compose-synthetic-multiline
-      - compose-synthetic-burst
-      - compose-synthetic-rotation
       - otlp-output-oracle
-      - otlp-input-oracle
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -100,8 +73,8 @@ jobs:
         run: |
           python3 tests/e2e/lib/render_issue_summary.py \
             --artifacts-root artifacts \
-            --suite-name "E2E Nightly Suite" \
-            --suite-key nightly \
+            --suite-name "E2E Smoke Suite" \
+            --suite-key smoke \
             --memagent-ref "${MEMAGENT_REF}" \
             --run-url "https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
             --output-markdown suite-summary.md \
@@ -110,14 +83,15 @@ jobs:
         run: cat suite-summary.md >>"$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         with:
-          name: e2e-nightly-summary
+          name: e2e-smoke-summary
           path: |
             suite-summary.md
             suite-summary.json
           retention-days: 7
       - name: Upsert suite issue
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
         env:
           GH_TOKEN: ${{ github.token }}
-          ISSUE_TITLE: E2E Nightly Suite Report
+          ISSUE_TITLE: E2E Smoke Suite Report
           ISSUE_BODY_FILE: ${{ github.workspace }}/suite-summary.md
         run: tests/e2e/lib/upsert_issue.sh

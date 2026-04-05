@@ -4,7 +4,8 @@ Explicit-job end-to-end scenario coverage for `memagent`.
 
 This repo owns:
 
-- GitHub Actions workflows for named e2e jobs
+- one workflow per named e2e scenario
+- suite workflows that call named scenario workflows
 - self-contained scenario folders
 - shared artifact/oracle plumbing
 
@@ -15,11 +16,19 @@ checkout.
 ## Layout
 
 - `.github/actions/` shared setup and artifact actions
-- `.github/workflows/` explicit PR/nightly workflows
+- `.github/workflows/` one workflow per scenario plus suite callers
 - `tests/e2e/lib/` shared shell and oracle helpers
 - `tests/e2e/scenarios/` one directory per scenario job
 
 ## Workflow inputs
+
+Every scenario workflow can be run directly with `workflow_dispatch`.
+
+The suite workflows call those scenario workflows with `workflow_call`, then:
+
+- download each scenario artifact bundle
+- render a single markdown and JSON suite summary from `result.json`
+- upsert a tracking issue in this repo with the latest suite status
 
 Manual runs accept a `memagent_ref` input. Use a branch, tag, or commit SHA
 from `strawgate/memagent`.

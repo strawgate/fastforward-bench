@@ -1,0 +1,59 @@
+name: E2E / compose-synthetic-multiline
+
+on:
+  workflow_call:
+    inputs:
+      memagent_ref:
+        description: memagent branch, tag, or SHA to test
+        required: false
+        type: string
+        default: master
+  workflow_dispatch:
+    inputs:
+      memagent_ref:
+        description: memagent branch, tag, or SHA to test
+        required: false
+        type: string
+        default: master
+
+permissions:
+  contents: read
+
+jobs:
+  compose-synthetic-multiline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      MEMAGENT_REF: ${{ inputs.memagent_ref || 'master' }}
+      E2E_RESULTS_DIR: ${{ github.workspace }}/tests/e2e/results/compose-synthetic-multiline
+      REPO_ROOT: ${{ github.workspace }}
+      MEMAGENT_REPO_ROOT: ${{ github.workspace }}/memagent
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
+        with:
+          repository: strawgate/memagent
+          ref: ${{ env.MEMAGENT_REF }}
+          path: memagent
+      - uses: ./.github/actions/setup-memagent-build
+        with:
+          memagent-repo-root: memagent
+      - uses: ./.github/actions/setup-compose
+        with:
+          results-dir: ${{ env.E2E_RESULTS_DIR }}
+      - name: Run scenario
+        run: tests/e2e/run-scenario.sh compose-synthetic-multiline
+      - if: always()
+        uses: ./.github/actions/collect-e2e-artifacts
+        with:
+          results-dir: ${{ env.E2E_RESULTS_DIR }}
+      - if: always()
+        uses: ./.github/actions/publish-e2e-summary
+        with:
+          summary-file: ${{ env.E2E_RESULTS_DIR }}/summary.md
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compose-synthetic-multiline
+          path: ${{ env.E2E_RESULTS_DIR }}
+          retention-days: 7
