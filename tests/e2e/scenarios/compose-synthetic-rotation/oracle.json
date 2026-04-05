@@ -1,0 +1,10 @@
+{
+  "scenario": "compose-synthetic-rotation",
+  "policy": "exact_once_ordered",
+  "selector": {
+    "field": "scenario",
+    "value": "compose-synthetic-rotation"
+  },
+  "order_key": "seq",
+  "compare_keys": ["scenario", "seq", "level", "message"]
+}

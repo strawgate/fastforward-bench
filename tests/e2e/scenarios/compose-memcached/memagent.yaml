@@ -1,0 +1,23 @@
+server:
+  diagnostics: "0.0.0.0:9090"
+  log_level: debug
+
+input:
+  type: file
+  path: /logs/memcached.log
+  format: raw
+
+transform: >-
+  SELECT
+    'compose-memcached' AS scenario,
+    int(regexp_extract(_raw, 'compose-memcached:([0-9]+)', 1)) AS seq,
+    regexp_extract(_raw, '\\b(set|get)\\b', 1) AS command,
+    regexp_extract(_raw, 'compose-memcached:[0-9]+', 0) AS key
+  FROM logs
+  WHERE _raw LIKE '%compose-memcached:%'
+    AND _raw LIKE '%set compose-memcached:%'
+
+output:
+  type: http
+  endpoint: http://capture:8080
+  format: json

@@ -1,0 +1,21 @@
+name: Collect E2E Artifacts
+description: Ensure a scenario's result files exist before upload
+
+inputs:
+  results-dir:
+    description: Scenario results directory
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Validate result files
+      shell: bash
+      run: |
+        ls -la "${{ inputs.results-dir }}"
+        if [[ ! -f "${{ inputs.results-dir }}/summary.md" ]]; then
+          printf '## e2e failure\n\n- Summary missing; scenario likely failed before verify.\n' >"${{ inputs.results-dir }}/summary.md"
+        fi
+        if [[ ! -f "${{ inputs.results-dir }}/result.json" ]]; then
+          printf '{\n  "passed": false,\n  "reason": "result.json missing"\n}\n' >"${{ inputs.results-dir }}/result.json"
+        fi

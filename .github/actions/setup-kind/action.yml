@@ -1,0 +1,35 @@
+name: Setup KIND
+description: Install KIND, ensure a cluster exists, and load the e2e image
+
+inputs:
+  cluster-name:
+    description: KIND cluster name
+    required: true
+  image:
+    description: Docker image to load into the cluster
+    required: false
+    default: logfwd:e2e
+
+runs:
+  using: composite
+  steps:
+    - name: Install KIND
+      shell: bash
+      run: |
+        if ! command -v kind >/dev/null 2>&1; then
+          KIND_VERSION="v0.24.0"
+          curl -Lo ./kind "https://kind.sigs.k8s.io/dl/${KIND_VERSION}/kind-linux-amd64"
+          chmod +x ./kind
+          sudo mv ./kind /usr/local/bin/kind
+        fi
+
+    - name: Create or reuse cluster
+      shell: bash
+      run: |
+        if ! kind get clusters | grep -q "^${{ inputs.cluster-name }}$"; then
+          kind create cluster --name "${{ inputs.cluster-name }}" --wait 60s
+        fi
+
+    - name: Load image
+      shell: bash
+      run: kind load docker-image "${{ inputs.image }}" --name "${{ inputs.cluster-name }}"

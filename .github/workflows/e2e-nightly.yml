@@ -1,0 +1,333 @@
+name: E2E Nightly
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      memagent_ref:
+        description: memagent branch, tag, or SHA to test
+        required: false
+        default: master
+
+concurrency:
+  group: e2e-nightly-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  MEMAGENT_REF: ${{ inputs.memagent_ref || 'master' }}
+
+jobs:
+  kind-cri-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      E2E_RESULTS_DIR: ${{ github.workspace }}/tests/e2e/results/kind-cri-smoke
+      E2E_CLUSTER_NAME: kind-cri-smoke
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
+        with:
+          repository: strawgate/memagent
+          ref: ${{ env.MEMAGENT_REF }}
+          path: memagent
+      - uses: ./.github/actions/setup-memagent-build
+        with:
+          memagent-repo-root: memagent
+      - uses: ./.github/actions/setup-kind
+        with:
+          cluster-name: kind-cri-smoke
+      - run: tests/e2e/run-scenario.sh kind-cri-smoke
+      - if: always()
+        uses: ./.github/actions/collect-e2e-artifacts
+        with:
+          results-dir: ${{ env.E2E_RESULTS_DIR }}
+      - if: always()
+        uses: ./.github/actions/publish-e2e-summary
+        with:
+          summary-file: ${{ env.E2E_RESULTS_DIR }}/summary.md
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kind-cri-smoke
+          path: ${{ env.E2E_RESULTS_DIR }}
+          retention-days: 7
+
+  compose-redis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      E2E_RESULTS_DIR: ${{ github.workspace }}/tests/e2e/results/compose-redis
+      REPO_ROOT: ${{ github.workspace }}
+      MEMAGENT_REPO_ROOT: ${{ github.workspace }}/memagent
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
+        with:
+          repository: strawgate/memagent
+          ref: ${{ env.MEMAGENT_REF }}
+          path: memagent
+      - uses: ./.github/actions/setup-memagent-build
+        with:
+          memagent-repo-root: memagent
+      - uses: ./.github/actions/setup-compose
+        with:
+          results-dir: ${{ env.E2E_RESULTS_DIR }}
+      - run: tests/e2e/run-scenario.sh compose-redis
+      - if: always()
+        uses: ./.github/actions/collect-e2e-artifacts
+        with:
+          results-dir: ${{ env.E2E_RESULTS_DIR }}
+      - if: always()
+        uses: ./.github/actions/publish-e2e-summary
+        with:
+          summary-file: ${{ env.E2E_RESULTS_DIR }}/summary.md
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compose-redis
+          path: ${{ env.E2E_RESULTS_DIR }}
+          retention-days: 7
+
+  compose-memcached:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      E2E_RESULTS_DIR: ${{ github.workspace }}/tests/e2e/results/compose-memcached
+      REPO_ROOT: ${{ github.workspace }}
+      MEMAGENT_REPO_ROOT: ${{ github.workspace }}/memagent
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
+        with:
+          repository: strawgate/memagent
+          ref: ${{ env.MEMAGENT_REF }}
+          path: memagent
+      - uses: ./.github/actions/setup-memagent-build
+        with:
+          memagent-repo-root: memagent
+      - uses: ./.github/actions/setup-compose
+        with:
+          results-dir: ${{ env.E2E_RESULTS_DIR }}
+      - run: tests/e2e/run-scenario.sh compose-memcached
+      - if: always()
+        uses: ./.github/actions/collect-e2e-artifacts
+        with:
+          results-dir: ${{ env.E2E_RESULTS_DIR }}
+      - if: always()
+        uses: ./.github/actions/publish-e2e-summary
+        with:
+          summary-file: ${{ env.E2E_RESULTS_DIR }}/summary.md
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compose-memcached
+          path: ${{ env.E2E_RESULTS_DIR }}
+          retention-days: 7
+
+  compose-nginx:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      E2E_RESULTS_DIR: ${{ github.workspace }}/tests/e2e/results/compose-nginx
+      REPO_ROOT: ${{ github.workspace }}
+      MEMAGENT_REPO_ROOT: ${{ github.workspace }}/memagent
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
+        with:
+          repository: strawgate/memagent
+          ref: ${{ env.MEMAGENT_REF }}
+          path: memagent
+      - uses: ./.github/actions/setup-memagent-build
+        with:
+          memagent-repo-root: memagent
+      - uses: ./.github/actions/setup-compose
+        with:
+          results-dir: ${{ env.E2E_RESULTS_DIR }}
+      - run: tests/e2e/run-scenario.sh compose-nginx
+      - if: always()
+        uses: ./.github/actions/collect-e2e-artifacts
+        with:
+          results-dir: ${{ env.E2E_RESULTS_DIR }}
+      - if: always()
+        uses: ./.github/actions/publish-e2e-summary
+        with:
+          summary-file: ${{ env.E2E_RESULTS_DIR }}/summary.md
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compose-nginx
+          path: ${{ env.E2E_RESULTS_DIR }}
+          retention-days: 7
+
+  compose-synthetic-multiline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      E2E_RESULTS_DIR: ${{ github.workspace }}/tests/e2e/results/compose-synthetic-multiline
+      REPO_ROOT: ${{ github.workspace }}
+      MEMAGENT_REPO_ROOT: ${{ github.workspace }}/memagent
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
+        with:
+          repository: strawgate/memagent
+          ref: ${{ env.MEMAGENT_REF }}
+          path: memagent
+      - uses: ./.github/actions/setup-memagent-build
+        with:
+          memagent-repo-root: memagent
+      - uses: ./.github/actions/setup-compose
+        with:
+          results-dir: ${{ env.E2E_RESULTS_DIR }}
+      - run: tests/e2e/run-scenario.sh compose-synthetic-multiline
+      - if: always()
+        uses: ./.github/actions/collect-e2e-artifacts
+        with:
+          results-dir: ${{ env.E2E_RESULTS_DIR }}
+      - if: always()
+        uses: ./.github/actions/publish-e2e-summary
+        with:
+          summary-file: ${{ env.E2E_RESULTS_DIR }}/summary.md
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compose-synthetic-multiline
+          path: ${{ env.E2E_RESULTS_DIR }}
+          retention-days: 7
+
+  compose-synthetic-burst:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      E2E_RESULTS_DIR: ${{ github.workspace }}/tests/e2e/results/compose-synthetic-burst
+      REPO_ROOT: ${{ github.workspace }}
+      MEMAGENT_REPO_ROOT: ${{ github.workspace }}/memagent
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
+        with:
+          repository: strawgate/memagent
+          ref: ${{ env.MEMAGENT_REF }}
+          path: memagent
+      - uses: ./.github/actions/setup-memagent-build
+        with:
+          memagent-repo-root: memagent
+      - uses: ./.github/actions/setup-compose
+        with:
+          results-dir: ${{ env.E2E_RESULTS_DIR }}
+      - run: tests/e2e/run-scenario.sh compose-synthetic-burst
+      - if: always()
+        uses: ./.github/actions/collect-e2e-artifacts
+        with:
+          results-dir: ${{ env.E2E_RESULTS_DIR }}
+      - if: always()
+        uses: ./.github/actions/publish-e2e-summary
+        with:
+          summary-file: ${{ env.E2E_RESULTS_DIR }}/summary.md
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compose-synthetic-burst
+          path: ${{ env.E2E_RESULTS_DIR }}
+          retention-days: 7
+
+  compose-synthetic-rotation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      E2E_RESULTS_DIR: ${{ github.workspace }}/tests/e2e/results/compose-synthetic-rotation
+      REPO_ROOT: ${{ github.workspace }}
+      MEMAGENT_REPO_ROOT: ${{ github.workspace }}/memagent
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
+        with:
+          repository: strawgate/memagent
+          ref: ${{ env.MEMAGENT_REF }}
+          path: memagent
+      - uses: ./.github/actions/setup-memagent-build
+        with:
+          memagent-repo-root: memagent
+      - uses: ./.github/actions/setup-compose
+        with:
+          results-dir: ${{ env.E2E_RESULTS_DIR }}
+      - run: tests/e2e/run-scenario.sh compose-synthetic-rotation
+      - if: always()
+        uses: ./.github/actions/collect-e2e-artifacts
+        with:
+          results-dir: ${{ env.E2E_RESULTS_DIR }}
+      - if: always()
+        uses: ./.github/actions/publish-e2e-summary
+        with:
+          summary-file: ${{ env.E2E_RESULTS_DIR }}/summary.md
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compose-synthetic-rotation
+          path: ${{ env.E2E_RESULTS_DIR }}
+          retention-days: 7
+
+  otlp-output-oracle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      E2E_RESULTS_DIR: ${{ github.workspace }}/tests/e2e/results/otlp-output-oracle
+      MEMAGENT_REPO_ROOT: ${{ github.workspace }}/memagent
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
+        with:
+          repository: strawgate/memagent
+          ref: ${{ env.MEMAGENT_REF }}
+          path: memagent
+      - uses: dtolnay/rust-toolchain@stable
+      - run: tests/e2e/run-scenario.sh otlp-output-oracle
+      - if: always()
+        uses: ./.github/actions/collect-e2e-artifacts
+        with:
+          results-dir: ${{ env.E2E_RESULTS_DIR }}
+      - if: always()
+        uses: ./.github/actions/publish-e2e-summary
+        with:
+          summary-file: ${{ env.E2E_RESULTS_DIR }}/summary.md
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: otlp-output-oracle
+          path: ${{ env.E2E_RESULTS_DIR }}
+          retention-days: 7
+
+  otlp-input-oracle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      E2E_RESULTS_DIR: ${{ github.workspace }}/tests/e2e/results/otlp-input-oracle
+      MEMAGENT_REPO_ROOT: ${{ github.workspace }}/memagent
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
+        with:
+          repository: strawgate/memagent
+          ref: ${{ env.MEMAGENT_REF }}
+          path: memagent
+      - uses: dtolnay/rust-toolchain@stable
+      - run: tests/e2e/run-scenario.sh otlp-input-oracle
+      - if: always()
+        uses: ./.github/actions/collect-e2e-artifacts
+        with:
+          results-dir: ${{ env.E2E_RESULTS_DIR }}
+      - if: always()
+        uses: ./.github/actions/publish-e2e-summary
+        with:
+          summary-file: ${{ env.E2E_RESULTS_DIR }}/summary.md
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: otlp-input-oracle
+          path: ${{ env.E2E_RESULTS_DIR }}
+          retention-days: 7

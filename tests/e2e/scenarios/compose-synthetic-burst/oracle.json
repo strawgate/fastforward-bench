@@ -1,0 +1,10 @@
+{
+  "scenario": "compose-synthetic-burst",
+  "policy": "exact_once_ordered",
+  "selector": {
+    "field": "scenario",
+    "value": "compose-synthetic-burst"
+  },
+  "order_key": "seq",
+  "compare_keys": ["scenario", "seq", "level", "message"]
+}

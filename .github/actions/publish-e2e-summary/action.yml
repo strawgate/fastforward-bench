@@ -1,0 +1,17 @@
+name: Publish E2E Summary
+description: Append a scenario summary to the GitHub step summary
+
+inputs:
+  summary-file:
+    description: Scenario summary markdown file
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Publish summary
+      shell: bash
+      run: |
+        if [[ -f "${{ inputs.summary-file }}" ]]; then
+          cat "${{ inputs.summary-file }}" >>"$GITHUB_STEP_SUMMARY"
+        fi

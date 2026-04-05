@@ -1,0 +1,10 @@
+{
+  "scenario": "compose-nginx",
+  "policy": "exact_once_ordered",
+  "selector": {
+    "field": "scenario",
+    "value": "compose-nginx"
+  },
+  "order_key": "seq",
+  "compare_keys": ["scenario", "seq", "path", "status"]
+}

@@ -1,0 +1,23 @@
+server:
+  diagnostics: "0.0.0.0:9090"
+  log_level: debug
+
+input:
+  type: file
+  path: /logs/redis-monitor.log
+  format: raw
+
+transform: >-
+  SELECT
+    'compose-redis' AS scenario,
+    int(regexp_extract(_raw, 'compose-redis:([0-9]+)', 1)) AS seq,
+    regexp_extract(_raw, '"(SET|GET)"', 1) AS command,
+    regexp_extract(_raw, 'compose-redis:[0-9]+', 0) AS key
+  FROM logs
+  WHERE _raw LIKE '%compose-redis:%'
+    AND _raw LIKE '%"SET"%'
+
+output:
+  type: http
+  endpoint: http://capture:8080
+  format: json

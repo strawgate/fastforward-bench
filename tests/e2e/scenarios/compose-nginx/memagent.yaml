@@ -1,0 +1,22 @@
+server:
+  diagnostics: "0.0.0.0:9090"
+  log_level: debug
+
+input:
+  type: file
+  path: /logs/nginx.access.log
+  format: raw
+
+transform: >-
+  SELECT
+    'compose-nginx' AS scenario,
+    int(regexp_extract(_raw, '/e2e/compose-nginx/([0-9]+)', 1)) AS seq,
+    regexp_extract(_raw, '^(.*?)\\|', 1) AS path,
+    int(regexp_extract(_raw, '\\|([0-9]+)$', 1)) AS status
+  FROM logs
+  WHERE _raw LIKE '/e2e/compose-nginx/%'
+
+output:
+  type: http
+  endpoint: http://capture:8080
+  format: json

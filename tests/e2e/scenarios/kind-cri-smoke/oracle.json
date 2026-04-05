@@ -1,0 +1,10 @@
+{
+  "scenario": "kind-cri-smoke",
+  "policy": "exact_once_ordered",
+  "selector": {
+    "field": "scenario",
+    "value": "kind-cri-smoke"
+  },
+  "order_key": "seq",
+  "compare_keys": ["scenario", "seq", "level", "message"]
+}

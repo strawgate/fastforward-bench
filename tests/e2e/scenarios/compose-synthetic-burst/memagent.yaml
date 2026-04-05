@@ -1,0 +1,18 @@
+server:
+  diagnostics: "0.0.0.0:9090"
+  log_level: debug
+
+input:
+  type: file
+  path: /logs/burst.log
+  format: json
+
+transform: >-
+  SELECT scenario, seq, level, message
+  FROM logs
+  WHERE scenario = 'compose-synthetic-burst'
+
+output:
+  type: http
+  endpoint: http://capture:8080
+  format: json

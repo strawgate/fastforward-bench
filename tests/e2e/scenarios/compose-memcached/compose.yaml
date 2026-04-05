@@ -1,0 +1,38 @@
+services:
+  capture:
+    image: python:3.12-alpine
+    command: ["python", "/workspace/tests/e2e/lib/capture_http.py", "--port", "8080", "--output-dir", "/artifacts"]
+    volumes:
+      - ${REPO_ROOT:?}:/workspace:ro
+      - ${E2E_RESULTS_DIR:?}:/artifacts
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
+      interval: 2s
+      timeout: 2s
+      retries: 20
+
+  memcached:
+    image: memcached:1.6-alpine
+    command:
+      - sh
+      - -lc
+      - |
+        memcached -u root -vv 2>&1 | tee -a /logs/memcached.log
+    volumes:
+      - ${E2E_RESULTS_DIR:?}/logs:/logs
+
+  memagent:
+    image: logfwd:e2e
+    command: ["--config", "/scenario/memagent.yaml"]
+    depends_on:
+      capture:
+        condition: service_healthy
+      memcached:
+        condition: service_started
+    volumes:
+      - ./memagent.yaml:/scenario/memagent.yaml:ro
+      - ${E2E_RESULTS_DIR:?}/logs:/logs
+
+  workload:
+    image: busybox:1.36
+    command: ["sh", "-lc", "sleep 3600"]

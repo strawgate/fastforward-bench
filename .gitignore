@@ -1,0 +1,16 @@
+/target
+# Benchmark/profiling output
+dhat-heap.json
+criterion-*.json
+build
+/actionlint
+.claude/worktrees/
+.worktrees/
+book/book/
+.DS_Store
+crates/logfwd-io/src/dashboard-dist/
+.playwright-mcp/
+*.env
+.env
+es-flamegraph.svg
+/tests/e2e/results/

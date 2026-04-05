@@ -1,0 +1,10 @@
+{
+  "scenario": "compose-redis",
+  "policy": "exact_once_ordered",
+  "selector": {
+    "field": "scenario",
+    "value": "compose-redis"
+  },
+  "order_key": "seq",
+  "compare_keys": ["scenario", "seq", "command", "key"]
+}

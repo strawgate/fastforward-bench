@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+source "$(cd "$(dirname "$0")/../.." && pwd)/lib/common.sh"
+
+python3 - <<'PY' >"$E2E_RESULTS_DIR/expected_rows.json"
+import json
+rows = [
+    {"scenario": "compose-nginx", "seq": i, "path": f"/e2e/compose-nginx/{i:04d}", "status": 204}
+    for i in range(1, 6)
+]
+print(json.dumps(rows, indent=2))
+PY
+
+docker compose -p "memagent-${SCENARIO_ID}" -f "$SCENARIO_DIR/compose.yaml" exec -T workload \
+    sh -lc 'for i in 1 2 3 4 5; do curl -fsS "http://nginx:8080/e2e/compose-nginx/$(printf "%04d" "$i")" >/dev/null; done'
+
+sleep 3

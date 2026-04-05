@@ -1,0 +1,17 @@
+name: Setup Memagent Build
+description: Build the memagent Docker image used by e2e scenarios
+
+inputs:
+  memagent-repo-root:
+    description: Path to the checked out memagent repository
+    required: false
+    default: memagent
+
+runs:
+  using: composite
+  steps:
+    - uses: dtolnay/rust-toolchain@stable
+
+    - name: Build image
+      shell: bash
+      run: docker build -t logfwd:e2e "${{ inputs.memagent-repo-root }}"

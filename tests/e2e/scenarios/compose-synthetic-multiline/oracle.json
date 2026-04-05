@@ -1,0 +1,10 @@
+{
+  "scenario": "compose-synthetic-multiline",
+  "policy": "exact_once_ordered",
+  "selector": {
+    "field": "scenario",
+    "value": "compose-synthetic-multiline"
+  },
+  "order_key": "seq",
+  "compare_keys": ["scenario", "seq", "level", "message"]
+}
