@@ -20,6 +20,13 @@ runs:
   steps:
     - uses: dtolnay/rust-toolchain@stable
 
+    - name: Log in to GitHub Container Registry
+      shell: bash
+      run: |
+        echo "${{ github.token }}" | docker login ghcr.io \
+          --username "${{ github.actor }}" \
+          --password-stdin
+
     - name: Resolve image source
       shell: bash
       run: |

@@ -55,6 +55,8 @@ spec:
             - name: config
               mountPath: /etc/logfwd
               readOnly: true
+            - name: state
+              mountPath: /var/lib/logfwd
       volumes:
         - name: varlog
           hostPath:
@@ -63,3 +65,5 @@ spec:
         - name: config
           configMap:
             name: logfwd-config
+        - name: state
+          emptyDir: {}

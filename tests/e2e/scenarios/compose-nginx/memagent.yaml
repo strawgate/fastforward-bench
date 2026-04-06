@@ -11,8 +11,8 @@ transform: >-
   SELECT
     'compose-nginx' AS scenario,
     int(regexp_extract(_raw, '/e2e/compose-nginx/([0-9]+)', 1)) AS seq,
-    regexp_extract(_raw, '^([^|]+)\\|', 1) AS path,
-    int(regexp_extract(_raw, '\\|([^|]+)$', 1)) AS status
+    regexp_extract(_raw, '^(.*?)\\|', 1) AS path,
+    int(regexp_extract(_raw, '\\|([0-9]+)$', 1)) AS status
   FROM logs
   WHERE _raw LIKE '/e2e/compose-nginx/%'
 
