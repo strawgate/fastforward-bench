@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: logfwd-capture-config
+  namespace: ${NAMESPACE}
+data:
+  config.yaml: |
+    server:
+      diagnostics: 0.0.0.0:9090
+    pipelines:
+      capture:
+        inputs:
+          - type: otlp
+            listen: 0.0.0.0:4318
+        outputs:
+          - type: file
+            path: /var/lib/logfwd/capture.ndjson
+            format: json

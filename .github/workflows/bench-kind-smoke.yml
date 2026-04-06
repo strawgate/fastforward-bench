@@ -1,0 +1,72 @@
+name: Bench / kind smoke
+
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - 'bench/kind/**'
+      - '.github/workflows/bench-kind-smoke.yml'
+      - '.github/actions/setup-memagent-build/**'
+  workflow_dispatch:
+    inputs:
+      memagent_ref:
+        description: memagent branch, tag, or SHA to test
+        required: false
+        type: string
+        default: master
+
+permissions:
+  contents: read
+  packages: read
+
+env:
+  MEMAGENT_REF: ${{ inputs.memagent_ref || 'master' }}
+
+jobs:
+  kind-bench-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      MEMAGENT_REPO_ROOT: ${{ github.workspace }}/memagent
+      BENCH_RESULTS_DIR: ${{ github.workspace }}/bench/kind/results/smoke
+      CLUSTER_NAME: bench-smoke-${{ github.run_id }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
+        with:
+          repository: strawgate/memagent
+          ref: ${{ env.MEMAGENT_REF }}
+          path: memagent
+      - uses: ./.github/actions/setup-memagent-build
+        with:
+          memagent-repo-root: memagent
+          memagent-ref: ${{ env.MEMAGENT_REF }}
+      - name: Install KIND
+        run: |
+          if ! command -v kind >/dev/null 2>&1; then
+            KIND_VERSION="v0.24.0"
+            curl -Lo ./kind "https://kind.sigs.k8s.io/dl/${KIND_VERSION}/kind-linux-amd64"
+            chmod +x ./kind
+            sudo mv ./kind /usr/local/bin/kind
+          fi
+      - name: Run benchmark harness
+        run: |
+          python3 bench/kind/run.py \
+            --phase infra \
+            --profile smoke \
+            --collector logfwd \
+            --protocol otlp_http \
+            --cluster-name "${CLUSTER_NAME}" \
+            --results-dir "${BENCH_RESULTS_DIR}"
+      - if: always()
+        name: Publish summary
+        run: |
+          if [[ -f "${BENCH_RESULTS_DIR}/summary.md" ]]; then
+            cat "${BENCH_RESULTS_DIR}/summary.md" >>"$GITHUB_STEP_SUMMARY"
+          fi
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kind-bench-smoke
+          path: ${{ env.BENCH_RESULTS_DIR }}
+          retention-days: 7

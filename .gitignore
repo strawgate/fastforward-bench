@@ -14,5 +14,6 @@ crates/logfwd-io/src/dashboard-dist/
 .env
 es-flamegraph.svg
 /tests/e2e/results/
+/bench/kind/results/
 __pycache__/
 *.pyc
