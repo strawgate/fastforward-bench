@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: logfwd-bench-collector
+  namespace: ${NAMESPACE}
+  labels:
+    app.kubernetes.io/name: logfwd-bench-collector
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: logfwd-bench-collector
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: logfwd-bench-collector
+    spec:
+      automountServiceAccountToken: false
+      tolerations:
+        - operator: Exists
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: logfwd
+          image: ${MEMAGENT_IMAGE}
+          imagePullPolicy: IfNotPresent
+          args: ["--config", "/etc/logfwd/config.yaml"]
+          securityContext:
+            runAsNonRoot: false
+            runAsUser: 0
+            runAsGroup: 0
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 9090
+            initialDelaySeconds: 3
+            periodSeconds: 3
+          volumeMounts:
+            - name: varlog
+              mountPath: /var/log
+              readOnly: true
+            - name: config
+              mountPath: /etc/logfwd
+              readOnly: true
+            - name: state
+              mountPath: /var/lib/logfwd
+      volumes:
+        - name: varlog
+          hostPath:
+            path: /var/log
+            type: Directory
+        - name: config
+          configMap:
+            name: logfwd-bench-collector-config
+        - name: state
+          emptyDir: {}

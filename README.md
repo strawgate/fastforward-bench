@@ -9,6 +9,7 @@ This repo owns:
 - self-contained scenario folders
 - shared artifact/oracle plumbing
 - family-level workflow and phase defaults to keep common cases cheap
+- the KIND competitive benchmark harness under `bench/kind/`
 
 This repo does **not** own the `memagent` product code. Workflows check out
 `strawgate/memagent` as the system under test and build `logfwd:e2e` from that
@@ -23,6 +24,7 @@ image is available.
 
 - `.github/actions/` shared setup and artifact actions
 - `.github/workflows/` one workflow per scenario plus suite callers and reusable family workflows
+- `bench/kind/` benchmark harness, manifests, schema notes, and smoke workflow inputs
 - `tests/e2e/lib/` shared shell and oracle helpers
 - `tests/e2e/scenarios/` one directory per scenario job
 - `docs/SCENARIO_PLATFORM.md` platform rules and scenario contract
