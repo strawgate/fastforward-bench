@@ -9,9 +9,7 @@ rows = [
         "scenario": "compose-nginx",
         "source_id": "nginx-access",
         "event_id": f"compose-nginx:{i:04d}",
-        "seq": i,
         "method": "GET",
-        "path": f"/e2e/compose-nginx/compose-nginx:{i:04d}",
         "status": 204,
     }
     for i in range(1, 6)

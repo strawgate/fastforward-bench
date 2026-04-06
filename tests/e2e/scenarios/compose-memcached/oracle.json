@@ -5,9 +5,9 @@
     "field": "scenario",
     "value": "compose-memcached"
   },
-  "order_key": "seq",
+  "order_key": "event_id",
   "source_key": "source_id",
   "identity_keys": ["scenario", "source_id", "event_id"],
-  "required_fields": ["scenario", "source_id", "event_id", "seq", "command", "key", "value"],
-  "compare_keys": ["scenario", "source_id", "event_id", "seq", "command", "key", "value"]
+  "required_fields": ["scenario", "source_id", "event_id", "command", "key"],
+  "compare_keys": ["scenario", "source_id", "event_id", "command", "key"]
 }

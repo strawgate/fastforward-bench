@@ -9,10 +9,8 @@ rows = [
         "scenario": "compose-memcached",
         "source_id": "memcached-verbose",
         "event_id": f"compose-memcached:{i:04d}",
-        "seq": i,
         "command": "set",
         "key": f"compose-memcached:{i:04d}",
-        "value": f"value-{i:04d}",
     }
     for i in range(1, 4)
 ]

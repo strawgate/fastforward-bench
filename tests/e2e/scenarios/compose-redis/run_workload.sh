@@ -9,10 +9,8 @@ rows = [
         "scenario": "compose-redis",
         "source_id": "redis-monitor",
         "event_id": f"compose-redis:{i:04d}",
-        "seq": i,
         "command": "SET",
         "key": f"compose-redis:{i:04d}",
-        "value": f"value-{i:04d}",
     }
     for i in range(1, 4)
 ]

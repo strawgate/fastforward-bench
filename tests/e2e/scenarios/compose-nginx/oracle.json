@@ -5,9 +5,9 @@
     "field": "scenario",
     "value": "compose-nginx"
   },
-  "order_key": "seq",
+  "order_key": "event_id",
   "source_key": "source_id",
   "identity_keys": ["scenario", "source_id", "event_id"],
-  "required_fields": ["scenario", "source_id", "event_id", "seq", "method", "path", "status"],
-  "compare_keys": ["scenario", "source_id", "event_id", "seq", "method", "path", "status"]
+  "required_fields": ["scenario", "source_id", "event_id", "method", "status"],
+  "compare_keys": ["scenario", "source_id", "event_id", "method", "status"]
 }
