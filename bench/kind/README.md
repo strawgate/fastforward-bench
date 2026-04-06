@@ -40,6 +40,9 @@ scores yet.
 - Harness runtime: Python 3, standard library only.
 - Generator: a lightweight stdout emitter workload.
 - Sink: `logfwd` configured as a dumb capture sink writing JSON lines to a file.
+- Producer counters:
+  - emitters expose lightweight `/stats` JSON with emitted totals
+  - the sink sidecar exposes lightweight `/stats` JSON with captured totals
 - Benchmark artifacts: JSON row, JSONL stream, summary markdown, rendered
   manifests, and `kubectl` debug output.
 - Reporting integration: `benchkit-run.otlp.json` for Octo11y
@@ -125,6 +128,8 @@ Each run writes a directory under `bench/kind/results/` containing:
 - `summary.md`
 - `rendered-manifests/`
 - `artifacts/`
+- `emitter-stats.json`
+- `sink-stats.json`
 - `stream-summary.json` for `smoke`
 - `actual_rows.json` for `smoke`
 - `source_rows.json` for `smoke`
@@ -136,6 +141,8 @@ Current smoke runs should be interpreted as:
 - benchmark mode: `baseline-pass-through`
 - pass means the sink observed the same benchmark-tagged events the emitters
   produced, with no duplicates or unexpected rows
+- the result row also records producer-reported totals from the emitters and the
+  sink sidecar as extra diagnostics
 - scores do not yet include parse-and-enrich overhead
 
 See [RESULT_SCHEMA.md](./RESULT_SCHEMA.md)

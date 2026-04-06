@@ -8,7 +8,9 @@ data:
     import json
     import os
     import sys
+    import threading
     import time
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
     from datetime import datetime, timezone
 
     benchmark_id = os.environ["BENCHMARK_ID"]
@@ -17,6 +19,38 @@ data:
     interval = 1.0 / eps
     seq = 0
     levels = ["INFO", "DEBUG", "WARN", "ERROR"]
+    started_at_unix_nano = time.time_ns()
+    stats = {
+      "benchmark_id": benchmark_id,
+      "pod_name": pod_name,
+      "eps_per_pod": eps,
+      "emitted_events_total": 0,
+      "last_seq": 0,
+      "started_at_unix_nano": started_at_unix_nano,
+    }
+    lock = threading.Lock()
+
+    class Handler(BaseHTTPRequestHandler):
+      def do_GET(self):
+        if self.path != "/stats":
+          self.send_response(404)
+          self.end_headers()
+          return
+        with lock:
+          payload = dict(stats)
+        body = json.dumps(payload, sort_keys=True).encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+      def log_message(self, format, *args):
+        return
+
+    server = ThreadingHTTPServer(("0.0.0.0", 8081), Handler)
+    server.daemon_threads = True
+    threading.Thread(target=server.serve_forever, daemon=True).start()
 
     while True:
       seq += 1
@@ -36,6 +70,9 @@ data:
         "duration_ms": (seq % 250) + 1,
         "service": "bench-emitter",
       }
+      with lock:
+        stats["emitted_events_total"] = seq
+        stats["last_seq"] = seq
       sys.stdout.write(json.dumps(payload, sort_keys=True) + "\n")
       sys.stdout.flush()
       time.sleep(interval)

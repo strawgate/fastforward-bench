@@ -33,7 +33,9 @@ from lib.kube import (
 )
 from lib.measure import (
     avg,
+    collect_emitter_reported_total,
     collect_logfwd_samples,
+    collect_sink_reported_stats,
     cpu_cores_series,
     diff_output_lines,
     lines_per_sec_series,
@@ -345,6 +347,8 @@ def run_smoke_phase(
     sink_pod = get_first_pod_name(args.namespace, "app.kubernetes.io/name=logfwd-capture")
     if not sink_pod:
         raise CommandError("sink pod not found after rollout")
+    sink_reported_stats = collect_sink_reported_stats(args.namespace, sink_pod)
+    result.sink_reported_events_total = int(sink_reported_stats.get("benchmark_rows_total", 0) or 0)
     collect_pod_logs(
         namespace=args.namespace,
         pod_names=[sink_pod],
@@ -354,6 +358,8 @@ def run_smoke_phase(
     collect_sink_capture(args.namespace, sink_pod, artifacts_dir / "sink-capture.ndjson")
 
     emitter_pods = get_pod_names(args.namespace, "app.kubernetes.io/name=log-emitter")
+    emitter_reported_total, emitter_reported_stats = collect_emitter_reported_total(args.namespace, emitter_pods)
+    result.emitter_reported_events_total = emitter_reported_total
     collect_pod_logs(
         namespace=args.namespace,
         pod_names=emitter_pods,
@@ -395,6 +401,8 @@ def run_smoke_phase(
             "expected_sources": comparison.expected_sources,
             "observed_sources": comparison.observed_sources,
             "missing_sources": comparison.missing_sources,
+            "emitter_reported_events_total": result.emitter_reported_events_total,
+            "sink_reported_events_total": result.sink_reported_events_total,
             "source_row_count": comparison.source_row_count,
             "sink_row_count": comparison.sink_row_count,
             "missing_event_count": comparison.missing_event_count,
@@ -403,6 +411,8 @@ def run_smoke_phase(
             "gap_count": comparison.gap_count,
         },
     )
+    write_json(results_dir / "emitter-stats.json", emitter_reported_stats)
+    write_json(results_dir / "sink-stats.json", sink_reported_stats)
 
     if (
         result.sink_lines_total
@@ -459,6 +469,8 @@ def main() -> int:
         measure_sec=profile.measure_sec,
         cooldown_sec=profile.cooldown_sec,
         sink_lines_total=None,
+        emitter_reported_events_total=None,
+        sink_reported_events_total=None,
         captured_rows_total=None,
         source_rows_total=None,
         missing_source_count=None,

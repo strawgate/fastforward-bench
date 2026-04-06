@@ -26,6 +26,8 @@ land. Fields that are not collected in a phase are emitted as `null`.
 | `measure_sec` | integer | Profile knob |
 | `cooldown_sec` | integer | Profile knob |
 | `sink_lines_total` | integer or null | Steady-state delta from sink diagnostics during the measured window |
+| `emitter_reported_events_total` | integer or null | Sum of emitter-side reported totals collected from per-pod `/stats` endpoints |
+| `sink_reported_events_total` | integer or null | Sink-side reported benchmark row total collected from the capture-reader `/stats` endpoint |
 | `captured_rows_total` | integer or null | Full count of captured benchmark rows observed in sink artifacts |
 | `source_rows_total` | integer or null | Full count of benchmark rows observed in emitter artifacts |
 | `missing_source_count` | integer or null | Expected emitter pods absent from sink artifacts |
@@ -79,6 +81,8 @@ Alongside the JSON row, each run should preserve:
 - deployment and pod descriptions
 - `benchkit-run.otlp.json` for Octo11y/Benchkit stash
 - sink pod logs
+- `emitter-stats.json`
+- `sink-stats.json`
 - `actual_rows.json` in `smoke`
 - `source_rows.json` in `smoke`
 - `stream-summary.json` in `smoke`

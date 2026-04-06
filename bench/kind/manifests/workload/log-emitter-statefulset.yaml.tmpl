@@ -34,6 +34,9 @@ spec:
           image: python:3.12-alpine
           imagePullPolicy: IfNotPresent
           command: ["python", "/opt/emitter/emit.py"]
+          ports:
+            - name: stats
+              containerPort: 8081
           env:
             - name: POD_NAME
               valueFrom:

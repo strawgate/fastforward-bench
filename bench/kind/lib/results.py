@@ -24,6 +24,8 @@ class BenchmarkResult:
     measure_sec: int
     cooldown_sec: int
     sink_lines_total: int | None
+    emitter_reported_events_total: int | None
+    sink_reported_events_total: int | None
     captured_rows_total: int | None
     source_rows_total: int | None
     missing_source_count: int | None
@@ -94,6 +96,8 @@ def _otlp_metric(
 def _metric_specs(result: BenchmarkResult) -> list[tuple[str, float | int | None, str, str, str]]:
     return [
         ("sink_lines_total", result.sink_lines_total, "events", "bigger_is_better", "outcome"),
+        ("emitter_reported_events_total", result.emitter_reported_events_total, "events", "bigger_is_better", "diagnostic"),
+        ("sink_reported_events_total", result.sink_reported_events_total, "events", "bigger_is_better", "diagnostic"),
         ("captured_rows_total", result.captured_rows_total, "events", "bigger_is_better", "outcome"),
         ("source_rows_total", result.source_rows_total, "events", "bigger_is_better", "diagnostic"),
         ("missing_source_count", result.missing_source_count, "sources", "smaller_is_better", "outcome"),
@@ -384,6 +388,8 @@ def render_summary(result: BenchmarkResult) -> str:
         "## Metrics",
         "",
         f"- sink_lines_total: `{show(result.sink_lines_total)}`",
+        f"- emitter_reported_events_total: `{show(result.emitter_reported_events_total)}`",
+        f"- sink_reported_events_total: `{show(result.sink_reported_events_total)}`",
         f"- captured_rows_total: `{show(result.captured_rows_total)}`",
         f"- source_rows_total: `{show(result.source_rows_total)}`",
         f"- missing_source_count: `{show(result.missing_source_count)}`",
