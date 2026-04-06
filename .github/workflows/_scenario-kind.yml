@@ -1,0 +1,66 @@
+name: _scenario-kind
+
+on:
+  workflow_call:
+    inputs:
+      scenario_id:
+        required: true
+        type: string
+      cluster_name:
+        required: true
+        type: string
+      timeout_minutes:
+        required: false
+        type: number
+        default: 25
+      memagent_ref:
+        required: false
+        type: string
+        default: master
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  scenario:
+    name: ${{ inputs.scenario_id }}
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.timeout_minutes }}
+    env:
+      MEMAGENT_REF: ${{ inputs.memagent_ref }}
+      E2E_RESULTS_DIR: ${{ github.workspace }}/tests/e2e/results/${{ inputs.scenario_id }}
+      E2E_CLUSTER_NAME: ${{ inputs.cluster_name }}
+      MEMAGENT_REPO_ROOT: ${{ github.workspace }}/memagent
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
+        with:
+          repository: strawgate/memagent
+          ref: ${{ env.MEMAGENT_REF }}
+          path: memagent
+      - name: Validate scenario contract
+        run: python3 tests/e2e/lib/check_scenarios.py --repo-root . --scenario-id "${{ inputs.scenario_id }}"
+      - uses: ./.github/actions/setup-memagent-build
+        with:
+          memagent-repo-root: memagent
+          memagent-ref: ${{ env.MEMAGENT_REF }}
+      - uses: ./.github/actions/setup-kind
+        with:
+          cluster-name: ${{ inputs.cluster_name }}
+      - name: Run scenario
+        run: tests/e2e/run-scenario.sh "${{ inputs.scenario_id }}"
+      - if: always()
+        uses: ./.github/actions/collect-e2e-artifacts
+        with:
+          results-dir: ${{ env.E2E_RESULTS_DIR }}
+      - if: always()
+        uses: ./.github/actions/publish-e2e-summary
+        with:
+          summary-file: ${{ env.E2E_RESULTS_DIR }}/summary.md
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.scenario_id }}
+          path: ${{ env.E2E_RESULTS_DIR }}
+          retention-days: 7

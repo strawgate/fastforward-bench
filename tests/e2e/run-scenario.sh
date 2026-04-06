@@ -22,16 +22,28 @@ export SCENARIO_ID
 export SCENARIO_DIR
 export E2E_RESULTS_DIR
 
+source "$REPO_ROOT/tests/e2e/lib/common.sh"
+
 mkdir -p "$E2E_RESULTS_DIR"
 
-cleanup() {
-    if [[ -x "$SCENARIO_DIR/collect.sh" ]]; then
-        "$SCENARIO_DIR/collect.sh" || true
+run_phase() {
+    local phase="$1"
+    local script_path="$SCENARIO_DIR/${phase}.sh"
+
+    if [[ -x "$script_path" ]]; then
+        "$script_path"
+        return 0
     fi
-    "$SCENARIO_DIR/down.sh" || true
+
+    run_default_phase "$phase"
+}
+
+cleanup() {
+    run_phase collect || true
+    run_phase down || true
 }
 trap cleanup EXIT
 
-"$SCENARIO_DIR/up.sh"
+run_phase up
 "$SCENARIO_DIR/run_workload.sh"
-"$SCENARIO_DIR/verify.sh"
+run_phase verify

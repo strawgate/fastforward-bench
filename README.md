@@ -8,6 +8,7 @@ This repo owns:
 - suite workflows that call named scenario workflows
 - self-contained scenario folders
 - shared artifact/oracle plumbing
+- family-level workflow and phase defaults to keep common cases cheap
 
 This repo does **not** own the `memagent` product code. Workflows check out
 `strawgate/memagent` as the system under test and build `logfwd:e2e` from that
@@ -21,9 +22,10 @@ image is available.
 ## Layout
 
 - `.github/actions/` shared setup and artifact actions
-- `.github/workflows/` one workflow per scenario plus suite callers
+- `.github/workflows/` one workflow per scenario plus suite callers and reusable family workflows
 - `tests/e2e/lib/` shared shell and oracle helpers
 - `tests/e2e/scenarios/` one directory per scenario job
+- `docs/SCENARIO_PLATFORM.md` platform rules and scenario contract
 
 ## Workflow inputs
 
@@ -44,3 +46,10 @@ from `strawgate/memagent`.
 2. Clone `strawgate/memagent` nearby or set `MEMAGENT_REPO_ROOT`.
 3. Build the image from `memagent`.
 4. Run a named scenario with `tests/e2e/run-scenario.sh <scenario-id>`.
+
+## Maintainability Rules
+
+- Keep named workflows explicit and easy to find in Actions.
+- Push reuse below that layer into family workflows and family defaults.
+- Prefer deleting copied boilerplate when a family default already covers it.
+- Use `python3 tests/e2e/lib/check_scenarios.py --repo-root .` before wiring a new scenario.

@@ -35,6 +35,17 @@ export E2E_LOG_DIR="${E2E_RESULTS_DIR}/logs"
 
 mkdir -p "$E2E_RESULTS_DIR" "$E2E_LOG_DIR"
 
+detect_scenario_family() {
+    case "$SCENARIO_ID" in
+        compose-*) echo "compose" ;;
+        kind-*) echo "kind" ;;
+        otlp-*) echo "otlp" ;;
+        *) echo "custom" ;;
+    esac
+}
+
+export SCENARIO_FAMILY="${SCENARIO_FAMILY:-$(detect_scenario_family)}"
+
 compose() {
     docker compose -p "memagent-${SCENARIO_ID}" -f "$SCENARIO_DIR/compose.yaml" "$@"
 }
@@ -72,4 +83,37 @@ append_job_summary() {
     if [[ -n "${GITHUB_STEP_SUMMARY:-}" && -f "$summary_file" ]]; then
         cat "$summary_file" >>"$GITHUB_STEP_SUMMARY"
     fi
+}
+
+run_oracle_verify() {
+    local actual_ndjson="${1:-$E2E_RESULTS_DIR/captured.ndjson}"
+    wait_for_file "$actual_ndjson" 30
+    python3 "$REPO_ROOT/tests/e2e/lib/oracle.py" \
+        --config "$SCENARIO_DIR/oracle.json" \
+        --expected "$E2E_RESULTS_DIR/expected_rows.json" \
+        --actual-ndjson "$actual_ndjson" \
+        --results-dir "$E2E_RESULTS_DIR"
+}
+
+run_default_phase() {
+    local phase="$1"
+
+    case "${SCENARIO_FAMILY}:${phase}" in
+        compose:up)
+            compose up -d --wait --remove-orphans
+            ;;
+        compose:down)
+            compose down -v --remove-orphans >/dev/null 2>&1 || true
+            ;;
+        compose:collect)
+            compose logs --no-color >"$E2E_RESULTS_DIR/compose.log" 2>&1 || true
+            ;;
+        compose:verify)
+            run_oracle_verify
+            ;;
+        *)
+            echo "No default implementation for phase '${phase}' in family '${SCENARIO_FAMILY}'" >&2
+            return 1
+            ;;
+    esac
 }
