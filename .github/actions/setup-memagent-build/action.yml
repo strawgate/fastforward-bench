@@ -1,54 +1,49 @@
 name: Setup Memagent Build
-description: Build the memagent Docker image used by e2e scenarios
+description: Pull or build the memagent Docker image used by e2e scenarios
 
 inputs:
   memagent-repo-root:
     description: Path to the checked out memagent repository
     required: false
     default: memagent
+  memagent-ref:
+    description: Memagent branch, tag, or SHA under test
+    required: false
+    default: master
+  image-repository:
+    description: GHCR image repository to try before falling back to a local build
+    required: false
+    default: ghcr.io/strawgate/memagent
 
 runs:
   using: composite
   steps:
     - uses: dtolnay/rust-toolchain@stable
 
-    - name: Build image
+    - name: Resolve image source
       shell: bash
       run: |
-        dockerfile="$(mktemp)"
-        trap 'rm -f "$dockerfile"' EXIT
-        cat >"$dockerfile" <<'EOF'
-        # syntax=docker/dockerfile:1
-        FROM rust:1-bookworm AS builder
-        ARG RUSTFLAGS=""
-        ARG CARGO_BUILD_JOBS="2"
-        ARG CARGO_PROFILE_RELEASE_LTO="off"
-        ARG CARGO_PROFILE_RELEASE_CODEGEN_UNITS="16"
-        ARG CARGO_PROFILE_RELEASE_DEBUG="0"
-        WORKDIR /src
-        COPY Cargo.toml Cargo.lock ./
-        COPY crates/ crates/
-        RUN --mount=type=cache,target=/src/target \
-            --mount=type=cache,target=/usr/local/cargo/registry \
-            CARGO_BUILD_RUSTC_WRAPPER="" \
-            CARGO_BUILD_JOBS="${CARGO_BUILD_JOBS}" \
-            CARGO_PROFILE_RELEASE_LTO="${CARGO_PROFILE_RELEASE_LTO}" \
-            CARGO_PROFILE_RELEASE_CODEGEN_UNITS="${CARGO_PROFILE_RELEASE_CODEGEN_UNITS}" \
-            CARGO_PROFILE_RELEASE_DEBUG="${CARGO_PROFILE_RELEASE_DEBUG}" \
-            RUSTFLAGS="${RUSTFLAGS}" \
-            cargo build --release --bin logfwd && \
-            strip target/release/logfwd && \
-            cp target/release/logfwd /logfwd
+        ref="${{ inputs.memagent-ref }}"
+        image_repo="${{ inputs.image-repository }}"
+        candidate=""
 
-        FROM gcr.io/distroless/cc-debian12:nonroot
-        COPY --from=builder /logfwd /usr/local/bin/logfwd
-        USER nonroot
-        EXPOSE 9090
-        ENTRYPOINT ["logfwd"]
-        EOF
+        if [[ "$ref" == "master" || "$ref" == "main" ]]; then
+          candidate="${image_repo}:master"
+        elif [[ "$ref" =~ ^[0-9a-f]{40}$ ]]; then
+          candidate="${image_repo}:sha-${ref}"
+        fi
+
+        if [[ -n "$candidate" ]]; then
+          echo "Trying prebuilt image: $candidate"
+          if docker pull "$candidate"; then
+            docker tag "$candidate" logfwd:e2e
+            exit 0
+          fi
+          echo "Prebuilt image unavailable, falling back to local build"
+        fi
 
         docker build \
-          --file "$dockerfile" \
+          --file "${{ inputs.memagent-repo-root }}/Dockerfile.e2e" \
           --build-arg CARGO_BUILD_JOBS=2 \
           --build-arg CARGO_PROFILE_RELEASE_LTO=off \
           --build-arg CARGO_PROFILE_RELEASE_CODEGEN_UNITS=16 \

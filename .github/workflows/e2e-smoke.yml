@@ -20,6 +20,7 @@ permissions:
   contents: read
   issues: write
   actions: read
+  packages: read
 
 env:
   MEMAGENT_REF: ${{ inputs.memagent_ref || 'master' }}

@@ -18,6 +18,7 @@ on:
 
 permissions:
   contents: read
+  packages: read
 
 jobs:
   kind-cri-smoke:
@@ -38,6 +39,7 @@ jobs:
       - uses: ./.github/actions/setup-memagent-build
         with:
           memagent-repo-root: memagent
+          memagent-ref: ${{ env.MEMAGENT_REF }}
       - uses: ./.github/actions/setup-kind
         with:
           cluster-name: kind-cri-smoke
