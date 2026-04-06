@@ -139,6 +139,8 @@ The GitHub workflow at
 uses this OTLP run file in a Benchkit/Octo11y pipeline:
 
 - `actions/monitor` captures runner telemetry sidecars for persisted runs
+- the harness can post the benchmark outcome OTLP payload directly to the
+  monitor collector when an OTLP endpoint is provided
 - the harness writes `benchkit-run.otlp.json`
 - `actions/stash` stores the benchmark run on `bench-data`
 - [bench-kind-aggregate.yml](../../.github/workflows/bench-kind-aggregate.yml)

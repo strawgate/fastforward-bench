@@ -103,3 +103,7 @@ Current projection rules:
 The OTLP document is intentionally a projection of the canonical `result.json`,
 not a second source of truth. If the two ever disagree, `result.json` is the
 debugging source and the OTLP file should be regenerated/fixed.
+
+When the harness is given a monitor OTLP HTTP endpoint, this same OTLP payload
+is also posted directly to the monitor collector as a best-effort telemetry
+signal. Persisted history still comes from the stashed run file.

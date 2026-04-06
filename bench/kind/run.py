@@ -9,6 +9,7 @@ import subprocess
 import string
 import traceback
 import uuid
+import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -39,7 +40,7 @@ from lib.measure import (
     rss_mb_series,
 )
 from lib.profiles import PROFILES, Profile
-from lib.results import BenchmarkResult, write_result_files
+from lib.results import BenchmarkResult, build_otlp_result_payload, write_result_files
 
 
 BENCH_ROOT = Path(__file__).resolve().parent
@@ -61,6 +62,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--benchkit-run-id", default=None)
     parser.add_argument("--benchkit-kind", choices=["workflow", "hybrid"], default="workflow")
     parser.add_argument("--benchkit-service-name", default="memagent-e2e.kind-bench")
+    parser.add_argument("--benchkit-otlp-http-endpoint", default=None)
     parser.add_argument("--keep-cluster", action="store_true")
     return parser.parse_args()
 
@@ -96,6 +98,29 @@ def ensure_tools() -> None:
 
 def write_json(path: Path, payload: object) -> None:
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def normalize_otlp_metrics_url(endpoint: str) -> str:
+    trimmed = endpoint.strip().rstrip("/")
+    if not trimmed:
+        raise ValueError("OTLP HTTP endpoint must not be blank")
+    if trimmed.endswith("/v1/metrics"):
+        return trimmed
+    return f"{trimmed}/v1/metrics"
+
+
+def emit_otlp_metrics(*, endpoint: str, payload: dict[str, object], timeout_sec: int = 10) -> None:
+    body = json.dumps(payload).encode("utf-8")
+    request = urllib.request.Request(
+        normalize_otlp_metrics_url(endpoint),
+        data=body,
+        headers={"content-type": "application/json"},
+        method="POST",
+    )
+    with urllib.request.urlopen(request, timeout=timeout_sec) as response:
+        status = getattr(response, "status", 200)
+        if status >= 400:
+            raise RuntimeError(f"collector rejected OTLP metrics with HTTP {status}")
 
 
 def collect_pod_logs(
@@ -439,6 +464,29 @@ def main() -> int:
                 benchkit_run_attempt=os.environ.get("GITHUB_RUN_ATTEMPT"),
                 benchkit_runner=os.environ.get("RUNNER_NAME") or os.environ.get("ImageOS"),
             )
+            if args.benchkit_otlp_http_endpoint:
+                artifacts_dir = results_dir / "artifacts"
+                artifacts_dir.mkdir(parents=True, exist_ok=True)
+                try:
+                    otlp_payload = build_otlp_result_payload(
+                        result=result,
+                        run_id=args.benchkit_run_id or benchmark_id,
+                        kind=args.benchkit_kind,
+                        service_name=args.benchkit_service_name,
+                        profile=args.profile,
+                        ref=os.environ.get("GITHUB_REF_NAME") or os.environ.get("GITHUB_REF"),
+                        commit=os.environ.get("GITHUB_SHA"),
+                        workflow=os.environ.get("GITHUB_WORKFLOW"),
+                        job=os.environ.get("GITHUB_JOB"),
+                        run_attempt=os.environ.get("GITHUB_RUN_ATTEMPT"),
+                        runner=os.environ.get("RUNNER_NAME") or os.environ.get("ImageOS"),
+                    )
+                    emit_otlp_metrics(
+                        endpoint=args.benchkit_otlp_http_endpoint,
+                        payload=otlp_payload,
+                    )
+                except Exception as exc:  # noqa: BLE001
+                    (artifacts_dir / "otlp-emit-error.txt").write_text(str(exc), encoding="utf-8")
             if not args.keep_cluster:
                 try:
                     delete_kind_cluster(args.cluster_name)

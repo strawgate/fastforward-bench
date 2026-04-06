@@ -73,6 +73,7 @@ jobs:
             --cluster-name "${CLUSTER_NAME}" \
             --benchkit-run-id "${BENCHKIT_RUN_ID}" \
             --benchkit-kind "hybrid" \
+            --benchkit-otlp-http-endpoint "${{ steps.monitor.outputs.otlp-http-endpoint }}" \
             --results-dir "${BENCH_RESULTS_DIR}"
       - if: env.PERSIST_BENCH_DATA == 'true'
         name: Stash benchmark run

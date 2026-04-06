@@ -115,9 +115,8 @@ def _metric_specs(result: BenchmarkResult) -> list[tuple[str, float | int | None
     ]
 
 
-def write_otlp_result_file(
+def build_otlp_result_payload(
     *,
-    results_dir: Path,
     result: BenchmarkResult,
     run_id: str,
     kind: str,
@@ -129,7 +128,7 @@ def write_otlp_result_file(
     job: str | None = None,
     run_attempt: str | None = None,
     runner: str | None = None,
-) -> Path:
+) -> dict[str, Any]:
     from datetime import datetime, timezone  # local import keeps module surface small
 
     parsed = datetime.strptime(result.timestamp_utc, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
@@ -181,7 +180,7 @@ def write_otlp_result_file(
         if value is not None
     ]
 
-    payload = {
+    return {
         "resourceMetrics": [
             {
                 "resource": {
@@ -189,12 +188,45 @@ def write_otlp_result_file(
                 },
                 "scopeMetrics": [
                     {
+                        "scope": {
+                            "name": "memagent-e2e.kind-bench",
+                        },
                         "metrics": metrics,
                     }
                 ],
             }
         ]
     }
+
+
+def write_otlp_result_file(
+    *,
+    results_dir: Path,
+    result: BenchmarkResult,
+    run_id: str,
+    kind: str,
+    service_name: str,
+    profile: str,
+    ref: str | None = None,
+    commit: str | None = None,
+    workflow: str | None = None,
+    job: str | None = None,
+    run_attempt: str | None = None,
+    runner: str | None = None,
+) -> Path:
+    payload = build_otlp_result_payload(
+        result=result,
+        run_id=run_id,
+        kind=kind,
+        service_name=service_name,
+        profile=profile,
+        ref=ref,
+        commit=commit,
+        workflow=workflow,
+        job=job,
+        run_attempt=run_attempt,
+        runner=runner,
+    )
     path = results_dir / "benchkit-run.otlp.json"
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return path
