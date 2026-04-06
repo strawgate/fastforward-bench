@@ -63,6 +63,15 @@ The harness ships with two named profiles:
   - `measure=120s`
   - `cooldown=10s`
 
+These timing windows now have real runtime meaning in the harness:
+
+- `warmup`
+  collector and sink are live, but samples do not count toward the score yet
+- `measure`
+  sink and collector diagnostics are sampled for the benchmark result
+- `cooldown`
+  the workload keeps running briefly so the collector can drain before teardown
+
 ## Prerequisites
 
 - Docker
@@ -141,6 +150,8 @@ uses this OTLP run file in a Benchkit/Octo11y pipeline:
 - `actions/monitor` captures runner telemetry sidecars for persisted runs
 - the harness can post the benchmark outcome OTLP payload directly to the
   monitor collector when an OTLP endpoint is provided
+- the harness also emits lightweight lifecycle signals for `setup`, `warmup`,
+  `measure`, `cooldown`, and final run completion
 - the harness writes `benchkit-run.otlp.json`
 - `actions/stash` stores the benchmark run on `bench-data`
 - [bench-kind-aggregate.yml](../../.github/workflows/bench-kind-aggregate.yml)

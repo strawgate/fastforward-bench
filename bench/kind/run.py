@@ -7,6 +7,7 @@ import json
 import os
 import subprocess
 import string
+import time
 import traceback
 import uuid
 import urllib.request
@@ -40,7 +41,12 @@ from lib.measure import (
     rss_mb_series,
 )
 from lib.profiles import PROFILES, Profile
-from lib.results import BenchmarkResult, build_otlp_result_payload, write_result_files
+from lib.results import (
+    BenchmarkResult,
+    build_otlp_phase_signal_payload,
+    build_otlp_result_payload,
+    write_result_files,
+)
 
 
 BENCH_ROOT = Path(__file__).resolve().parent
@@ -121,6 +127,51 @@ def emit_otlp_metrics(*, endpoint: str, payload: dict[str, object], timeout_sec:
         status = getattr(response, "status", 200)
         if status >= 400:
             raise RuntimeError(f"collector rejected OTLP metrics with HTTP {status}")
+
+
+def append_artifact_note(results_dir: Path, filename: str, message: str) -> None:
+    artifacts_dir = results_dir / "artifacts"
+    artifacts_dir.mkdir(parents=True, exist_ok=True)
+    path = artifacts_dir / filename
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(message.rstrip() + "\n")
+
+
+def emit_phase_signal(
+    *,
+    args: argparse.Namespace,
+    results_dir: Path,
+    result: BenchmarkResult,
+    profile_name: str,
+    phase_name: str,
+    event: str,
+    status: str | None = None,
+) -> None:
+    if not args.benchkit_otlp_http_endpoint:
+        return
+    try:
+        payload = build_otlp_phase_signal_payload(
+            result=result,
+            run_id=args.benchkit_run_id or result.benchmark_id,
+            kind=args.benchkit_kind,
+            service_name=args.benchkit_service_name,
+            profile=profile_name,
+            phase_name=phase_name,
+            event=event,
+            status=status,
+            ref=os.environ.get("GITHUB_REF_NAME") or os.environ.get("GITHUB_REF"),
+            commit=os.environ.get("GITHUB_SHA"),
+            workflow=os.environ.get("GITHUB_WORKFLOW"),
+            job=os.environ.get("GITHUB_JOB"),
+            run_attempt=os.environ.get("GITHUB_RUN_ATTEMPT"),
+            runner=os.environ.get("RUNNER_NAME") or os.environ.get("ImageOS"),
+        )
+        emit_otlp_metrics(
+            endpoint=args.benchkit_otlp_http_endpoint,
+            payload=payload,
+        )
+    except Exception as exc:  # noqa: BLE001
+        append_artifact_note(results_dir, "otlp-emit-error.txt", f"phase signal {phase_name}/{event}: {exc}")
 
 
 def collect_pod_logs(
@@ -223,13 +274,56 @@ def run_smoke_phase(
     if not collector_pod:
         raise CommandError("collector pod not found after rollout")
 
+    emit_phase_signal(
+        args=args,
+        results_dir=results_dir,
+        result=result,
+        profile_name=args.profile,
+        phase_name="warmup",
+        event="start",
+    )
     sink_samples, collector_samples = collect_logfwd_samples(
         args.namespace,
         "deployment/logfwd-capture",
         adapter.diagnostics_target_format.format(pod_name=collector_pod),
         warmup_sec=profile.warmup_sec,
         measure_sec=profile.measure_sec,
+        on_measure_start=lambda: emit_phase_signal(
+            args=args,
+            results_dir=results_dir,
+            result=result,
+            profile_name=args.profile,
+            phase_name="measure",
+            event="start",
+        ),
+        on_measure_complete=lambda: emit_phase_signal(
+            args=args,
+            results_dir=results_dir,
+            result=result,
+            profile_name=args.profile,
+            phase_name="measure",
+            event="complete",
+        ),
     )
+
+    if profile.cooldown_sec > 0:
+        emit_phase_signal(
+            args=args,
+            results_dir=results_dir,
+            result=result,
+            profile_name=args.profile,
+            phase_name="cooldown",
+            event="start",
+        )
+        time.sleep(profile.cooldown_sec)
+        emit_phase_signal(
+            args=args,
+            results_dir=results_dir,
+            result=result,
+            profile_name=args.profile,
+            phase_name="cooldown",
+            event="complete",
+        )
 
     result.sink_lines_total = diff_output_lines(sink_samples)
     sink_series = lines_per_sec_series(sink_samples)
@@ -400,6 +494,14 @@ def main() -> int:
 
     try:
         ensure_tools()
+        emit_phase_signal(
+            args=args,
+            results_dir=results_dir,
+            result=result,
+            profile_name=args.profile,
+            phase_name="setup",
+            event="start",
+        )
         create_kind_cluster(args.cluster_name)
         result.cluster_ready = True
         load_image_into_kind(args.cluster_name, args.memagent_image)
@@ -464,9 +566,16 @@ def main() -> int:
                 benchkit_run_attempt=os.environ.get("GITHUB_RUN_ATTEMPT"),
                 benchkit_runner=os.environ.get("RUNNER_NAME") or os.environ.get("ImageOS"),
             )
+            emit_phase_signal(
+                args=args,
+                results_dir=results_dir,
+                result=result,
+                profile_name=args.profile,
+                phase_name="run",
+                event="complete",
+                status=result.status,
+            )
             if args.benchkit_otlp_http_endpoint:
-                artifacts_dir = results_dir / "artifacts"
-                artifacts_dir.mkdir(parents=True, exist_ok=True)
                 try:
                     otlp_payload = build_otlp_result_payload(
                         result=result,
@@ -486,7 +595,7 @@ def main() -> int:
                         payload=otlp_payload,
                     )
                 except Exception as exc:  # noqa: BLE001
-                    (artifacts_dir / "otlp-emit-error.txt").write_text(str(exc), encoding="utf-8")
+                    append_artifact_note(results_dir, "otlp-emit-error.txt", f"result payload: {exc}")
             if not args.keep_cluster:
                 try:
                     delete_kind_cluster(args.cluster_name)

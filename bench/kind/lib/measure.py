@@ -7,6 +7,7 @@ import time
 import urllib.request
 from contextlib import ExitStack
 from dataclasses import dataclass
+from typing import Callable
 
 
 @dataclass
@@ -81,6 +82,8 @@ def collect_logfwd_samples(
     *,
     warmup_sec: int,
     measure_sec: int,
+    on_measure_start: Callable[[], None] | None = None,
+    on_measure_complete: Callable[[], None] | None = None,
 ) -> tuple[list[StatsSample], list[StatsSample]]:
     with ExitStack() as stack:
         stack.enter_context(PortForward(namespace, sink_target, 19090, 9090))
@@ -88,6 +91,8 @@ def collect_logfwd_samples(
 
         if warmup_sec > 0:
             time.sleep(warmup_sec)
+        if on_measure_start is not None:
+            on_measure_start()
 
         sink_samples: list[StatsSample] = []
         collector_samples: list[StatsSample] = []
@@ -99,6 +104,8 @@ def collect_logfwd_samples(
             if time.time() >= deadline:
                 break
             time.sleep(1)
+        if on_measure_complete is not None:
+            on_measure_complete()
 
     return sink_samples, collector_samples
 

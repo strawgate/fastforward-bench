@@ -199,6 +199,91 @@ def build_otlp_result_payload(
     }
 
 
+def build_otlp_phase_signal_payload(
+    *,
+    result: BenchmarkResult,
+    run_id: str,
+    kind: str,
+    service_name: str,
+    profile: str,
+    phase_name: str,
+    event: str,
+    status: str | None = None,
+    ref: str | None = None,
+    commit: str | None = None,
+    workflow: str | None = None,
+    job: str | None = None,
+    run_attempt: str | None = None,
+    runner: str | None = None,
+) -> dict[str, Any]:
+    from datetime import datetime, timezone  # local import keeps module surface small
+
+    now = datetime.now(timezone.utc)
+    timestamp_unix_nano = str(int(now.timestamp() * 1_000_000_000))
+
+    resource_attrs = [
+        _otlp_attr("benchkit.run_id", run_id),
+        _otlp_attr("benchkit.kind", kind),
+        _otlp_attr("benchkit.source_format", "otlp"),
+        _otlp_attr("service.name", service_name),
+    ]
+    optional_resource_attrs = {
+        "benchkit.ref": ref,
+        "benchkit.commit": commit,
+        "benchkit.workflow": workflow,
+        "benchkit.job": job,
+        "benchkit.run_attempt": run_attempt,
+        "benchkit.runner": runner,
+    }
+    for key, value in optional_resource_attrs.items():
+        if value:
+            resource_attrs.append(_otlp_attr(key, value))
+
+    scenario = f"kind/{result.phase}/{result.benchmark_mode}"
+    tags = {
+        "benchkit.impl": result.collector,
+        "benchkit.protocol": result.protocol,
+        "benchkit.profile": profile,
+        "benchkit.cluster": result.cluster,
+        "benchkit.namespace": result.namespace,
+        "phase": phase_name,
+        "event": event,
+        "benchmark.id": result.benchmark_id,
+    }
+    if status:
+        tags["result.status"] = status
+
+    metric = _otlp_metric(
+        name="_monitor.phase_signal",
+        value=1,
+        unit="events",
+        timestamp_unix_nano=timestamp_unix_nano,
+        scenario=scenario,
+        series=result.collector,
+        direction="bigger_is_better",
+        role="diagnostic",
+        tags=tags,
+    )
+
+    return {
+        "resourceMetrics": [
+            {
+                "resource": {
+                    "attributes": resource_attrs,
+                },
+                "scopeMetrics": [
+                    {
+                        "scope": {
+                            "name": "memagent-e2e.kind-bench",
+                        },
+                        "metrics": [metric],
+                    }
+                ],
+            }
+        ]
+    }
+
+
 def write_otlp_result_file(
     *,
     results_dir: Path,

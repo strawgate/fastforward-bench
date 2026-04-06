@@ -107,3 +107,8 @@ debugging source and the OTLP file should be regenerated/fixed.
 When the harness is given a monitor OTLP HTTP endpoint, this same OTLP payload
 is also posted directly to the monitor collector as a best-effort telemetry
 signal. Persisted history still comes from the stashed run file.
+
+In the same mode, the harness emits lightweight `_monitor.phase_signal` metrics
+for benchmark lifecycle transitions such as `setup`, `warmup`, `measure`,
+`cooldown`, and final run completion. These are breadcrumbs for Octo11y and do
+not replace the canonical benchmark result row.
