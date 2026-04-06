@@ -23,6 +23,12 @@ class ScenarioResult:
     extra_count: int
     order_violations: int
     null_field_violations: int
+    source_checked: bool
+    source_passed: bool | None
+    source_missing_count: int
+    source_duplicate_count: int
+    source_extra_count: int
+    source_null_field_violations: int
     reason: str | None
     missing_preview: list[dict[str, Any]]
 
@@ -54,6 +60,12 @@ def load_result(path: Path, artifact_name: str) -> ScenarioResult:
         extra_count=int(payload.get("extra_count", 0)),
         order_violations=int(payload.get("order_violations", 0)),
         null_field_violations=int(payload.get("null_field_violations", 0)),
+        source_checked=bool(payload.get("source_checked")),
+        source_passed=payload.get("source_passed"),
+        source_missing_count=int(payload.get("source_missing_count", 0)),
+        source_duplicate_count=int(payload.get("source_duplicate_count", 0)),
+        source_extra_count=int(payload.get("source_extra_count", 0)),
+        source_null_field_violations=int(payload.get("source_null_field_violations", 0)),
         reason=payload.get("reason"),
         missing_preview=payload.get("missing_preview") or [],
     )
@@ -93,18 +105,20 @@ def render_markdown(
         f"- Workflow run: [view run]({run_url})",
         f"- Scenarios: `{total}` total, `{passed}` passed, `{failed}` failed",
         "",
-        "| Scenario | Status | Policy | Expected | Actual | Missing | Duplicates | Extras | Order Violations | Null Violations |",
-        "| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+        "| Scenario | Status | Source | Policy | Expected | Actual | Missing | Duplicates | Extras | Order Violations | Null Violations |",
+        "| --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
 
     if not results:
-        lines.append("| _none_ | FAIL | unknown | 0 | 0 | 0 | 0 | 0 | 0 | 0 |")
+        lines.append("| _none_ | FAIL | n/a | unknown | 0 | 0 | 0 | 0 | 0 | 0 | 0 |")
     else:
         for result in results:
+            source_status = "PASS" if result.source_passed else "FAIL" if result.source_checked else "n/a"
             lines.append(
-                "| {scenario} | {status} | `{policy}` | {expected} | {actual} | {missing} | {duplicates} | {extras} | {order} | {nulls} |".format(
+                "| {scenario} | {status} | {source_status} | `{policy}` | {expected} | {actual} | {missing} | {duplicates} | {extras} | {order} | {nulls} |".format(
                     scenario=result.scenario,
                     status="PASS" if result.passed else "FAIL",
+                    source_status=source_status,
                     policy=result.policy,
                     expected=result.expected_count,
                     actual=result.actual_count,
@@ -129,6 +143,10 @@ def render_markdown(
             lines.append(
                 f"- Duplicates / extras / order / nulls: `{result.duplicate_count}` / `{result.extra_count}` / `{result.order_violations}` / `{result.null_field_violations}`"
             )
+            if result.source_checked:
+                lines.append(
+                    f"- Source evidence: `{'PASS' if result.source_passed else 'FAIL'}` with missing / duplicates / extras / nulls `{result.source_missing_count}` / `{result.source_duplicate_count}` / `{result.source_extra_count}` / `{result.source_null_field_violations}`"
+                )
             if result.missing_preview:
                 lines.extend(["", "Missing preview:", "", "```json", json.dumps(result.missing_preview[:5], indent=2, sort_keys=True), "```"])
             lines.append("")
@@ -162,6 +180,12 @@ def main() -> None:
                 "extra_count": result.extra_count,
                 "order_violations": result.order_violations,
                 "null_field_violations": result.null_field_violations,
+                "source_checked": result.source_checked,
+                "source_passed": result.source_passed,
+                "source_missing_count": result.source_missing_count,
+                "source_duplicate_count": result.source_duplicate_count,
+                "source_extra_count": result.source_extra_count,
+                "source_null_field_violations": result.source_null_field_violations,
                 "reason": result.reason,
                 "missing_preview": result.missing_preview,
             }

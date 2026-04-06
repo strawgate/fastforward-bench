@@ -88,11 +88,16 @@ append_job_summary() {
 run_oracle_verify() {
     local actual_ndjson="${1:-$E2E_RESULTS_DIR/captured.ndjson}"
     wait_for_file "$actual_ndjson" 30
-    python3 "$REPO_ROOT/tests/e2e/lib/oracle.py" \
-        --config "$SCENARIO_DIR/oracle.json" \
-        --expected "$E2E_RESULTS_DIR/expected_rows.json" \
-        --actual-ndjson "$actual_ndjson" \
+    local oracle_args=(
+        --config "$SCENARIO_DIR/oracle.json"
+        --expected "$E2E_RESULTS_DIR/expected_rows.json"
+        --actual-ndjson "$actual_ndjson"
         --results-dir "$E2E_RESULTS_DIR"
+    )
+    if [[ -f "$E2E_RESULTS_DIR/source_rows.json" ]]; then
+        oracle_args+=(--source-json "$E2E_RESULTS_DIR/source_rows.json")
+    fi
+    python3 "$REPO_ROOT/tests/e2e/lib/oracle.py" "${oracle_args[@]}"
 }
 
 run_default_phase() {

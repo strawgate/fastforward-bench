@@ -9,6 +9,7 @@ rows = [
         "scenario": "compose-memcached",
         "source_id": "memcached-verbose",
         "event_id": f"compose-memcached:{i:04d}",
+        "seq": i,
         "command": "set",
         "key": f"compose-memcached:{i:04d}",
     }
@@ -27,3 +28,10 @@ done
 '
 
 sleep 3
+
+python3 "$REPO_ROOT/tests/e2e/lib/source_evidence.py" \
+    --mode memcached-verbose \
+    --input "$E2E_LOG_DIR/memcached.log" \
+    --output "$E2E_RESULTS_DIR/source_rows.json" \
+    --scenario "$SCENARIO_ID" \
+    --source-id "memcached-verbose"

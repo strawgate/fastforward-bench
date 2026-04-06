@@ -64,6 +64,10 @@ Scenarios that use the default capture-oracle path emit:
 - `result.json`
 - `summary.md`
 
+Scenarios can also emit:
+
+- `source_rows.json`
+
 `oracle.json` defines:
 
 - the comparison policy
@@ -71,6 +75,23 @@ Scenarios that use the default capture-oracle path emit:
 - the ordered comparison keys
 - the stable identity keys for duplicate and missing-event reporting
 - the required non-null fields that must survive the forwarder
+- optional source-evidence comparison keys and policy
+
+## What A Green Run Means
+
+For scenarios with only the sink oracle, green means:
+
+- the expected marker events were observed at the capture sink
+- the selected semantic fields matched the scenario contract
+- duplicates, extras, ordering, and required-field checks stayed within policy
+
+For scenarios that also emit `source_rows.json`, green means all of the above plus:
+
+- the service or pod really emitted the expected marker events
+- the source-side normalized evidence matched the scenario contract
+- we can distinguish "workload never emitted the event" from "forwarder lost or mangled the event"
+
+That is the preferred shape for real infrastructure scenarios like Redis, nginx, memcached, and Kubernetes.
 
 ## V2 Event Contract
 
@@ -98,6 +119,28 @@ Then add scenario-specific semantic fields such as:
 - out-of-order delivery within a source stream
 
 `source_id` identifies the emitting stream, so order checks can be evaluated per source instead of globally when needed.
+
+## Source Evidence
+
+`source_rows.json` is optional but strongly recommended for real-service scenarios.
+
+It should be generated from the actual service log or pod log whenever practical, not from a copy of `expected_rows.json`.
+
+Current supported shared evidence parsers live in `tests/e2e/lib/source_evidence.py`:
+
+- `nginx-access`
+- `redis-monitor`
+- `memcached-verbose`
+- `json-lines`
+
+Use `source_compare_keys` and `source_policy` in `oracle.json` when the source format can support a richer contract than the forwarded payload.
+
+Example:
+
+- Redis source evidence can prove `seq` and `value` from the monitor log
+- the forwarded Redis scenario still only requires `command` and `key` at the sink because that is the stable contract today
+
+This keeps the scenario honest about what the source emitted without pretending the current forwarder already preserves every field.
 
 ## Validation
 

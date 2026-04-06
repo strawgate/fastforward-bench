@@ -9,5 +9,8 @@
   "source_key": "source_id",
   "identity_keys": ["scenario", "source_id", "event_id"],
   "required_fields": ["scenario", "source_id", "event_id", "method", "status"],
-  "compare_keys": ["scenario", "source_id", "event_id", "method", "status"]
+  "compare_keys": ["scenario", "source_id", "event_id", "method", "status"],
+  "source_policy": "exact_once_ordered",
+  "source_compare_keys": ["scenario", "source_id", "event_id", "seq", "method", "path", "status"],
+  "source_required_fields": ["scenario", "source_id", "event_id", "seq", "method", "path", "status"]
 }
