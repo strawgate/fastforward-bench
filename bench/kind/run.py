@@ -5,17 +5,20 @@ from __future__ import annotations
 import argparse
 import json
 import subprocess
-import shutil
 import string
-import sys
 import traceback
 import uuid
-from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
-from lib.analyze import benchmark_rows, expected_emitter_pods, load_json_lines, summarize_rows
+from lib.analyze import (
+    benchmark_rows,
+    compare_source_and_sink,
+    expected_emitter_pods,
+    load_json_lines,
+)
 from lib.cluster import CommandError, create_kind_cluster, delete_kind_cluster, load_image_into_kind, require_tool
+from lib.collectors import CollectorAdapter, get_collector_adapter
 from lib.kube import (
     apply_manifest,
     collect_debug_artifacts,
@@ -34,6 +37,7 @@ from lib.measure import (
     percentile,
     rss_mb_series,
 )
+from lib.profiles import PROFILES, Profile
 from lib.results import BenchmarkResult, write_result_files
 
 
@@ -41,22 +45,6 @@ BENCH_ROOT = Path(__file__).resolve().parent
 COMMON_MANIFESTS_ROOT = BENCH_ROOT / "manifests" / "common"
 COLLECTOR_MANIFESTS_ROOT = BENCH_ROOT / "manifests" / "collectors"
 WORKLOAD_MANIFESTS_ROOT = BENCH_ROOT / "manifests" / "workload"
-
-
-@dataclass(frozen=True)
-class Profile:
-    name: str
-    pods: int
-    eps_per_pod: int
-    warmup_sec: int
-    measure_sec: int
-    cooldown_sec: int
-
-
-PROFILES = {
-    "smoke": Profile("smoke", pods=5, eps_per_pod=100, warmup_sec=5, measure_sec=15, cooldown_sec=5),
-    "default": Profile("default", pods=30, eps_per_pod=300, warmup_sec=30, measure_sec=120, cooldown_sec=10),
-}
 
 
 def parse_args() -> argparse.Namespace:
@@ -106,21 +94,236 @@ def write_json(path: Path, payload: object) -> None:
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
+def collect_pod_logs(
+    *,
+    namespace: str,
+    pod_names: list[str],
+    destination: Path,
+    tail: int,
+) -> None:
+    chunks: list[str] = []
+    for pod_name in pod_names:
+        chunks.append(f"==== {pod_name}")
+        proc = subprocess.run(
+            ["kubectl", "-n", namespace, "logs", pod_name, f"--tail={tail}"],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        chunks.append(proc.stdout if proc.stdout else proc.stderr)
+    destination.write_text("\n".join(chunks), encoding="utf-8")
+
+
+def collect_sink_capture(namespace: str, sink_pod: str, destination: Path) -> None:
+    sink_capture = subprocess.run(
+        [
+            "kubectl",
+            "-n",
+            namespace,
+            "exec",
+            "-c",
+            "capture-reader",
+            sink_pod,
+            "--",
+            "cat",
+            "/var/lib/logfwd/capture.ndjson",
+        ],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    destination.write_text(
+        sink_capture.stdout if sink_capture.stdout else sink_capture.stderr,
+        encoding="utf-8",
+    )
+
+
+def render_manifests(
+    *,
+    args: argparse.Namespace,
+    profile: Profile,
+    adapter: CollectorAdapter,
+    benchmark_id: str,
+    rendered_dir: Path,
+) -> dict[str, Path]:
+    substitutions = {
+        "NAMESPACE": args.namespace,
+        "MEMAGENT_IMAGE": args.memagent_image,
+        "BENCHMARK_ID": benchmark_id,
+        "EPS_PER_POD": str(profile.eps_per_pod),
+        "POD_REPLICAS": str(profile.pods),
+    }
+    manifests = {
+        "namespace": rendered_dir / "namespace.yaml",
+        "sink_configmap": rendered_dir / "sink-configmap.yaml",
+        "sink_deployment": rendered_dir / "sink-deployment.yaml",
+        "collector_configmap": rendered_dir / "collector-configmap.yaml",
+        "collector_workload": rendered_dir / "collector-workload.yaml",
+        "emitter_configmap": rendered_dir / "emitter-configmap.yaml",
+        "emitter_statefulset": rendered_dir / "emitter-statefulset.yaml",
+    }
+    copy_static_manifest("namespace.yaml", manifests["namespace"], substitutions)
+    render_template("sink-configmap.yaml.tmpl", manifests["sink_configmap"], substitutions)
+    render_template("sink-deployment.yaml.tmpl", manifests["sink_deployment"], substitutions)
+    if args.phase == "smoke":
+        render_template(adapter.config_template, manifests["collector_configmap"], substitutions)
+        render_template(adapter.workload_template, manifests["collector_workload"], substitutions)
+        render_template("workload/log-emitter-configmap.yaml.tmpl", manifests["emitter_configmap"], substitutions)
+        render_template("workload/log-emitter-statefulset.yaml.tmpl", manifests["emitter_statefulset"], substitutions)
+    return manifests
+
+
+def run_smoke_phase(
+    *,
+    args: argparse.Namespace,
+    profile: Profile,
+    adapter: CollectorAdapter,
+    manifests: dict[str, Path],
+    results_dir: Path,
+    result: BenchmarkResult,
+) -> int:
+    apply_manifest(manifests["emitter_configmap"])
+    apply_manifest(manifests["emitter_statefulset"])
+    rollout_status(args.namespace, "statefulset", "log-emitter", timeout_sec=120)
+
+    apply_manifest(manifests["collector_configmap"])
+    apply_manifest(manifests["collector_workload"])
+    rollout_status(args.namespace, adapter.rollout_kind, adapter.rollout_name, timeout_sec=120)
+
+    collector_pod = get_first_pod_name(args.namespace, adapter.pod_selector)
+    if not collector_pod:
+        raise CommandError("collector pod not found after rollout")
+
+    sink_samples, collector_samples = collect_logfwd_samples(
+        args.namespace,
+        "deployment/logfwd-capture",
+        adapter.diagnostics_target_format.format(pod_name=collector_pod),
+        warmup_sec=profile.warmup_sec,
+        measure_sec=profile.measure_sec,
+    )
+
+    result.sink_lines_total = diff_output_lines(sink_samples)
+    sink_series = lines_per_sec_series(sink_samples)
+    result.sink_lines_per_sec_avg = avg(sink_series)
+    result.sink_lines_per_sec_p50 = percentile(sink_series, 0.50)
+    result.sink_lines_per_sec_p95 = percentile(sink_series, 0.95)
+    result.sink_lines_per_sec_p99 = percentile(sink_series, 0.99)
+
+    cpu_series = cpu_cores_series(collector_samples)
+    rss_series = rss_mb_series(collector_samples)
+    result.collector_cpu_cores_avg = avg(cpu_series)
+    result.collector_cpu_cores_p95 = percentile(cpu_series, 0.95)
+    result.collector_rss_mb_avg = avg(rss_series)
+    result.collector_rss_mb_p95 = percentile(rss_series, 0.95)
+
+    artifacts_dir = results_dir / "artifacts"
+    artifacts_dir.mkdir(parents=True, exist_ok=True)
+
+    sink_pod = get_first_pod_name(args.namespace, "app.kubernetes.io/name=logfwd-capture")
+    if not sink_pod:
+        raise CommandError("sink pod not found after rollout")
+    collect_pod_logs(
+        namespace=args.namespace,
+        pod_names=[sink_pod],
+        destination=artifacts_dir / "sink-logs.txt",
+        tail=-1,
+    )
+    collect_sink_capture(args.namespace, sink_pod, artifacts_dir / "sink-capture.ndjson")
+
+    emitter_pods = get_pod_names(args.namespace, "app.kubernetes.io/name=log-emitter")
+    collect_pod_logs(
+        namespace=args.namespace,
+        pod_names=emitter_pods,
+        destination=artifacts_dir / "emitter-logs.txt",
+        tail=-1,
+    )
+
+    collector_pods = get_pod_names(args.namespace, adapter.pod_selector)
+    if collector_pods:
+        collect_pod_logs(
+            namespace=args.namespace,
+            pod_names=collector_pods,
+            destination=artifacts_dir / "collector-logs.txt",
+            tail=200,
+        )
+
+    sink_rows = benchmark_rows(load_json_lines(artifacts_dir / "sink-capture.ndjson"), result.benchmark_id)
+    source_rows = benchmark_rows(load_json_lines(artifacts_dir / "emitter-logs.txt"), result.benchmark_id)
+    expected_sources = expected_emitter_pods("log-emitter", profile.pods)
+    comparison = compare_source_and_sink(
+        source_rows=source_rows,
+        sink_rows=sink_rows,
+        expected_sources=expected_sources,
+    )
+
+    result.captured_rows_total = comparison.sink_row_count
+    result.source_rows_total = comparison.source_row_count
+    result.missing_source_count = comparison.missing_source_count
+    result.missing_event_count = comparison.missing_event_count
+    result.unexpected_event_count = comparison.unexpected_event_count
+    result.dup_estimate = comparison.duplicate_event_count
+    result.drop_estimate = comparison.missing_event_count
+
+    write_json(results_dir / "actual_rows.json", sink_rows)
+    write_json(results_dir / "source_rows.json", source_rows)
+    write_json(
+        results_dir / "stream-summary.json",
+        {
+            "expected_sources": comparison.expected_sources,
+            "observed_sources": comparison.observed_sources,
+            "missing_sources": comparison.missing_sources,
+            "source_row_count": comparison.source_row_count,
+            "sink_row_count": comparison.sink_row_count,
+            "missing_event_count": comparison.missing_event_count,
+            "unexpected_event_count": comparison.unexpected_event_count,
+            "duplicate_event_count": comparison.duplicate_event_count,
+            "gap_count": comparison.gap_count,
+        },
+    )
+
+    if (
+        result.sink_lines_total
+        and comparison.missing_source_count == 0
+        and comparison.missing_event_count == 0
+        and comparison.unexpected_event_count == 0
+        and comparison.duplicate_event_count == 0
+        and comparison.gap_count == 0
+    ):
+        result.status = "pass"
+        result.notes = (
+            f"smoke benchmark succeeded in {adapter.benchmark_mode}; source_rows_total={comparison.source_row_count}, "
+            f"captured_rows_total={comparison.sink_row_count}, sink_lines_total={result.sink_lines_total}, "
+            f"missing_events={comparison.missing_event_count}, unexpected_events={comparison.unexpected_event_count}, "
+            f"duplicates={comparison.duplicate_event_count}, gaps={comparison.gap_count}."
+        )
+        return 0
+
+    result.status = "fail"
+    result.notes = (
+        f"smoke benchmark failed in {adapter.benchmark_mode}; source_rows_total={comparison.source_row_count}, "
+        f"captured_rows_total={comparison.sink_row_count}, sink_lines_total={result.sink_lines_total}, "
+        f"missing_sources={comparison.missing_sources}, missing_events={comparison.missing_event_count}, "
+        f"unexpected_events={comparison.unexpected_event_count}, duplicates={comparison.duplicate_event_count}, "
+        f"gaps={comparison.gap_count}."
+    )
+    return 1
+
+
 def main() -> int:
     args = parse_args()
     profile = PROFILES[args.profile]
+    adapter = get_collector_adapter(args.collector)
     results_dir = resolve_results_dir(args.results_dir)
     rendered_dir = results_dir / "rendered-manifests"
     rendered_dir.mkdir(parents=True, exist_ok=True)
 
     benchmark_id = str(uuid.uuid4())
     timestamp_utc = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    total_target_eps = profile.pods * profile.eps_per_pod
-
     result = BenchmarkResult(
         benchmark_id=benchmark_id,
         timestamp_utc=timestamp_utc,
         phase=args.phase,
+        benchmark_mode="infra-bootstrap" if args.phase == "infra" else adapter.benchmark_mode,
         cluster="kind-single-node",
         cluster_name=args.cluster_name,
         namespace=args.namespace,
@@ -128,12 +331,16 @@ def main() -> int:
         protocol=args.protocol,
         pods=profile.pods,
         target_eps_per_pod=profile.eps_per_pod,
-        total_target_eps=total_target_eps,
+        total_target_eps=profile.total_target_eps,
         warmup_sec=profile.warmup_sec,
         measure_sec=profile.measure_sec,
         cooldown_sec=profile.cooldown_sec,
         sink_lines_total=None,
         captured_rows_total=None,
+        source_rows_total=None,
+        missing_source_count=None,
+        missing_event_count=None,
+        unexpected_event_count=None,
         sink_lines_per_sec_avg=None,
         sink_lines_per_sec_p50=None,
         sink_lines_per_sec_p95=None,
@@ -153,175 +360,48 @@ def main() -> int:
         notes="run started",
     )
 
-    namespace_manifest = rendered_dir / "namespace.yaml"
-    sink_configmap_manifest = rendered_dir / "sink-configmap.yaml"
-    sink_deployment_manifest = rendered_dir / "sink-deployment.yaml"
-    collector_configmap_manifest = rendered_dir / "collector-configmap.yaml"
-    collector_daemonset_manifest = rendered_dir / "collector-daemonset.yaml"
-    emitter_configmap_manifest = rendered_dir / "emitter-configmap.yaml"
-    emitter_statefulset_manifest = rendered_dir / "emitter-statefulset.yaml"
-    substitutions = {
-        "NAMESPACE": args.namespace,
-        "MEMAGENT_IMAGE": args.memagent_image,
-        "BENCHMARK_ID": benchmark_id,
-        "EPS_PER_POD": str(profile.eps_per_pod),
-        "POD_REPLICAS": str(profile.pods),
-    }
+    return_code = 1
+    manifests = render_manifests(
+        args=args,
+        profile=profile,
+        adapter=adapter,
+        benchmark_id=benchmark_id,
+        rendered_dir=rendered_dir,
+    )
 
     try:
         ensure_tools()
-        copy_static_manifest("namespace.yaml", namespace_manifest, substitutions)
-        render_template("sink-configmap.yaml.tmpl", sink_configmap_manifest, substitutions)
-        render_template("sink-deployment.yaml.tmpl", sink_deployment_manifest, substitutions)
-        if args.phase == "smoke":
-            if args.collector != "logfwd":
-                raise CommandError(f"collector not implemented yet in benchmark harness: {args.collector}")
-            render_template("collectors/logfwd-configmap.yaml.tmpl", collector_configmap_manifest, substitutions)
-            render_template("collectors/logfwd-daemonset.yaml.tmpl", collector_daemonset_manifest, substitutions)
-            render_template("workload/log-emitter-configmap.yaml.tmpl", emitter_configmap_manifest, substitutions)
-            render_template("workload/log-emitter-statefulset.yaml.tmpl", emitter_statefulset_manifest, substitutions)
-
         create_kind_cluster(args.cluster_name)
         result.cluster_ready = True
         load_image_into_kind(args.cluster_name, args.memagent_image)
 
-        apply_manifest(namespace_manifest)
+        apply_manifest(manifests["namespace"])
         wait_for_namespace(args.namespace)
-        apply_manifest(sink_configmap_manifest)
-        apply_manifest(sink_deployment_manifest)
+        apply_manifest(manifests["sink_configmap"])
+        apply_manifest(manifests["sink_deployment"])
         wait_for_deployment(args.namespace, "logfwd-capture", timeout_sec=90)
-
         result.sink_ready = True
 
         if args.phase == "infra":
             result.status = "pass"
             result.notes = (
                 "infra-only benchmark run succeeded; cluster lifecycle and logfwd sink deployment are healthy. "
-                "Workload generation and collector-under-test installation land in later phases."
+                "Run --phase smoke to exercise the collector, emitters, and source-vs-sink oracle."
             )
-        else:
-            apply_manifest(emitter_configmap_manifest)
-            apply_manifest(emitter_statefulset_manifest)
-            rollout_status(args.namespace, "statefulset", "log-emitter", timeout_sec=120)
-
-            apply_manifest(collector_configmap_manifest)
-            apply_manifest(collector_daemonset_manifest)
-            rollout_status(args.namespace, "daemonset", "logfwd-bench-collector", timeout_sec=120)
-
-            collector_pod = get_first_pod_name(args.namespace, "app.kubernetes.io/name=logfwd-bench-collector")
-            if not collector_pod:
-                raise CommandError("collector pod not found after rollout")
-
-            sink_samples, collector_samples = collect_logfwd_samples(
-                args.namespace,
-                "deployment/logfwd-capture",
-                f"pod/{collector_pod}",
-                warmup_sec=profile.warmup_sec,
-                measure_sec=profile.measure_sec,
-            )
-
-            result.sink_lines_total = diff_output_lines(sink_samples)
-            sink_series = lines_per_sec_series(sink_samples)
-            result.sink_lines_per_sec_avg = avg(sink_series)
-            result.sink_lines_per_sec_p50 = percentile(sink_series, 0.50)
-            result.sink_lines_per_sec_p95 = percentile(sink_series, 0.95)
-            result.sink_lines_per_sec_p99 = percentile(sink_series, 0.99)
-
-            cpu_series = cpu_cores_series(collector_samples)
-            rss_series = rss_mb_series(collector_samples)
-            result.collector_cpu_cores_avg = avg(cpu_series)
-            result.collector_cpu_cores_p95 = percentile(cpu_series, 0.95)
-            result.collector_rss_mb_avg = avg(rss_series)
-            result.collector_rss_mb_p95 = percentile(rss_series, 0.95)
-
-            sink_pod = get_first_pod_name(args.namespace, "app.kubernetes.io/name=logfwd-capture")
-            if not sink_pod:
-                raise CommandError("sink pod not found after rollout")
-
-            artifacts_dir = results_dir / "artifacts"
-            artifacts_dir.mkdir(parents=True, exist_ok=True)
-            sink_logs_path = artifacts_dir / "sink-logs.txt"
-            sink_logs = subprocess.run(
-                ["kubectl", "-n", args.namespace, "logs", sink_pod, "--tail=-1"],
-                text=True,
-                capture_output=True,
-                check=False,
-            )
-            sink_logs_path.write_text(
-                sink_logs.stdout if sink_logs.stdout else sink_logs.stderr,
-                encoding="utf-8",
-            )
-
-            sink_capture_path = artifacts_dir / "sink-capture.ndjson"
-            sink_capture = subprocess.run(
-                [
-                    "kubectl",
-                    "-n",
-                    args.namespace,
-                    "exec",
-                    "-c",
-                    "capture-reader",
-                    sink_pod,
-                    "--",
-                    "cat",
-                    "/var/lib/logfwd/capture.ndjson",
-                ],
-                text=True,
-                capture_output=True,
-                check=False,
-            )
-            sink_capture_path.write_text(
-                sink_capture.stdout if sink_capture.stdout else sink_capture.stderr,
-                encoding="utf-8",
-            )
-
-            rows = benchmark_rows(load_json_lines(sink_capture_path), benchmark_id)
-            summary = summarize_rows(rows)
-            expected_sources = expected_emitter_pods("log-emitter", profile.pods)
-            missing_sources = sorted(set(expected_sources) - set(summary["sources"]))
-            result.captured_rows_total = int(summary["row_count"])
-
-            write_json(results_dir / "actual_rows.json", rows)
-            write_json(
-                results_dir / "stream-summary.json",
-                {
-                    "expected_sources": expected_sources,
-                    "observed_sources": summary["sources"],
-                    "missing_sources": missing_sources,
-                    "duplicate_event_count": summary["duplicate_event_count"],
-                    "gap_count": summary["gap_count"],
-                    "row_count": summary["row_count"],
-                },
-            )
-
-            result.dup_estimate = int(summary["duplicate_event_count"])
-            result.drop_estimate = int(summary["gap_count"])
-
-            if (
-                result.sink_lines_total
-                and not missing_sources
-                and summary["gap_count"] == 0
-                and summary["duplicate_event_count"] == 0
-            ):
-                result.status = "pass"
-                result.notes = (
-                    f"smoke benchmark succeeded; captured_rows_total={summary['row_count']}, "
-                    f"sink_lines_total={result.sink_lines_total}; observed "
-                    f"{len(summary['sources'])}/{profile.pods} emitter pods with "
-                    f"{summary['gap_count']} gaps and {summary['duplicate_event_count']} duplicate events."
-                )
-                return_code = 0
-            else:
-                result.status = "fail"
-                result.notes = (
-                    f"smoke benchmark failed; sink_lines_total={result.sink_lines_total}, "
-                    f"captured_rows_total={summary['row_count']}, "
-                    f"missing_sources={missing_sources}, gaps={summary['gap_count']}, "
-                    f"duplicates={summary['duplicate_event_count']}"
-                )
-                return_code = 1
-        if args.phase == "infra":
             return_code = 0
+        else:
+            return_code = run_smoke_phase(
+                args=args,
+                profile=profile,
+                adapter=adapter,
+                manifests=manifests,
+                results_dir=results_dir,
+                result=result,
+            )
+    except NotImplementedError as exc:
+        result.status = "partial"
+        result.notes = str(exc)
+        return_code = 1
     except Exception as exc:  # noqa: BLE001
         result.status = "fail"
         result.notes = f"{type(exc).__name__}: {exc}"
@@ -336,51 +416,22 @@ def main() -> int:
                 deployment="logfwd-capture",
                 selector="app.kubernetes.io/name=logfwd-capture",
             )
-            emitter_logs_path = results_dir / "artifacts" / "emitter-logs.txt"
-            emitter_pods = get_pod_names(args.namespace, "app.kubernetes.io/name=log-emitter")
-            if emitter_pods:
-                chunks: list[str] = []
-                for pod_name in emitter_pods:
-                    chunks.append(f"==== {pod_name}")
-                    proc = subprocess.run(
-                        ["kubectl", "-n", args.namespace, "logs", pod_name, "--tail=100"],
-                        text=True,
-                        capture_output=True,
-                        check=False,
-                    )
-                    chunks.append(proc.stdout if proc.stdout else proc.stderr)
-                emitter_logs_path.write_text("\n".join(chunks), encoding="utf-8")
-            collector_pods = get_pod_names(args.namespace, "app.kubernetes.io/name=logfwd-bench-collector")
-            if collector_pods:
-                chunks = []
-                for pod_name in collector_pods:
-                    chunks.append(f"==== {pod_name}")
-                    proc = subprocess.run(
-                        ["kubectl", "-n", args.namespace, "logs", pod_name, "--tail=200"],
-                        text=True,
-                        capture_output=True,
-                        check=False,
-                    )
-                    chunks.append(proc.stdout if proc.stdout else proc.stderr)
-                (results_dir / "artifacts" / "collector-logs.txt").write_text("\n".join(chunks), encoding="utf-8")
         except Exception as exc:  # noqa: BLE001
             artifacts_dir = results_dir / "artifacts"
             artifacts_dir.mkdir(parents=True, exist_ok=True)
             (artifacts_dir / "artifact-collection-error.txt").write_text(str(exc), encoding="utf-8")
-
-        if not args.keep_cluster:
-            try:
-                delete_kind_cluster(args.cluster_name)
-            except Exception as exc:  # noqa: BLE001
-                artifacts_dir = results_dir / "artifacts"
-                artifacts_dir.mkdir(parents=True, exist_ok=True)
-                (artifacts_dir / "cluster-delete-error.txt").write_text(str(exc), encoding="utf-8")
-
-        write_result_files(results_dir, result)
-
-    print(results_dir)
+        finally:
+            write_result_files(results_dir, result)
+            if not args.keep_cluster:
+                try:
+                    delete_kind_cluster(args.cluster_name)
+                except Exception as exc:  # noqa: BLE001
+                    artifacts_dir = results_dir / "artifacts"
+                    artifacts_dir.mkdir(parents=True, exist_ok=True)
+                    (artifacts_dir / "cluster-delete-error.txt").write_text(str(exc), encoding="utf-8")
+            print(results_dir)
     return return_code
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(main())

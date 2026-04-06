@@ -52,7 +52,7 @@ jobs:
       - name: Run benchmark harness
         run: |
           python3 bench/kind/run.py \
-            --phase infra \
+            --phase smoke \
             --profile smoke \
             --collector logfwd \
             --protocol otlp_http \

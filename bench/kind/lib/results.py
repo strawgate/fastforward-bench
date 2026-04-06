@@ -10,6 +10,7 @@ class BenchmarkResult:
     benchmark_id: str
     timestamp_utc: str
     phase: str
+    benchmark_mode: str
     cluster: str
     cluster_name: str
     namespace: str
@@ -23,6 +24,10 @@ class BenchmarkResult:
     cooldown_sec: int
     sink_lines_total: int | None
     captured_rows_total: int | None
+    source_rows_total: int | None
+    missing_source_count: int | None
+    missing_event_count: int | None
+    unexpected_event_count: int | None
     sink_lines_per_sec_avg: float | None
     sink_lines_per_sec_p50: float | None
     sink_lines_per_sec_p95: float | None
@@ -58,6 +63,7 @@ def write_result_files(results_dir: Path, result: BenchmarkResult) -> None:
 
 def render_summary(result: BenchmarkResult) -> str:
     status = result.status.upper()
+
     def show(value: object) -> str:
         return "n/a" if value is None else str(value)
 
@@ -66,6 +72,7 @@ def render_summary(result: BenchmarkResult) -> str:
         "",
         f"- Status: `{status}`",
         f"- Benchmark ID: `{result.benchmark_id}`",
+        f"- Benchmark mode: `{result.benchmark_mode}`",
         f"- Collector: `{result.collector}`",
         f"- Protocol: `{result.protocol}`",
         f"- Cluster: `{result.cluster_name}`",
@@ -79,6 +86,10 @@ def render_summary(result: BenchmarkResult) -> str:
         "",
         f"- sink_lines_total: `{show(result.sink_lines_total)}`",
         f"- captured_rows_total: `{show(result.captured_rows_total)}`",
+        f"- source_rows_total: `{show(result.source_rows_total)}`",
+        f"- missing_source_count: `{show(result.missing_source_count)}`",
+        f"- missing_event_count: `{show(result.missing_event_count)}`",
+        f"- unexpected_event_count: `{show(result.unexpected_event_count)}`",
         f"- sink_lines_per_sec_avg: `{show(result.sink_lines_per_sec_avg)}`",
         f"- drop_estimate: `{show(result.drop_estimate)}`",
         f"- dup_estimate: `{show(result.dup_estimate)}`",

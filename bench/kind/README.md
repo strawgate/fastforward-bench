@@ -8,26 +8,37 @@ while the scenario suite proves semantic correctness.
 
 ## Current Scope
 
-The current implementation covers Phase 0 and Phase 1:
+The harness currently supports two phases:
 
-- runtime/tooling decision and default profile selection;
-- deterministic KIND cluster lifecycle;
-- `logfwd` capture sink deployment;
-- canonical run metadata, summary markdown, and artifact collection;
-- smoke CI workflow that exercises the infrastructure path.
+- `infra`
+  - deterministic KIND cluster lifecycle
+  - `logfwd` capture sink deployment
+  - canonical run metadata, summary markdown, and artifact collection
+- `smoke`
+  - all `infra` behavior
+  - a replicated stdout emitter workload
+  - one collector-under-test DaemonSet
+  - sink-side diagnostics sampling
+  - source-vs-sink artifact comparison for exact event preservation
 
-It does **not** yet deploy the stdout emitter workload or collector-under-test
-DaemonSets. Those land in later phases on top of this harness.
+The current smoke implementation is intentionally narrow:
+
+- collector support: `logfwd` only
+- benchmark mode: `baseline-pass-through`
+- sink transport: OTLP/HTTP into a `logfwd` capture sink
+
+That means the current scores are useful for benchmarking discovery, framing,
+shipping, and loss/dup behavior under load. They are **not** parse-and-enrich
+scores yet.
 
 ## Design Choices
 
 - Harness runtime: Python 3, standard library only.
-- Generator and sink direction: `logfwd` is the preferred generator and sink.
-- v1 sink transport: OTLP/HTTP into a `logfwd` sink deployment.
-- Sink persistence: the sink writes JSON lines to stdout and the harness collects
-  pod logs as the benchmark artifact.
+- Generator: a lightweight stdout emitter workload.
+- Sink: `logfwd` configured as a dumb capture sink writing JSON lines to a file.
 - Benchmark artifacts: JSON row, JSONL stream, summary markdown, rendered
-  manifests, and kubectl debug output.
+  manifests, and `kubectl` debug output.
+- Extension seam: add collector adapters without changing the result contract.
 
 ## Profiles
 
@@ -46,9 +57,6 @@ The harness ships with two named profiles:
   - `measure=120s`
   - `cooldown=10s`
 
-For the current `infra` phase, these values are recorded in metadata but not yet
-driven by a workload deployment.
-
 ## Prerequisites
 
 - Docker
@@ -59,14 +67,28 @@ driven by a workload deployment.
 
 ## Quickstart
 
+Run the real smoke benchmark:
+
 ```bash
 python3 bench/kind/run.py \
-  --phase infra \
+  --phase smoke \
   --profile smoke \
   --collector logfwd \
   --cluster-name memagent-bench-smoke \
   --memagent-image logfwd:e2e \
   --results-dir bench/kind/results/local-smoke
+```
+
+Run only the infrastructure bootstrap path:
+
+```bash
+python3 bench/kind/run.py \
+  --phase infra \
+  --profile smoke \
+  --collector logfwd \
+  --cluster-name memagent-bench-infra \
+  --memagent-image logfwd:e2e \
+  --results-dir bench/kind/results/local-infra
 ```
 
 Useful flags:
@@ -87,6 +109,18 @@ Each run writes a directory under `bench/kind/results/` containing:
 - `summary.md`
 - `rendered-manifests/`
 - `artifacts/`
+- `stream-summary.json` for `smoke`
+- `actual_rows.json` for `smoke`
+- `source_rows.json` for `smoke`
 
-See [RESULT_SCHEMA.md](/Users/billeaston/Documents/repos/memagent-e2e/bench/kind/RESULT_SCHEMA.md)
-for the current row contract.
+## Reading The Results
+
+Current smoke runs should be interpreted as:
+
+- benchmark mode: `baseline-pass-through`
+- pass means the sink observed the same benchmark-tagged events the emitters
+  produced, with no duplicates or unexpected rows
+- scores do not yet include parse-and-enrich overhead
+
+See [RESULT_SCHEMA.md](./RESULT_SCHEMA.md)
+for the row contract.
