@@ -6,5 +6,8 @@
     "value": "compose-synthetic-rotation"
   },
   "order_key": "seq",
-  "compare_keys": ["scenario", "seq", "level", "message"]
+  "source_key": "source_id",
+  "identity_keys": ["scenario", "source_id", "event_id"],
+  "required_fields": ["scenario", "source_id", "event_id", "seq", "level", "message"],
+  "compare_keys": ["scenario", "source_id", "event_id", "seq", "level", "message"]
 }

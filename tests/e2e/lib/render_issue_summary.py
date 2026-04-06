@@ -22,6 +22,7 @@ class ScenarioResult:
     duplicate_count: int
     extra_count: int
     order_violations: int
+    null_field_violations: int
     reason: str | None
     missing_preview: list[dict[str, Any]]
 
@@ -52,6 +53,7 @@ def load_result(path: Path, artifact_name: str) -> ScenarioResult:
         duplicate_count=int(payload.get("duplicate_count", 0)),
         extra_count=int(payload.get("extra_count", 0)),
         order_violations=int(payload.get("order_violations", 0)),
+        null_field_violations=int(payload.get("null_field_violations", 0)),
         reason=payload.get("reason"),
         missing_preview=payload.get("missing_preview") or [],
     )
@@ -91,16 +93,16 @@ def render_markdown(
         f"- Workflow run: [view run]({run_url})",
         f"- Scenarios: `{total}` total, `{passed}` passed, `{failed}` failed",
         "",
-        "| Scenario | Status | Policy | Expected | Actual | Missing | Duplicates | Extras | Order Violations |",
-        "| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |",
+        "| Scenario | Status | Policy | Expected | Actual | Missing | Duplicates | Extras | Order Violations | Null Violations |",
+        "| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
 
     if not results:
-        lines.append("| _none_ | FAIL | unknown | 0 | 0 | 0 | 0 | 0 | 0 |")
+        lines.append("| _none_ | FAIL | unknown | 0 | 0 | 0 | 0 | 0 | 0 | 0 |")
     else:
         for result in results:
             lines.append(
-                "| {scenario} | {status} | `{policy}` | {expected} | {actual} | {missing} | {duplicates} | {extras} | {order} |".format(
+                "| {scenario} | {status} | `{policy}` | {expected} | {actual} | {missing} | {duplicates} | {extras} | {order} | {nulls} |".format(
                     scenario=result.scenario,
                     status="PASS" if result.passed else "FAIL",
                     policy=result.policy,
@@ -110,6 +112,7 @@ def render_markdown(
                     duplicates=result.duplicate_count,
                     extras=result.extra_count,
                     order=result.order_violations,
+                    nulls=result.null_field_violations,
                 )
             )
 
@@ -124,7 +127,7 @@ def render_markdown(
             lines.append(f"- Policy: `{result.policy}`")
             lines.append(f"- Counts: expected `{result.expected_count}`, actual `{result.actual_count}`, missing `{result.missing_count}`")
             lines.append(
-                f"- Duplicates / extras / order: `{result.duplicate_count}` / `{result.extra_count}` / `{result.order_violations}`"
+                f"- Duplicates / extras / order / nulls: `{result.duplicate_count}` / `{result.extra_count}` / `{result.order_violations}` / `{result.null_field_violations}`"
             )
             if result.missing_preview:
                 lines.extend(["", "Missing preview:", "", "```json", json.dumps(result.missing_preview[:5], indent=2, sort_keys=True), "```"])
@@ -158,6 +161,7 @@ def main() -> None:
                 "duplicate_count": result.duplicate_count,
                 "extra_count": result.extra_count,
                 "order_violations": result.order_violations,
+                "null_field_violations": result.null_field_violations,
                 "reason": result.reason,
                 "missing_preview": result.missing_preview,
             }

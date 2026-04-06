@@ -9,7 +9,14 @@ NAMESPACE="e2e-logfwd"
 python3 - <<'PY' >"$E2E_RESULTS_DIR/expected_rows.json"
 import json
 rows = [
-    {"scenario": "kind-cri-smoke", "seq": i, "level": level, "message": f"KIND_E2E_MARKER_{i:03d}"}
+    {
+        "scenario": "kind-cri-smoke",
+        "source_id": "log-generator",
+        "event_id": f"kind-cri-smoke:{i:04d}",
+        "seq": i,
+        "level": level,
+        "message": f"KIND_E2E_MARKER_{i:03d}",
+    }
     for i, level in enumerate(["INFO", "INFO", "WARN", "INFO", "ERROR", "INFO", "DEBUG", "INFO", "WARN", "INFO"], start=1)
 ]
 print(json.dumps(rows, indent=2))

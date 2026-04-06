@@ -69,6 +69,35 @@ Scenarios that use the default capture-oracle path emit:
 - the comparison policy
 - the selector used to isolate scenario rows
 - the ordered comparison keys
+- the stable identity keys for duplicate and missing-event reporting
+- the required non-null fields that must survive the forwarder
+
+## V2 Event Contract
+
+For forwarder correctness scenarios, expected and actual rows should converge on a shared shape:
+
+- `scenario`
+- `source_id`
+- `event_id`
+- `seq`
+
+Then add scenario-specific semantic fields such as:
+
+- `message`
+- `level`
+- `command`
+- `key`
+- `value`
+- `path`
+- `status`
+
+`event_id` is the canonical per-event identity used to detect:
+
+- missing events
+- duplicate events
+- out-of-order delivery within a source stream
+
+`source_id` identifies the emitting stream, so order checks can be evaluated per source instead of globally when needed.
 
 ## Validation
 
