@@ -6,7 +6,10 @@ on:
     paths:
       - 'bench/kind/**'
       - '.github/workflows/bench-kind-smoke.yml'
+      - '.github/workflows/bench-kind-aggregate.yml'
       - '.github/actions/setup-memagent-build/**'
+  schedule:
+    - cron: '0 7 * * *'
   workflow_dispatch:
     inputs:
       memagent_ref:
@@ -16,11 +19,14 @@ on:
         default: master
 
 permissions:
-  contents: read
+  contents: write
+  actions: write
   packages: read
 
 env:
   MEMAGENT_REF: ${{ inputs.memagent_ref || 'master' }}
+  BENCHKIT_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}--kind-bench-smoke
+  PERSIST_BENCH_DATA: ${{ github.event_name != 'pull_request' && 'true' || 'false' }}
 
 jobs:
   kind-bench-smoke:
@@ -41,6 +47,14 @@ jobs:
         with:
           memagent-repo-root: memagent
           memagent-ref: ${{ env.MEMAGENT_REF }}
+      - if: env.PERSIST_BENCH_DATA == 'true'
+        name: Start Octo11y monitor
+        id: monitor
+        uses: strawgate/octo11y/actions/monitor@main-dist
+        with:
+          run-id: ${{ env.BENCHKIT_RUN_ID }}
+          scrape-interval: 1s
+          metric-sets: cpu,memory,load,process
       - name: Install KIND
         run: |
           if ! command -v kind >/dev/null 2>&1; then
@@ -57,7 +71,22 @@ jobs:
             --collector logfwd \
             --protocol otlp_http \
             --cluster-name "${CLUSTER_NAME}" \
+            --benchkit-run-id "${BENCHKIT_RUN_ID}" \
+            --benchkit-kind "hybrid" \
             --results-dir "${BENCH_RESULTS_DIR}"
+      - if: env.PERSIST_BENCH_DATA == 'true'
+        name: Stash benchmark run
+        uses: strawgate/octo11y/actions/stash@main-dist
+        with:
+          results: ${{ env.BENCH_RESULTS_DIR }}/benchkit-run.otlp.json
+          format: otlp
+          run-id: ${{ env.BENCHKIT_RUN_ID }}
+          summary: true
+      - if: env.PERSIST_BENCH_DATA == 'true'
+        name: Trigger aggregate
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run bench-kind-aggregate.yml --repo ${{ github.repository }}
       - if: always()
         name: Publish summary
         run: |

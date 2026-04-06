@@ -1,0 +1,23 @@
+name: Bench / kind aggregate
+
+on:
+  push:
+    branches:
+      - bench-data
+    paths:
+      - 'data/runs/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  aggregate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - name: Aggregate benchmark data
+        uses: strawgate/octo11y/actions/aggregate@main-dist
+        with:
+          max-runs: 50

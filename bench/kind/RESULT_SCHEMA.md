@@ -77,7 +77,29 @@ Alongside the JSON row, each run should preserve:
 - rendered manifests applied to the cluster
 - `kubectl get all` output
 - deployment and pod descriptions
+- `benchkit-run.otlp.json` for Octo11y/Benchkit stash
 - sink pod logs
 - `actual_rows.json` in `smoke`
 - `source_rows.json` in `smoke`
 - `stream-summary.json` in `smoke`
+
+## Benchkit OTLP Projection
+
+For reporting/history, the harness also writes `benchkit-run.otlp.json`.
+
+Current projection rules:
+
+- resource attributes:
+  - `benchkit.run_id`
+  - `benchkit.kind`
+  - `benchkit.source_format=otlp`
+  - `service.name`
+- datapoint identity:
+  - `benchkit.scenario=kind/{phase}/{benchmark_mode}`
+  - `benchkit.series={collector}`
+- datapoint tags:
+  - implementation, protocol, profile, cluster, namespace, and profile knobs
+
+The OTLP document is intentionally a projection of the canonical `result.json`,
+not a second source of truth. If the two ever disagree, `result.json` is the
+debugging source and the OTLP file should be regenerated/fixed.

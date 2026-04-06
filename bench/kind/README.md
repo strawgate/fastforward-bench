@@ -6,6 +6,10 @@ The benchmark is intentionally separate from the correctness scenarios under
 `tests/e2e/`. It measures throughput-oriented Kubernetes collection behavior,
 while the scenario suite proves semantic correctness.
 
+The harness now also emits a Benchkit/Octo11y-compatible OTLP run document so
+nightly or manual runs can be stashed to `bench-data` and aggregated without a
+repo-local reporting format.
+
 ## Current Scope
 
 The harness currently supports two phases:
@@ -38,6 +42,8 @@ scores yet.
 - Sink: `logfwd` configured as a dumb capture sink writing JSON lines to a file.
 - Benchmark artifacts: JSON row, JSONL stream, summary markdown, rendered
   manifests, and `kubectl` debug output.
+- Reporting integration: `benchkit-run.otlp.json` for Octo11y
+  `stash`/`aggregate` workflows.
 - Extension seam: add collector adapters without changing the result contract.
 
 ## Profiles
@@ -106,6 +112,7 @@ Each run writes a directory under `bench/kind/results/` containing:
 
 - `result.json`
 - `results.jsonl`
+- `benchkit-run.otlp.json`
 - `summary.md`
 - `rendered-manifests/`
 - `artifacts/`
@@ -124,3 +131,18 @@ Current smoke runs should be interpreted as:
 
 See [RESULT_SCHEMA.md](./RESULT_SCHEMA.md)
 for the row contract.
+
+## Octo11y Integration
+
+The GitHub workflow at
+[bench-kind-smoke.yml](../../.github/workflows/bench-kind-smoke.yml)
+uses this OTLP run file in a Benchkit/Octo11y pipeline:
+
+- `actions/monitor` captures runner telemetry sidecars for persisted runs
+- the harness writes `benchkit-run.otlp.json`
+- `actions/stash` stores the benchmark run on `bench-data`
+- [bench-kind-aggregate.yml](../../.github/workflows/bench-kind-aggregate.yml)
+  rebuilds the derived views
+
+Pull requests still use the same smoke harness, but only scheduled or manual
+runs persist benchmark history to `bench-data`.

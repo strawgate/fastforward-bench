@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import string
 import traceback
@@ -57,6 +58,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--namespace", default="memagent-bench")
     parser.add_argument("--memagent-image", default="logfwd:e2e")
     parser.add_argument("--results-dir", default=None)
+    parser.add_argument("--benchkit-run-id", default=None)
+    parser.add_argument("--benchkit-kind", choices=["workflow", "hybrid"], default="workflow")
+    parser.add_argument("--benchkit-service-name", default="memagent-e2e.kind-bench")
     parser.add_argument("--keep-cluster", action="store_true")
     return parser.parse_args()
 
@@ -421,7 +425,20 @@ def main() -> int:
             artifacts_dir.mkdir(parents=True, exist_ok=True)
             (artifacts_dir / "artifact-collection-error.txt").write_text(str(exc), encoding="utf-8")
         finally:
-            write_result_files(results_dir, result)
+            write_result_files(
+                results_dir,
+                result,
+                benchkit_run_id=args.benchkit_run_id or benchmark_id,
+                benchkit_kind=args.benchkit_kind,
+                benchkit_service_name=args.benchkit_service_name,
+                benchkit_profile=args.profile,
+                benchkit_ref=os.environ.get("GITHUB_REF_NAME") or os.environ.get("GITHUB_REF"),
+                benchkit_commit=os.environ.get("GITHUB_SHA"),
+                benchkit_workflow=os.environ.get("GITHUB_WORKFLOW"),
+                benchkit_job=os.environ.get("GITHUB_JOB"),
+                benchkit_run_attempt=os.environ.get("GITHUB_RUN_ATTEMPT"),
+                benchkit_runner=os.environ.get("RUNNER_NAME") or os.environ.get("ImageOS"),
+            )
             if not args.keep_cluster:
                 try:
                     delete_kind_cluster(args.cluster_name)
