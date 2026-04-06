@@ -20,19 +20,13 @@ spec:
           imagePullPolicy: IfNotPresent
           command:
             - python
-            - /opt/capture/capture_http.py
+            - /opt/capture/capture_tcp.py
             - --port
-            - "8080"
+            - "9000"
             - --output-dir
             - /artifacts
           ports:
-            - containerPort: 8080
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: 8080
-            initialDelaySeconds: 1
-            periodSeconds: 2
+            - containerPort: 9000
           volumeMounts:
             - name: capture-script
               mountPath: /opt/capture
@@ -42,7 +36,7 @@ spec:
       volumes:
         - name: capture-script
           configMap:
-            name: capture-http-script
+            name: capture-tcp-script
         - name: capture-data
           emptyDir: {}
 ---
@@ -54,5 +48,5 @@ spec:
   selector:
     app: capture-receiver
   ports:
-    - port: 8080
-      targetPort: 8080
+    - port: 9000
+      targetPort: 9000

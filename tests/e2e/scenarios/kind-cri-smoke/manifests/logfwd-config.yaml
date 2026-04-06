@@ -22,6 +22,6 @@ data:
       WHERE scenario = 'kind-cri-smoke'
 
     output:
-      type: http
-      endpoint: http://capture-receiver.e2e-logfwd.svc.cluster.local:8080
+      type: tcp
+      endpoint: capture-receiver.e2e-logfwd.svc.cluster.local:9000
       format: json

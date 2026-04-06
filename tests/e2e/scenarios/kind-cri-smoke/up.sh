@@ -15,8 +15,8 @@ kind load docker-image logfwd:e2e --name "$CLUSTER_NAME"
 
 kubectl --context "$KUBE_CONTEXT" delete namespace "$NAMESPACE" --ignore-not-found --wait=false >/dev/null 2>&1 || true
 kubectl --context "$KUBE_CONTEXT" create namespace "$NAMESPACE"
-kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" create configmap capture-http-script \
-    --from-file=capture_http.py="$REPO_ROOT/tests/e2e/lib/capture_http.py"
+kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" create configmap capture-tcp-script \
+    --from-file=capture_tcp.py="$REPO_ROOT/tests/e2e/lib/capture_tcp.py"
 kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" apply -f "$SCENARIO_DIR/manifests/capture-receiver.yaml"
 kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" apply -f "$SCENARIO_DIR/manifests/logfwd-config.yaml"
 kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" apply -f "$SCENARIO_DIR/manifests/logfwd-daemonset.yaml"
