@@ -62,6 +62,13 @@ spec:
             - --config
             - /etc/vector/vector.yaml
             - --quiet
+          resources:
+            requests:
+              cpu: ${COLLECTOR_CPU_REQUEST}
+              memory: ${COLLECTOR_MEMORY_REQUEST}
+            limits:
+              cpu: ${COLLECTOR_CPU_LIMIT}
+              memory: ${COLLECTOR_MEMORY_LIMIT}
           securityContext:
             runAsNonRoot: false
             runAsUser: 0

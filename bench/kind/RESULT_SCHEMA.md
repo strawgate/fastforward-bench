@@ -19,6 +19,8 @@ land. Fields that are not collected in a phase are emitted as `null`.
 | `namespace` | string | Kubernetes namespace used by the run |
 | `collector` | string | Target collector name for the cell |
 | `protocol` | string | Sink protocol, currently `otlp_http` by default |
+| `cpu_profile` | string | CPU shaping profile, currently `single` or `multi` |
+| `cluster_cpu_limit_cores` | number | CPU cap applied to the KIND control-plane container |
 | `pods` | integer | Target emitter pod count for the profile |
 | `target_eps_per_pod` | integer | Target rate for the profile |
 | `total_target_eps` | integer | `pods * target_eps_per_pod` |
@@ -102,7 +104,7 @@ Current projection rules:
   - `benchkit.scenario=kind/{phase}/{benchmark_mode}`
   - `benchkit.series={collector}`
 - datapoint tags:
-  - implementation, protocol, profile, cluster, namespace, and profile knobs
+  - implementation, protocol, profile, cpu profile, cluster CPU cap, cluster, namespace, and profile knobs
 
 The OTLP document is intentionally a projection of the canonical `result.json`,
 not a second source of truth. If the two ever disagree, `result.json` is the

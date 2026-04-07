@@ -27,9 +27,11 @@ The harness currently supports two phases:
 
 The current smoke implementation is intentionally narrow:
 
-- collector support: `logfwd`, `otelcol`
+- collector support: `logfwd`, `otelcol`, `vector`
 - benchmark mode: `baseline-pass-through`
-- sink transport: OTLP/HTTP into a `logfwd` capture sink
+- sink transport:
+  - `logfwd`/`otelcol`: OTLP/HTTP into a `logfwd` capture sink
+  - `vector`: HTTP NDJSON into the same capture sink
 
 That means the current scores are useful for benchmarking discovery, framing,
 shipping, and loss/dup behavior under load. They are **not** parse-and-enrich
@@ -67,6 +69,18 @@ The harness ships with two named profiles:
   - `measure=120s`
   - `cooldown=10s`
 
+CPU behavior is controlled separately via `--cpu-profile`:
+
+- `single`
+  - caps the KIND control-plane container to `1` core
+  - computes stable per-pod resource requests/limits from that budget
+- `multi`
+  - caps the KIND control-plane container to `2` cores
+  - computes stable per-pod resource requests/limits from that budget
+
+Local runs default to `single`. CI runs can matrix both `single` and `multi`
+for apples-to-apples comparisons.
+
 These timing windows now have real runtime meaning in the harness:
 
 - `warmup`
@@ -93,6 +107,7 @@ python3 bench/kind/run.py \
   --phase smoke \
   --profile smoke \
   --collector logfwd \
+  --cpu-profile single \
   --cluster-name memagent-bench-smoke \
   --memagent-image logfwd:e2e \
   --results-dir bench/kind/results/local-smoke
@@ -105,6 +120,7 @@ python3 bench/kind/run.py \
   --phase infra \
   --profile smoke \
   --collector logfwd \
+  --cpu-profile single \
   --cluster-name memagent-bench-infra \
   --memagent-image logfwd:e2e \
   --results-dir bench/kind/results/local-infra

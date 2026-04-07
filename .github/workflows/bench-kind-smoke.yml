@@ -27,6 +27,15 @@ on:
           - logfwd
           - otelcol
           - vector
+      cpu_profile:
+        description: CPU profile to benchmark
+        required: false
+        type: choice
+        default: all
+        options:
+          - all
+          - single
+          - multi
 
 permissions:
   contents: write
@@ -42,15 +51,22 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       collectors: ${{ steps.plan.outputs.collectors }}
+      cpu_profiles: ${{ steps.plan.outputs.cpu_profiles }}
     steps:
       - id: plan
         env:
           INPUT_COLLECTOR: ${{ inputs.collector || 'all' }}
+          INPUT_CPU_PROFILE: ${{ inputs.cpu_profile || 'all' }}
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${INPUT_COLLECTOR}" != "all" ]]; then
             echo "collectors=[\"${INPUT_COLLECTOR}\"]" >>"$GITHUB_OUTPUT"
           else
             echo 'collectors=["logfwd","otelcol","vector"]' >>"$GITHUB_OUTPUT"
+          fi
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${INPUT_CPU_PROFILE}" != "all" ]]; then
+            echo "cpu_profiles=[\"${INPUT_CPU_PROFILE}\"]" >>"$GITHUB_OUTPUT"
+          else
+            echo 'cpu_profiles=["single","multi"]' >>"$GITHUB_OUTPUT"
           fi
 
   kind-bench-smoke:
@@ -61,19 +77,24 @@ jobs:
       fail-fast: false
       matrix:
         collector: ${{ fromJSON(needs.plan.outputs.collectors) }}
+        cpu_profile: ${{ fromJSON(needs.plan.outputs.cpu_profiles) }}
     env:
       MEMAGENT_REPO_ROOT: ${{ github.workspace }}/memagent
-      BENCH_RESULTS_DIR: ${{ github.workspace }}/bench/kind/results/smoke/${{ matrix.collector }}
-      CLUSTER_NAME: bench-smoke-${{ github.run_id }}-${{ matrix.collector }}
+      BENCH_RESULTS_DIR: ${{ github.workspace }}/bench/kind/results/smoke/${{ matrix.cpu_profile }}/${{ matrix.collector }}
+      CLUSTER_NAME: bench-smoke-${{ github.run_id }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}
       BENCH_COLLECTOR: ${{ matrix.collector }}
-      BENCHKIT_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}--kind-bench-smoke-${{ matrix.collector }}
+      BENCH_CPU_PROFILE: ${{ matrix.cpu_profile }}
+      BENCHKIT_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}--kind-bench-smoke-${{ matrix.cpu_profile }}-${{ matrix.collector }}
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - uses: actions/checkout@v6
         with:
           repository: strawgate/memagent
           ref: ${{ env.MEMAGENT_REF }}
           path: memagent
+          persist-credentials: false
       - uses: ./.github/actions/setup-memagent-build
         with:
           memagent-repo-root: memagent
@@ -95,11 +116,13 @@ jobs:
             sudo mv ./kind /usr/local/bin/kind
           fi
       - name: Run benchmark harness
+        continue-on-error: ${{ github.event_name == 'pull_request' && matrix.collector == 'vector' }}
         run: |
           python3 bench/kind/run.py \
             --phase smoke \
             --profile smoke \
             --collector "${BENCH_COLLECTOR}" \
+            --cpu-profile "${BENCH_CPU_PROFILE}" \
             --protocol otlp_http \
             --cluster-name "${CLUSTER_NAME}" \
             --benchkit-run-id "${BENCHKIT_RUN_ID}" \
@@ -128,6 +151,6 @@ jobs:
       - if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: kind-bench-smoke-${{ matrix.collector }}
+          name: kind-bench-smoke-${{ matrix.cpu_profile }}-${{ matrix.collector }}
           path: ${{ env.BENCH_RESULTS_DIR }}
           retention-days: 7
