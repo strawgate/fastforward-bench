@@ -1,8 +1,8 @@
 {
   "run": {
-    "id": "24092637090-1--kind-bench-smoke-profile-smoke-multi-otelcol",
-    "timestamp": "2026-04-07T16:32:22.000Z",
-    "commit": "8728b2520567fe55f8544ee9827159c2bc067f26",
+    "id": "24097059068-1--kind-bench-smoke-file-profile-smoke-multi-otelcol",
+    "timestamp": "2026-04-07T18:13:25.000Z",
+    "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
     "ref": "refs/heads/codex/eps-target-sweep",
     "benchmarks": 1,
     "metrics": [
@@ -33,8 +33,8 @@
       "direction": "bigger_is_better",
       "values": [
         {
-          "name": "otelcol [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]",
-          "value": 24576,
+          "name": "otelcol [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]",
+          "value": 21504,
           "unit": "events",
           "direction": "bigger_is_better",
           "tags": {
@@ -42,6 +42,7 @@
             "benchkit.cluster_cpu_limit_cores": "2.0",
             "benchkit.cpu_profile": "multi",
             "benchkit.impl": "otelcol",
+            "benchkit.ingest_mode": "file",
             "benchkit.namespace": "memagent-bench",
             "benchkit.pods": "5",
             "benchkit.profile": "smoke",
@@ -58,8 +59,8 @@
       "direction": "smaller_is_better",
       "values": [
         {
-          "name": "otelcol [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]",
-          "value": 0.027738999023551782,
+          "name": "otelcol [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]",
+          "value": 0.03210652235444971,
           "unit": "cores",
           "direction": "smaller_is_better",
           "tags": {
@@ -67,6 +68,7 @@
             "benchkit.cluster_cpu_limit_cores": "2.0",
             "benchkit.cpu_profile": "multi",
             "benchkit.impl": "otelcol",
+            "benchkit.ingest_mode": "file",
             "benchkit.namespace": "memagent-bench",
             "benchkit.pods": "5",
             "benchkit.profile": "smoke",
@@ -83,8 +85,8 @@
       "direction": "smaller_is_better",
       "values": [
         {
-          "name": "otelcol [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]",
-          "value": 0.052517216629009,
+          "name": "otelcol [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]",
+          "value": 0.07258120513829978,
           "unit": "cores",
           "direction": "smaller_is_better",
           "tags": {
@@ -92,6 +94,7 @@
             "benchkit.cluster_cpu_limit_cores": "2.0",
             "benchkit.cpu_profile": "multi",
             "benchkit.impl": "otelcol",
+            "benchkit.ingest_mode": "file",
             "benchkit.namespace": "memagent-bench",
             "benchkit.pods": "5",
             "benchkit.profile": "smoke",
@@ -108,8 +111,8 @@
       "direction": "smaller_is_better",
       "values": [
         {
-          "name": "otelcol [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]",
-          "value": 223.327880859375,
+          "name": "otelcol [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]",
+          "value": 222.31494140625,
           "unit": "MB",
           "direction": "smaller_is_better",
           "tags": {
@@ -117,6 +120,7 @@
             "benchkit.cluster_cpu_limit_cores": "2.0",
             "benchkit.cpu_profile": "multi",
             "benchkit.impl": "otelcol",
+            "benchkit.ingest_mode": "file",
             "benchkit.namespace": "memagent-bench",
             "benchkit.pods": "5",
             "benchkit.profile": "smoke",
@@ -133,8 +137,8 @@
       "direction": "smaller_is_better",
       "values": [
         {
-          "name": "otelcol [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]",
-          "value": 223.4033203125,
+          "name": "otelcol [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]",
+          "value": 228.654296875,
           "unit": "MB",
           "direction": "smaller_is_better",
           "tags": {
@@ -142,6 +146,7 @@
             "benchkit.cluster_cpu_limit_cores": "2.0",
             "benchkit.cpu_profile": "multi",
             "benchkit.impl": "otelcol",
+            "benchkit.ingest_mode": "file",
             "benchkit.namespace": "memagent-bench",
             "benchkit.pods": "5",
             "benchkit.profile": "smoke",
@@ -158,7 +163,7 @@
       "direction": "smaller_is_better",
       "values": [
         {
-          "name": "otelcol [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]",
+          "name": "otelcol [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]",
           "value": 0,
           "unit": "events",
           "direction": "smaller_is_better",
@@ -167,6 +172,7 @@
             "benchkit.cluster_cpu_limit_cores": "2.0",
             "benchkit.cpu_profile": "multi",
             "benchkit.impl": "otelcol",
+            "benchkit.ingest_mode": "file",
             "benchkit.namespace": "memagent-bench",
             "benchkit.pods": "5",
             "benchkit.profile": "smoke",
@@ -183,7 +189,7 @@
       "direction": "smaller_is_better",
       "values": [
         {
-          "name": "otelcol [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]",
+          "name": "otelcol [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]",
           "value": 0,
           "unit": "events",
           "direction": "smaller_is_better",
@@ -192,6 +198,7 @@
             "benchkit.cluster_cpu_limit_cores": "2.0",
             "benchkit.cpu_profile": "multi",
             "benchkit.impl": "otelcol",
+            "benchkit.ingest_mode": "file",
             "benchkit.namespace": "memagent-bench",
             "benchkit.pods": "5",
             "benchkit.profile": "smoke",
@@ -208,8 +215,8 @@
       "direction": "bigger_is_better",
       "values": [
         {
-          "name": "otelcol [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]",
-          "value": 24576,
+          "name": "otelcol [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]",
+          "value": 21504,
           "unit": "events",
           "direction": "bigger_is_better",
           "tags": {
@@ -217,6 +224,7 @@
             "benchkit.cluster_cpu_limit_cores": "2.0",
             "benchkit.cpu_profile": "multi",
             "benchkit.impl": "otelcol",
+            "benchkit.ingest_mode": "file",
             "benchkit.namespace": "memagent-bench",
             "benchkit.pods": "5",
             "benchkit.profile": "smoke",
@@ -233,7 +241,7 @@
       "direction": "smaller_is_better",
       "values": [
         {
-          "name": "otelcol [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]",
+          "name": "otelcol [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]",
           "value": 0,
           "unit": "events",
           "direction": "smaller_is_better",
@@ -242,6 +250,7 @@
             "benchkit.cluster_cpu_limit_cores": "2.0",
             "benchkit.cpu_profile": "multi",
             "benchkit.impl": "otelcol",
+            "benchkit.ingest_mode": "file",
             "benchkit.namespace": "memagent-bench",
             "benchkit.pods": "5",
             "benchkit.profile": "smoke",
@@ -258,7 +267,7 @@
       "direction": "smaller_is_better",
       "values": [
         {
-          "name": "otelcol [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]",
+          "name": "otelcol [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]",
           "value": 0,
           "unit": "sources",
           "direction": "smaller_is_better",
@@ -267,6 +276,7 @@
             "benchkit.cluster_cpu_limit_cores": "2.0",
             "benchkit.cpu_profile": "multi",
             "benchkit.impl": "otelcol",
+            "benchkit.ingest_mode": "file",
             "benchkit.namespace": "memagent-bench",
             "benchkit.pods": "5",
             "benchkit.profile": "smoke",
@@ -283,8 +293,8 @@
       "direction": "bigger_is_better",
       "values": [
         {
-          "name": "otelcol [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]",
-          "value": 541.211626961954,
+          "name": "otelcol [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]",
+          "value": 537.1283535954295,
           "unit": "events/sec",
           "direction": "bigger_is_better",
           "tags": {
@@ -292,6 +302,7 @@
             "benchkit.cluster_cpu_limit_cores": "2.0",
             "benchkit.cpu_profile": "multi",
             "benchkit.impl": "otelcol",
+            "benchkit.ingest_mode": "file",
             "benchkit.namespace": "memagent-bench",
             "benchkit.pods": "5",
             "benchkit.profile": "smoke",
@@ -308,8 +319,8 @@
       "direction": "bigger_is_better",
       "values": [
         {
-          "name": "otelcol [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]",
-          "value": 1013.2882849534627,
+          "name": "otelcol [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]",
+          "value": 0,
           "unit": "events/sec",
           "direction": "bigger_is_better",
           "tags": {
@@ -317,6 +328,7 @@
             "benchkit.cluster_cpu_limit_cores": "2.0",
             "benchkit.cpu_profile": "multi",
             "benchkit.impl": "otelcol",
+            "benchkit.ingest_mode": "file",
             "benchkit.namespace": "memagent-bench",
             "benchkit.pods": "5",
             "benchkit.profile": "smoke",
@@ -333,8 +345,8 @@
       "direction": "bigger_is_better",
       "values": [
         {
-          "name": "otelcol [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]",
-          "value": 1016.5119124473356,
+          "name": "otelcol [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]",
+          "value": 2332.6116460056405,
           "unit": "events/sec",
           "direction": "bigger_is_better",
           "tags": {
@@ -342,6 +354,7 @@
             "benchkit.cluster_cpu_limit_cores": "2.0",
             "benchkit.cpu_profile": "multi",
             "benchkit.impl": "otelcol",
+            "benchkit.ingest_mode": "file",
             "benchkit.namespace": "memagent-bench",
             "benchkit.pods": "5",
             "benchkit.profile": "smoke",
@@ -358,8 +371,8 @@
       "direction": "bigger_is_better",
       "values": [
         {
-          "name": "otelcol [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]",
-          "value": 1016.5704066483142,
+          "name": "otelcol [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]",
+          "value": 2899.9022649951016,
           "unit": "events/sec",
           "direction": "bigger_is_better",
           "tags": {
@@ -367,6 +380,7 @@
             "benchkit.cluster_cpu_limit_cores": "2.0",
             "benchkit.cpu_profile": "multi",
             "benchkit.impl": "otelcol",
+            "benchkit.ingest_mode": "file",
             "benchkit.namespace": "memagent-bench",
             "benchkit.pods": "5",
             "benchkit.profile": "smoke",
@@ -383,7 +397,7 @@
       "direction": "bigger_is_better",
       "values": [
         {
-          "name": "otelcol [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]",
+          "name": "otelcol [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]",
           "value": 8196,
           "unit": "events",
           "direction": "bigger_is_better",
@@ -392,6 +406,7 @@
             "benchkit.cluster_cpu_limit_cores": "2.0",
             "benchkit.cpu_profile": "multi",
             "benchkit.impl": "otelcol",
+            "benchkit.ingest_mode": "file",
             "benchkit.namespace": "memagent-bench",
             "benchkit.pods": "5",
             "benchkit.profile": "smoke",
@@ -408,8 +423,8 @@
       "direction": "bigger_is_better",
       "values": [
         {
-          "name": "otelcol [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]",
-          "value": 25258,
+          "name": "otelcol [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]",
+          "value": 22175,
           "unit": "events",
           "direction": "bigger_is_better",
           "tags": {
@@ -417,6 +432,7 @@
             "benchkit.cluster_cpu_limit_cores": "2.0",
             "benchkit.cpu_profile": "multi",
             "benchkit.impl": "otelcol",
+            "benchkit.ingest_mode": "file",
             "benchkit.namespace": "memagent-bench",
             "benchkit.pods": "5",
             "benchkit.profile": "smoke",
@@ -433,8 +449,8 @@
       "direction": "bigger_is_better",
       "values": [
         {
-          "name": "otelcol [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]",
-          "value": 24576,
+          "name": "otelcol [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]",
+          "value": 21504,
           "unit": "events",
           "direction": "bigger_is_better",
           "tags": {
@@ -442,6 +458,7 @@
             "benchkit.cluster_cpu_limit_cores": "2.0",
             "benchkit.cpu_profile": "multi",
             "benchkit.impl": "otelcol",
+            "benchkit.ingest_mode": "file",
             "benchkit.namespace": "memagent-bench",
             "benchkit.pods": "5",
             "benchkit.profile": "smoke",
@@ -458,7 +475,7 @@
       "direction": "smaller_is_better",
       "values": [
         {
-          "name": "otelcol [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]",
+          "name": "otelcol [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]",
           "value": 0,
           "unit": "events",
           "direction": "smaller_is_better",
@@ -467,6 +484,7 @@
             "benchkit.cluster_cpu_limit_cores": "2.0",
             "benchkit.cpu_profile": "multi",
             "benchkit.impl": "otelcol",
+            "benchkit.ingest_mode": "file",
             "benchkit.namespace": "memagent-bench",
             "benchkit.pods": "5",
             "benchkit.profile": "smoke",

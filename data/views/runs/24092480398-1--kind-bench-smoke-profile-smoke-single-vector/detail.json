@@ -1,7 +1,7 @@
 {
   "run": {
     "id": "24092480398-1--kind-bench-smoke-profile-smoke-single-vector",
-    "timestamp": "2026-04-07T17:37:00.983Z",
+    "timestamp": "2026-04-07T18:17:20.151Z",
     "commit": "e353482c67c2e71ff4deb7fd37212264e976922d",
     "ref": "refs/heads/codex/eps-target-sweep",
     "benchmarks": 0,
