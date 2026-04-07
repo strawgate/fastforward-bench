@@ -178,6 +178,12 @@
           "value": 0,
           "commit": "422dccb19b8c94bce9eab4ea62bcdb5f34a5e447",
           "run_id": "24085144632-1--kind-bench-smoke-single-logfwd"
+        },
+        {
+          "timestamp": "2026-04-07T14:28:07.000Z",
+          "value": 0,
+          "commit": "84970602417d6f16a53feb704d9bc55907136bb1",
+          "run_id": "24086735572-1--kind-bench-smoke-single-logfwd"
         }
       ]
     },

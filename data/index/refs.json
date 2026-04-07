@@ -1,10 +1,10 @@
 [
   {
     "ref": "refs/heads/codex/nightly-eps-report",
-    "latestRunId": "24085144632-1--kind-bench-smoke-single-logfwd",
-    "latestTimestamp": "2026-04-07T13:55:03.000Z",
-    "latestCommit": "422dccb19b8c94bce9eab4ea62bcdb5f34a5e447",
-    "runCount": 2
+    "latestRunId": "24086735572-1--kind-bench-smoke-single-logfwd",
+    "latestTimestamp": "2026-04-07T14:28:07.000Z",
+    "latestCommit": "84970602417d6f16a53feb704d9bc55907136bb1",
+    "runCount": 3
   },
   {
     "ref": "refs/heads/master",
