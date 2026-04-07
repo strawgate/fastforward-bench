@@ -62,7 +62,7 @@ jobs:
   otlp-output-oracle:
     uses: ./.github/workflows/e2e-otlp-output-oracle.yml
     with:
-      memagent_ref: ${{ inputs.memagent_ref || 'master' }}
+      memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit
 
   summarize:
