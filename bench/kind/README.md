@@ -199,9 +199,14 @@ Pull requests still use the same smoke harness, but only scheduled or manual
 runs persist benchmark history to `bench-data`.
 
 Nightly scheduled runs publish a benchmark suite summary (`bench-summary.md`)
-with EPS-oriented tables. The nightly workflow upserts that summary into the
-`Bench Nightly EPS Report` issue so trend checks stay visible without opening
-run artifacts.
+with EPS-oriented tables. Reporting now uses rotating live issues with status in
+the title and suite labels:
+
+- schedule runs: `Bench Nightly EPS Report` (`report:bench-nightly-eps`)
+- manual workflow runs: `Bench Competitive Benchmarks Report`
+  (`report:bench-competitive`)
+
+Each new report issue auto-links and closes the prior live issue for that suite.
 
 The benchmark workflow also supports target EPS sweeps:
 

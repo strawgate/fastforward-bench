@@ -322,12 +322,29 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: gh workflow run bench-kind-aggregate.yml --repo ${{ github.repository }}
       - if: github.event_name != 'pull_request'
-        name: Upsert nightly benchmark issue
+        id: issue_meta
+        name: Compute benchmark issue metadata
+        run: |
+          if [[ "${GITHUB_EVENT_NAME}" == "schedule" ]]; then
+            {
+              echo "title_base=Bench Nightly EPS Report"
+              echo "suite_key=bench-nightly-eps"
+              echo "labels=live-suite-report,report:bench,report:bench-nightly-eps"
+            } >>"$GITHUB_OUTPUT"
+          else
+            {
+              echo "title_base=Bench Competitive Benchmarks Report"
+              echo "suite_key=bench-competitive"
+              echo "labels=live-suite-report,report:bench,report:bench-competitive"
+            } >>"$GITHUB_OUTPUT"
+          fi
+      - if: github.event_name != 'pull_request'
+        name: Upsert benchmark issue
         env:
           GH_TOKEN: ${{ github.token }}
-          ISSUE_TITLE_BASE: Bench Nightly EPS Report
+          ISSUE_TITLE_BASE: ${{ steps.issue_meta.outputs.title_base }}
           ISSUE_BODY_FILE: ${{ github.workspace }}/bench-summary.md
           ISSUE_SUMMARY_JSON_FILE: ${{ github.workspace }}/bench-summary.json
-          ISSUE_SUITE_KEY: bench-nightly-eps
-          ISSUE_LABELS: live-suite-report,report:bench,report:bench-nightly-eps
+          ISSUE_SUITE_KEY: ${{ steps.issue_meta.outputs.suite_key }}
+          ISSUE_LABELS: ${{ steps.issue_meta.outputs.labels }}
         run: tests/e2e/lib/upsert_issue.sh

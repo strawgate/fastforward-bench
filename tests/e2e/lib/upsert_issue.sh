@@ -140,7 +140,7 @@ trap 'rm -f "${issue_body_with_meta}"' EXIT
     echo "<!-- live-suite-updated:${GITHUB_RUN_ID:-unknown} -->"
     echo ""
     if [[ "${existing_issue_count}" -gt 0 ]]; then
-        echo "Supersedes: $(printf '#%s ' "${existing_issue_numbers[@]}" | sed 's/[[:space:]]$//')"
+        echo "Supersedes: $(printf '#%s ' "${existing_issue_numbers[@]-}" | sed 's/[[:space:]]$//')"
         echo ""
     fi
     cat "${ISSUE_BODY_FILE}"
@@ -161,6 +161,9 @@ new_issue_url="$(
 new_issue_number="${new_issue_url##*/}"
 
 for old_issue in "${existing_issue_numbers[@]-}"; do
+    if [[ -z "${old_issue}" ]]; then
+        continue
+    fi
     if [[ "${old_issue}" == "${new_issue_number}" ]]; then
         continue
     fi
