@@ -175,7 +175,7 @@ jobs:
       - if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: kind-bench-smoke-${{ matrix.cpu_profile }}-${{ matrix.collector }}
+          name: kind-bench-${{ needs.plan.outputs.bench_profile }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}
           path: ${{ env.BENCH_RESULTS_DIR }}
           retention-days: 7
 
