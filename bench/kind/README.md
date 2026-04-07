@@ -219,6 +219,8 @@ Each new report issue auto-links and closes the prior live issue for that suite.
 
 The benchmark workflow also supports target EPS sweeps:
 
+- `t1m`: single high-rate lane for fast tuning loops
+- `high`: two high-rate lanes (`t100k`, `t1m`) for quick capacity checks
 - `ladder`: `1, 10, 100, 500, 1k, 10k, 100k, 1m`
 - `max`: unbounded generator mode (`eps_per_pod=0`) for
   "fast as the current resource allocation allows"

@@ -32,6 +32,8 @@ on:
         default: profile
         options:
           - profile
+          - high
+          - t1m
           - ladder
           - ladder_and_max
           - max
@@ -108,6 +110,12 @@ jobs:
               else
                 echo 'workloads=[{"label":"profile-smoke","pods":5,"eps_per_pod":100}]' >>"$GITHUB_OUTPUT"
               fi
+              ;;
+            high)
+              echo 'workloads=[{"label":"t100k","pods":1,"eps_per_pod":100000},{"label":"t1m","pods":1,"eps_per_pod":1000000}]' >>"$GITHUB_OUTPUT"
+              ;;
+            t1m)
+              echo 'workloads=[{"label":"t1m","pods":1,"eps_per_pod":1000000}]' >>"$GITHUB_OUTPUT"
               ;;
             ladder)
               echo 'workloads=[{"label":"t1","pods":1,"eps_per_pod":1},{"label":"t10","pods":1,"eps_per_pod":10},{"label":"t100","pods":1,"eps_per_pod":100},{"label":"t500","pods":1,"eps_per_pod":500},{"label":"t1k","pods":1,"eps_per_pod":1000},{"label":"t10k","pods":1,"eps_per_pod":10000},{"label":"t100k","pods":1,"eps_per_pod":100000},{"label":"t1m","pods":1,"eps_per_pod":1000000}]' >>"$GITHUB_OUTPUT"
