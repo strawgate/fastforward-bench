@@ -185,3 +185,8 @@ uses this OTLP run file in a Benchkit/Octo11y pipeline:
 
 Pull requests still use the same smoke harness, but only scheduled or manual
 runs persist benchmark history to `bench-data`.
+
+Nightly scheduled runs use the `default` benchmark profile and also publish a
+benchmark suite summary (`bench-summary.md`) with EPS-oriented tables. The
+nightly workflow upserts that summary into the `Bench Nightly EPS Report`
+issue so trend checks stay visible without opening run artifacts.

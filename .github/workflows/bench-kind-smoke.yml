@@ -17,6 +17,14 @@ on:
         required: false
         type: string
         default: main
+      profile:
+        description: benchmark workload profile
+        required: false
+        type: choice
+        default: smoke
+        options:
+          - smoke
+          - default
       collector:
         description: collector adapter to benchmark
         required: false
@@ -40,6 +48,7 @@ on:
 permissions:
   contents: write
   actions: write
+  issues: write
   packages: read
 
 env:
@@ -50,14 +59,21 @@ jobs:
   plan:
     runs-on: ubuntu-latest
     outputs:
+      bench_profile: ${{ steps.plan.outputs.bench_profile }}
       collectors: ${{ steps.plan.outputs.collectors }}
       cpu_profiles: ${{ steps.plan.outputs.cpu_profiles }}
     steps:
       - id: plan
         env:
+          INPUT_PROFILE: ${{ inputs.profile || 'smoke' }}
           INPUT_COLLECTOR: ${{ inputs.collector || 'all' }}
           INPUT_CPU_PROFILE: ${{ inputs.cpu_profile || 'all' }}
         run: |
+          if [[ "${{ github.event_name }}" == "schedule" ]]; then
+            echo 'bench_profile=default' >>"$GITHUB_OUTPUT"
+          else
+            echo "bench_profile=${INPUT_PROFILE}" >>"$GITHUB_OUTPUT"
+          fi
           if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${INPUT_COLLECTOR}" != "all" ]]; then
             echo "collectors=[\"${INPUT_COLLECTOR}\"]" >>"$GITHUB_OUTPUT"
           else
@@ -72,7 +88,7 @@ jobs:
   kind-bench-smoke:
     needs: plan
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
@@ -80,11 +96,12 @@ jobs:
         cpu_profile: ${{ fromJSON(needs.plan.outputs.cpu_profiles) }}
     env:
       MEMAGENT_REPO_ROOT: ${{ github.workspace }}/memagent
-      BENCH_RESULTS_DIR: ${{ github.workspace }}/bench/kind/results/smoke/${{ matrix.cpu_profile }}/${{ matrix.collector }}
-      CLUSTER_NAME: bench-smoke-${{ github.run_id }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}
+      BENCH_PROFILE: ${{ needs.plan.outputs.bench_profile }}
+      BENCH_RESULTS_DIR: ${{ github.workspace }}/bench/kind/results/${{ needs.plan.outputs.bench_profile }}/${{ matrix.cpu_profile }}/${{ matrix.collector }}
+      CLUSTER_NAME: bench-${{ needs.plan.outputs.bench_profile }}-${{ github.run_id }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}
       BENCH_COLLECTOR: ${{ matrix.collector }}
       BENCH_CPU_PROFILE: ${{ matrix.cpu_profile }}
-      BENCHKIT_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}--kind-bench-smoke-${{ matrix.cpu_profile }}-${{ matrix.collector }}
+      BENCHKIT_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}--kind-bench-${{ needs.plan.outputs.bench_profile }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -120,7 +137,7 @@ jobs:
         run: |
           python3 bench/kind/run.py \
             --phase smoke \
-            --profile smoke \
+            --profile "${BENCH_PROFILE}" \
             --collector "${BENCH_COLLECTOR}" \
             --cpu-profile "${BENCH_CPU_PROFILE}" \
             --protocol otlp_http \
@@ -161,3 +178,42 @@ jobs:
           name: kind-bench-smoke-${{ matrix.cpu_profile }}-${{ matrix.collector }}
           path: ${{ env.BENCH_RESULTS_DIR }}
           retention-days: 7
+
+  summarize:
+    if: always() && github.event_name != 'pull_request'
+    needs:
+      - plan
+      - kind-bench-smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Render benchmark summary
+        run: |
+          python3 bench/kind/render_issue_summary.py \
+            --artifacts-root artifacts \
+            --suite-name "Bench Nightly EPS" \
+            --suite-key kind-bench-${{ needs.plan.outputs.bench_profile }} \
+            --memagent-ref "${MEMAGENT_REF}" \
+            --bench-profile "${{ needs.plan.outputs.bench_profile }}" \
+            --run-url "https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+            --output-markdown bench-summary.md \
+            --output-json bench-summary.json
+      - name: Publish benchmark summary
+        run: cat bench-summary.md >>"$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bench-kind-summary
+          path: |
+            bench-summary.md
+            bench-summary.json
+          retention-days: 7
+      - if: github.event_name == 'schedule'
+        name: Upsert nightly benchmark issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_TITLE: Bench Nightly EPS Report
+          ISSUE_BODY_FILE: ${{ github.workspace }}/bench-summary.md
+        run: tests/e2e/lib/upsert_issue.sh
