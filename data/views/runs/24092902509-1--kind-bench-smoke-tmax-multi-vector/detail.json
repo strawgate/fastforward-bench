@@ -1,7 +1,7 @@
 {
   "run": {
     "id": "24092902509-1--kind-bench-smoke-tmax-multi-vector",
-    "timestamp": "2026-04-07T22:32:04.332Z",
+    "timestamp": "2026-04-07T23:15:17.166Z",
     "commit": "8728b2520567fe55f8544ee9827159c2bc067f26",
     "ref": "refs/heads/codex/eps-target-sweep",
     "benchmarks": 0,
