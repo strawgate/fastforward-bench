@@ -426,12 +426,14 @@ def render_manifests(
     benchmark_id: str,
     rendered_dir: Path,
 ) -> dict[str, Path]:
+    generator_batch_size = 64 if profile.eps_per_pod == 0 else 1024
     substitutions = {
         "NAMESPACE": args.namespace,
         "MEMAGENT_IMAGE": args.memagent_image,
         "COLLECTOR_IMAGE": args.collector_image or adapter.collector_image or args.memagent_image,
         "BENCHMARK_ID": benchmark_id,
         "EPS_PER_POD": str(profile.eps_per_pod),
+        "GENERATOR_BATCH_SIZE": str(generator_batch_size),
         "POD_REPLICAS": str(profile.pods),
         "COLLECTOR_CPU_REQUEST": resource_plan.collector_cpu,
         "COLLECTOR_CPU_LIMIT": resource_plan.collector_cpu,

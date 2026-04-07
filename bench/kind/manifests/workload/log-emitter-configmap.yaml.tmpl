@@ -11,7 +11,7 @@ data:
       type: generator
       generator:
         events_per_sec: ${EPS_PER_POD}
-        batch_size: 1024
+        batch_size: ${GENERATOR_BATCH_SIZE}
         profile: record
         attributes:
           benchmark_id: ${BENCHMARK_ID}
