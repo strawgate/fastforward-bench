@@ -21,11 +21,29 @@ data:
     import os
     from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
     from pathlib import Path
+    from threading import Lock
 
     benchmark_id = os.environ.get("BENCHMARK_ID")
     capture_path = Path("/var/lib/logfwd/capture.ndjson")
+    capture_lock = Lock()
 
     class Handler(BaseHTTPRequestHandler):
+      def do_POST(self):
+        if self.path != "/ingest":
+          self.send_response(404)
+          self.end_headers()
+          return
+        length = int(self.headers.get("Content-Length", "0") or 0)
+        body = self.rfile.read(length)
+        if body:
+          if not body.endswith(b"\n"):
+            body += b"\n"
+          with capture_lock:
+            with capture_path.open("ab") as handle:
+              handle.write(body)
+        self.send_response(200)
+        self.end_headers()
+
       def do_GET(self):
         if self.path != "/stats":
           self.send_response(404)

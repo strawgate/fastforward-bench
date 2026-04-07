@@ -9,7 +9,7 @@ on:
         description: memagent branch, tag, or SHA to test
         required: false
         type: string
-        default: master
+        default: main
 
 concurrency:
   group: e2e-nightly-${{ github.head_ref || github.run_id }}
@@ -22,61 +22,61 @@ permissions:
   packages: read
 
 env:
-  MEMAGENT_REF: ${{ inputs.memagent_ref || 'master' }}
+  MEMAGENT_REF: ${{ inputs.memagent_ref || 'main' }}
 
 jobs:
   kind-cri-smoke:
     uses: ./.github/workflows/e2e-kind-cri-smoke.yml
     with:
-      memagent_ref: ${{ inputs.memagent_ref || 'master' }}
+      memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit
 
   compose-redis:
     uses: ./.github/workflows/e2e-compose-redis.yml
     with:
-      memagent_ref: ${{ inputs.memagent_ref || 'master' }}
+      memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit
 
   compose-memcached:
     uses: ./.github/workflows/e2e-compose-memcached.yml
     with:
-      memagent_ref: ${{ inputs.memagent_ref || 'master' }}
+      memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit
 
   compose-nginx:
     uses: ./.github/workflows/e2e-compose-nginx.yml
     with:
-      memagent_ref: ${{ inputs.memagent_ref || 'master' }}
+      memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit
 
   compose-synthetic-multiline:
     uses: ./.github/workflows/e2e-compose-synthetic-multiline.yml
     with:
-      memagent_ref: ${{ inputs.memagent_ref || 'master' }}
+      memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit
 
   compose-synthetic-burst:
     uses: ./.github/workflows/e2e-compose-synthetic-burst.yml
     with:
-      memagent_ref: ${{ inputs.memagent_ref || 'master' }}
+      memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit
 
   compose-synthetic-rotation:
     uses: ./.github/workflows/e2e-compose-synthetic-rotation.yml
     with:
-      memagent_ref: ${{ inputs.memagent_ref || 'master' }}
+      memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit
 
   otlp-output-oracle:
     uses: ./.github/workflows/e2e-otlp-output-oracle.yml
     with:
-      memagent_ref: ${{ inputs.memagent_ref || 'master' }}
+      memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit
 
   otlp-input-oracle:
     uses: ./.github/workflows/e2e-otlp-input-oracle.yml
     with:
-      memagent_ref: ${{ inputs.memagent_ref || 'master' }}
+      memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit
 
   summarize:

@@ -90,7 +90,15 @@ def get_pod_names(namespace: str, selector: str) -> list[str]:
     return [line.strip() for line in completed.stdout.splitlines() if line.strip()]
 
 
-def collect_debug_artifacts(results_dir: Path, namespace: str, deployment: str, selector: str) -> None:
+def collect_debug_artifacts(
+    results_dir: Path,
+    namespace: str,
+    deployment: str,
+    selector: str,
+    *,
+    collector_selector: str | None = None,
+    emitter_selector: str | None = None,
+) -> None:
     artifacts_dir = results_dir / "artifacts"
     artifacts_dir.mkdir(parents=True, exist_ok=True)
 
@@ -116,6 +124,39 @@ def collect_debug_artifacts(results_dir: Path, namespace: str, deployment: str, 
             completed = subprocess.run(command, text=True, capture_output=True, check=False)
             output = completed.stdout if completed.stdout else completed.stderr
             (artifacts_dir / suffix).write_text(output, encoding="utf-8")
+
+    if collector_selector:
+        collector_pods = get_pod_names(namespace, collector_selector)
+        for pod_name in collector_pods:
+            slug = pod_name.replace("/", "_")
+            for suffix, command in {
+                f"collector-{slug}-describe.txt": ["kubectl", "-n", namespace, "describe", "pod", pod_name],
+                f"collector-{slug}-logs.txt": ["kubectl", "-n", namespace, "logs", pod_name, "--all-containers=true"],
+            }.items():
+                completed = subprocess.run(command, text=True, capture_output=True, check=False)
+                output = completed.stdout if completed.stdout else completed.stderr
+                (artifacts_dir / suffix).write_text(output, encoding="utf-8")
+
+    if emitter_selector:
+        emitter_pods = get_pod_names(namespace, emitter_selector)
+        for pod_name in emitter_pods:
+            slug = pod_name.replace("/", "_")
+            for suffix, command in {
+                f"emitter-{slug}-describe.txt": ["kubectl", "-n", namespace, "describe", "pod", pod_name],
+                f"emitter-{slug}-logs.txt": ["kubectl", "-n", namespace, "logs", pod_name, "--all-containers=true"],
+                f"emitter-{slug}-previous-logs.txt": [
+                    "kubectl",
+                    "-n",
+                    namespace,
+                    "logs",
+                    pod_name,
+                    "--all-containers=true",
+                    "--previous",
+                ],
+            }.items():
+                completed = subprocess.run(command, text=True, capture_output=True, check=False)
+                output = completed.stdout if completed.stdout else completed.stderr
+                (artifacts_dir / suffix).write_text(output, encoding="utf-8")
 
 
 def wait_for_namespace(namespace: str, timeout_sec: int = 15) -> None:

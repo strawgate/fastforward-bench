@@ -4,13 +4,22 @@ on:
   pull_request:
     branches: [master]
     types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - 'tests/e2e/**'
+      - '.github/workflows/e2e-*.yml'
+      - '.github/workflows/_scenario-*.yml'
+      - '.github/actions/collect-e2e-artifacts/**'
+      - '.github/actions/publish-e2e-summary/**'
+      - '.github/actions/setup-compose/**'
+      - '.github/actions/setup-kind/**'
+      - '.github/actions/setup-memagent-build/**'
   workflow_dispatch:
     inputs:
       memagent_ref:
         description: memagent branch, tag, or SHA to test
         required: false
         type: string
-        default: master
+        default: main
 
 concurrency:
   group: e2e-smoke-${{ github.head_ref || github.run_id }}
@@ -23,31 +32,31 @@ permissions:
   packages: read
 
 env:
-  MEMAGENT_REF: ${{ inputs.memagent_ref || 'master' }}
+  MEMAGENT_REF: ${{ inputs.memagent_ref || 'main' }}
 
 jobs:
   kind-cri-smoke:
     uses: ./.github/workflows/e2e-kind-cri-smoke.yml
     with:
-      memagent_ref: ${{ inputs.memagent_ref || 'master' }}
+      memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit
 
   compose-redis:
     uses: ./.github/workflows/e2e-compose-redis.yml
     with:
-      memagent_ref: ${{ inputs.memagent_ref || 'master' }}
+      memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit
 
   compose-nginx:
     uses: ./.github/workflows/e2e-compose-nginx.yml
     with:
-      memagent_ref: ${{ inputs.memagent_ref || 'master' }}
+      memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit
 
   compose-synthetic-multiline:
     uses: ./.github/workflows/e2e-compose-synthetic-multiline.yml
     with:
-      memagent_ref: ${{ inputs.memagent_ref || 'master' }}
+      memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit
 
   otlp-output-oracle:

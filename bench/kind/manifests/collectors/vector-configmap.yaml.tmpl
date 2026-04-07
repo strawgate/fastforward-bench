@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vector-bench-collector-config
+  namespace: ${NAMESPACE}
+data:
+  vector.yaml: |
+    data_dir: /vector-data-dir
+    api:
+      enabled: true
+      address: 0.0.0.0:8686
+
+    sources:
+      kubernetes_logs:
+        type: kubernetes_logs
+        read_from: beginning
+        oldest_first: true
+        glob_minimum_cooldown_ms: 1000
+      internal_metrics:
+        type: internal_metrics
+        scrape_interval_secs: 1
+
+    transforms:
+      bench_parse:
+        type: remap
+        inputs: ["kubernetes_logs"]
+        source: |
+          if !starts_with(string!(.message), "{") {
+            abort
+          }
+
+          . = object!(parse_json!(string!(.message)))
+
+    sinks:
+      bench_out:
+        type: http
+        inputs: ["bench_parse"]
+        uri: http://logfwd-capture.${NAMESPACE}.svc.cluster.local:8081/ingest
+        method: post
+        encoding:
+          codec: json
+        framing:
+          method: newline_delimited
+        batch:
+          max_bytes: 1048576
+          timeout_secs: 1
+        healthcheck:
+          enabled: false
+
+      prom_exporter:
+        type: prometheus_exporter
+        inputs: ["internal_metrics"]
+        address: 0.0.0.0:9090
