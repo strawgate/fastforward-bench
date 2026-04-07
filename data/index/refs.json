@@ -1,5 +1,12 @@
 [
   {
+    "ref": "refs/heads/codex/eps-target-sweep",
+    "latestRunId": "24088165741-1--kind-bench-smoke-target-max-single-logfwd",
+    "latestTimestamp": "2026-04-07T15:00:51.104Z",
+    "latestCommit": "c9277487896b5a0510f17051418961868ff70cd6",
+    "runCount": 1
+  },
+  {
     "ref": "refs/heads/codex/nightly-eps-report",
     "latestRunId": "24086735572-1--kind-bench-smoke-single-logfwd",
     "latestTimestamp": "2026-04-07T14:28:07.000Z",
