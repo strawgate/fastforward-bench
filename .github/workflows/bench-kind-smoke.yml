@@ -102,16 +102,16 @@ jobs:
               fi
               ;;
             ladder)
-              echo 'workloads=[{"label":"target-1","pods":1,"eps_per_pod":1},{"label":"target-10","pods":1,"eps_per_pod":10},{"label":"target-100","pods":1,"eps_per_pod":100},{"label":"target-1000","pods":1,"eps_per_pod":1000},{"label":"target-10000","pods":1,"eps_per_pod":10000},{"label":"target-100000","pods":1,"eps_per_pod":100000},{"label":"target-1000000","pods":1,"eps_per_pod":1000000}]' >>"$GITHUB_OUTPUT"
-              echo 'aggregate_trigger_label=target-1' >>"$GITHUB_OUTPUT"
+              echo 'workloads=[{"label":"t1","pods":1,"eps_per_pod":1},{"label":"t10","pods":1,"eps_per_pod":10},{"label":"t100","pods":1,"eps_per_pod":100},{"label":"t1k","pods":1,"eps_per_pod":1000},{"label":"t10k","pods":1,"eps_per_pod":10000},{"label":"t100k","pods":1,"eps_per_pod":100000},{"label":"t1m","pods":1,"eps_per_pod":1000000}]' >>"$GITHUB_OUTPUT"
+              echo 'aggregate_trigger_label=t1' >>"$GITHUB_OUTPUT"
               ;;
             ladder_and_max)
-              echo 'workloads=[{"label":"target-1","pods":1,"eps_per_pod":1},{"label":"target-10","pods":1,"eps_per_pod":10},{"label":"target-100","pods":1,"eps_per_pod":100},{"label":"target-1000","pods":1,"eps_per_pod":1000},{"label":"target-10000","pods":1,"eps_per_pod":10000},{"label":"target-100000","pods":1,"eps_per_pod":100000},{"label":"target-1000000","pods":1,"eps_per_pod":1000000},{"label":"target-max","pods":1,"eps_per_pod":2000000}]' >>"$GITHUB_OUTPUT"
-              echo 'aggregate_trigger_label=target-max' >>"$GITHUB_OUTPUT"
+              echo 'workloads=[{"label":"t1","pods":1,"eps_per_pod":1},{"label":"t10","pods":1,"eps_per_pod":10},{"label":"t100","pods":1,"eps_per_pod":100},{"label":"t1k","pods":1,"eps_per_pod":1000},{"label":"t10k","pods":1,"eps_per_pod":10000},{"label":"t100k","pods":1,"eps_per_pod":100000},{"label":"t1m","pods":1,"eps_per_pod":1000000},{"label":"tmax","pods":1,"eps_per_pod":2000000}]' >>"$GITHUB_OUTPUT"
+              echo 'aggregate_trigger_label=tmax' >>"$GITHUB_OUTPUT"
               ;;
             max)
-              echo 'workloads=[{"label":"target-max","pods":1,"eps_per_pod":2000000}]' >>"$GITHUB_OUTPUT"
-              echo 'aggregate_trigger_label=target-max' >>"$GITHUB_OUTPUT"
+              echo 'workloads=[{"label":"tmax","pods":1,"eps_per_pod":2000000}]' >>"$GITHUB_OUTPUT"
+              echo 'aggregate_trigger_label=tmax' >>"$GITHUB_OUTPUT"
               ;;
             *)
               echo "unsupported target_set: ${TARGET_SET}" >&2
@@ -184,7 +184,7 @@ jobs:
             sudo mv ./kind /usr/local/bin/kind
           fi
       - name: Run benchmark harness
-        continue-on-error: ${{ github.event_name == 'schedule' || matrix.collector == 'vector' || matrix.workload.label == 'target-max' }}
+        continue-on-error: ${{ github.event_name == 'schedule' || matrix.collector == 'vector' || matrix.workload.label == 'tmax' }}
         run: |
           python3 bench/kind/run.py \
             --phase smoke \

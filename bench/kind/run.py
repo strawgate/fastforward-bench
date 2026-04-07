@@ -720,14 +720,16 @@ def run_smoke_phase(
     write_json(results_dir / "emitter-stats.json", emitter_reported_stats)
     write_json(results_dir / "sink-stats.json", sink_reported_stats)
 
-    if (
-        result.sink_lines_total
-        and comparison.missing_source_count == 0
+    strict_oracle_clean = (
+        comparison.missing_source_count == 0
         and comparison.missing_event_count == 0
         and comparison.unexpected_event_count == 0
         and comparison.duplicate_event_count == 0
         and comparison.gap_count == 0
-    ):
+    )
+    observed_any_sink_output = bool((result.sink_lines_total is not None and result.sink_lines_total > 0) or comparison.sink_row_count > 0)
+
+    if strict_oracle_clean and observed_any_sink_output:
         result.status = "pass"
         result.notes = (
             f"smoke benchmark succeeded in {adapter.benchmark_mode}; source_rows_total={comparison.source_row_count}, "
