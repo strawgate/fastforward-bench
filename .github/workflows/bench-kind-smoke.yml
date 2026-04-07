@@ -6,21 +6,36 @@ on:
     paths:
       - 'bench/kind/**'
       - '.github/workflows/bench-kind-smoke.yml'
+      - '.github/workflows/bench-kind-aggregate.yml'
       - '.github/actions/setup-memagent-build/**'
+  schedule:
+    - cron: '0 7 * * *'
   workflow_dispatch:
     inputs:
       memagent_ref:
         description: memagent branch, tag, or SHA to test
         required: false
         type: string
-        default: master
+        default: main
+      collector:
+        description: collector adapter to benchmark
+        required: false
+        type: choice
+        default: logfwd
+        options:
+          - logfwd
+          - otelcol
 
 permissions:
-  contents: read
+  contents: write
+  actions: write
   packages: read
 
 env:
-  MEMAGENT_REF: ${{ inputs.memagent_ref || 'master' }}
+  MEMAGENT_REF: ${{ inputs.memagent_ref || 'main' }}
+  BENCH_COLLECTOR: ${{ inputs.collector || 'logfwd' }}
+  BENCHKIT_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}--kind-bench-smoke-${{ inputs.collector || 'logfwd' }}
+  PERSIST_BENCH_DATA: ${{ github.event_name != 'pull_request' && 'true' || 'false' }}
 
 jobs:
   kind-bench-smoke:
@@ -41,6 +56,14 @@ jobs:
         with:
           memagent-repo-root: memagent
           memagent-ref: ${{ env.MEMAGENT_REF }}
+      - if: env.PERSIST_BENCH_DATA == 'true'
+        name: Start Octo11y monitor
+        id: monitor
+        uses: strawgate/octo11y/actions/monitor@main-dist
+        with:
+          run-id: ${{ env.BENCHKIT_RUN_ID }}
+          scrape-interval: 1s
+          metric-sets: cpu,memory,load,process
       - name: Install KIND
         run: |
           if ! command -v kind >/dev/null 2>&1; then
@@ -52,12 +75,28 @@ jobs:
       - name: Run benchmark harness
         run: |
           python3 bench/kind/run.py \
-            --phase infra \
+            --phase smoke \
             --profile smoke \
-            --collector logfwd \
+            --collector "${BENCH_COLLECTOR}" \
             --protocol otlp_http \
             --cluster-name "${CLUSTER_NAME}" \
+            --benchkit-run-id "${BENCHKIT_RUN_ID}" \
+            --benchkit-kind "hybrid" \
+            --benchkit-otlp-http-endpoint "${{ steps.monitor.outputs.otlp-http-endpoint }}" \
             --results-dir "${BENCH_RESULTS_DIR}"
+      - if: env.PERSIST_BENCH_DATA == 'true'
+        name: Stash benchmark run
+        uses: strawgate/octo11y/actions/stash@main-dist
+        with:
+          results: ${{ env.BENCH_RESULTS_DIR }}/benchkit-run.otlp.json
+          format: otlp
+          run-id: ${{ env.BENCHKIT_RUN_ID }}
+          summary: true
+      - if: env.PERSIST_BENCH_DATA == 'true'
+        name: Trigger aggregate
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run bench-kind-aggregate.yml --repo ${{ github.repository }}
       - if: always()
         name: Publish summary
         run: |
@@ -67,6 +106,6 @@ jobs:
       - if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: kind-bench-smoke
+          name: kind-bench-smoke-${{ env.BENCH_COLLECTOR }}
           path: ${{ env.BENCH_RESULTS_DIR }}
           retention-days: 7

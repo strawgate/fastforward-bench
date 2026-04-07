@@ -4,38 +4,45 @@ metadata:
   name: log-emitter-config
   namespace: ${NAMESPACE}
 data:
-  emit.py: |
-    import json
-    import os
-    import sys
-    import time
-    from datetime import datetime, timezone
-
-    benchmark_id = os.environ["BENCHMARK_ID"]
-    pod_name = os.environ["POD_NAME"]
-    eps = max(int(os.environ.get("EPS_PER_POD", "100")), 1)
-    interval = 1.0 / eps
-    seq = 0
-    levels = ["INFO", "DEBUG", "WARN", "ERROR"]
-
-    while True:
-      seq += 1
-      now = time.time_ns()
-      level = levels[seq % len(levels)]
-      payload = {
-        "benchmark_id": benchmark_id,
-        "pod_name": pod_name,
-        "stream_id": pod_name,
-        "event_id": f"{pod_name}:{seq:08d}",
-        "seq": seq,
-        "emit_ts_unix_nano": now,
-        "timestamp": datetime.fromtimestamp(now / 1_000_000_000, tz=timezone.utc).isoformat(),
-        "level": level,
-        "message": f"bench event {seq}",
-        "status": 500 if level == "ERROR" else 200,
-        "duration_ms": (seq % 250) + 1,
-        "service": "bench-emitter",
-      }
-      sys.stdout.write(json.dumps(payload, sort_keys=True) + "\n")
-      sys.stdout.flush()
-      time.sleep(interval)
+  config.yaml: |
+    server:
+      diagnostics: 0.0.0.0:9090
+    input:
+      type: generator
+      generator:
+        events_per_sec: ${EPS_PER_POD}
+        batch_size: 1024
+        profile: record
+        attributes:
+          benchmark_id: ${BENCHMARK_ID}
+          pod_name: ${POD_NAME}
+          stream_id: ${POD_NAME}
+          service: bench-emitter
+        sequence:
+          field: seq
+        event_created_unix_nano_field: event_created_unix_nano
+    transform: |
+      SELECT
+        benchmark_id,
+        pod_name,
+        stream_id,
+        concat(stream_id, ':', CAST(seq AS VARCHAR)) AS event_id,
+        CAST(seq AS BIGINT) AS seq,
+        CAST(event_created_unix_nano AS BIGINT) AS event_created_unix_nano,
+        CASE CAST(seq % 4 AS BIGINT)
+          WHEN 0 THEN 'ERROR'
+          WHEN 1 THEN 'INFO'
+          WHEN 2 THEN 'DEBUG'
+          ELSE 'WARN'
+        END AS level,
+        concat('bench event ', CAST(seq AS VARCHAR)) AS message,
+        CASE
+          WHEN CAST(seq % 4 AS BIGINT) = 0 THEN 500
+          ELSE 200
+        END AS status,
+        CAST((seq % 250) + 1 AS BIGINT) AS duration_ms,
+        service
+      FROM logs
+    output:
+      type: stdout
+      format: json
