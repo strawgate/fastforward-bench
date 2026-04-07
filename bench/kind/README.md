@@ -201,3 +201,5 @@ The benchmark workflow also supports target EPS sweeps:
 - `ladder`: `1, 10, 100, 1k, 10k, 100k, 1m`
 - `max`: unbounded generator (`events_per_sec=0`) for
   "fast as the current resource allocation allows"
+  - max mode records throughput/resource metrics and skips strict source-vs-sink
+    oracle enforcement by design

@@ -492,6 +492,8 @@ def run_smoke_phase(
     results_dir: Path,
     result: BenchmarkResult,
 ) -> int:
+    max_throughput_mode = profile.eps_per_pod == 0
+
     apply_manifest(manifests["collector_configmap"])
     apply_manifest(manifests["collector_workload"])
     rollout_status(args.namespace, adapter.rollout_kind, adapter.rollout_name, timeout_sec=120)
@@ -608,6 +610,60 @@ def run_smoke_phase(
     )
     collect_sink_capture(args.namespace, sink_pod, artifacts_dir / "sink-capture.ndjson")
 
+    sink_rows = filter_rows_to_emitter_snapshot(
+        benchmark_rows(load_json_lines(artifacts_dir / "sink-capture.ndjson"), result.benchmark_id),
+        emitter_reported_stats,
+    )
+
+    if max_throughput_mode:
+        result.captured_rows_total = len(sink_rows)
+        result.source_rows_total = None
+        result.missing_source_count = None
+        result.missing_event_count = None
+        result.unexpected_event_count = None
+        result.dup_estimate = None
+        if result.emitter_reported_events_total is not None and result.sink_reported_events_total is not None:
+            result.drop_estimate = max(0, result.emitter_reported_events_total - result.sink_reported_events_total)
+        else:
+            result.drop_estimate = None
+
+        write_json(results_dir / "actual_rows.json", sink_rows)
+        write_json(results_dir / "source_rows.json", [])
+        write_json(
+            results_dir / "stream-summary.json",
+            {
+                "mode": "max-throughput",
+                "source_oracle": "skipped",
+                "emitter_reported_events_total": result.emitter_reported_events_total,
+                "sink_reported_events_total": result.sink_reported_events_total,
+                "sink_row_count": len(sink_rows),
+                "sink_lines_total": result.sink_lines_total,
+                "sink_lines_per_sec_avg": result.sink_lines_per_sec_avg,
+                "drop_estimate": result.drop_estimate,
+            },
+        )
+        write_json(results_dir / "emitter-stats.json", emitter_reported_stats)
+        write_json(results_dir / "sink-stats.json", sink_reported_stats)
+
+        if result.sink_lines_total and result.sink_lines_total > 0:
+            result.status = "pass"
+            result.notes = (
+                "max-throughput benchmark completed with unbounded generator; strict source-vs-sink oracle "
+                "is intentionally skipped in this mode. "
+                f"sink_lines_total={result.sink_lines_total}, sink_lines_per_sec_avg={result.sink_lines_per_sec_avg}, "
+                f"emitter_reported_events_total={result.emitter_reported_events_total}, "
+                f"sink_reported_events_total={result.sink_reported_events_total}, "
+                f"drop_estimate={result.drop_estimate}."
+            )
+            return 0
+
+        result.status = "fail"
+        result.notes = (
+            "max-throughput benchmark did not observe sink output in unbounded mode; "
+            f"sink_lines_total={result.sink_lines_total}, sink_reported_events_total={result.sink_reported_events_total}."
+        )
+        return 1
+
     collect_pod_logs(
         namespace=args.namespace,
         pod_names=emitter_pods,
@@ -624,10 +680,6 @@ def run_smoke_phase(
             tail=200,
         )
 
-    sink_rows = filter_rows_to_emitter_snapshot(
-        benchmark_rows(load_json_lines(artifacts_dir / "sink-capture.ndjson"), result.benchmark_id),
-        emitter_reported_stats,
-    )
     source_rows = filter_rows_to_emitter_snapshot(
         benchmark_rows(load_json_lines(artifacts_dir / "emitter-logs.txt"), result.benchmark_id),
         emitter_reported_stats,
