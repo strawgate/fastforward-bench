@@ -2,5 +2,5 @@
   "schemaVersion": 1,
   "label": "collector cpu cores avg",
   "message": "0.04 cores",
-  "color": "blue"
+  "color": "brightgreen"
 }
