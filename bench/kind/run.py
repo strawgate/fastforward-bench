@@ -220,6 +220,29 @@ def collect_sink_capture(namespace: str, sink_pod: str, destination: Path) -> No
     )
 
 
+def filter_rows_to_emitter_snapshot(
+    rows: list[dict[str, object]],
+    emitter_reported_stats: list[dict[str, object]],
+) -> list[dict[str, object]]:
+    cutoff_by_pod: dict[str, int] = {}
+    for stat in emitter_reported_stats:
+        pod_name = stat.get("pod_name")
+        output_lines = stat.get("output_lines")
+        if isinstance(pod_name, str) and isinstance(output_lines, int):
+            cutoff_by_pod[pod_name] = output_lines
+
+    filtered: list[dict[str, object]] = []
+    for row in rows:
+        pod_name = row.get("pod_name")
+        seq = row.get("seq")
+        if not isinstance(pod_name, str) or not isinstance(seq, int):
+            continue
+        cutoff = cutoff_by_pod.get(pod_name)
+        if cutoff is None or seq <= cutoff:
+            filtered.append(row)
+    return filtered
+
+
 def render_manifests(
     *,
     args: argparse.Namespace,
@@ -264,10 +287,6 @@ def run_smoke_phase(
     results_dir: Path,
     result: BenchmarkResult,
 ) -> int:
-    apply_manifest(manifests["emitter_configmap"])
-    apply_manifest(manifests["emitter_statefulset"])
-    rollout_status(args.namespace, "statefulset", "log-emitter", timeout_sec=120)
-
     apply_manifest(manifests["collector_configmap"])
     apply_manifest(manifests["collector_workload"])
     rollout_status(args.namespace, adapter.rollout_kind, adapter.rollout_name, timeout_sec=120)
@@ -275,6 +294,10 @@ def run_smoke_phase(
     collector_pod = get_first_pod_name(args.namespace, adapter.pod_selector)
     if not collector_pod:
         raise CommandError("collector pod not found after rollout")
+
+    apply_manifest(manifests["emitter_configmap"])
+    apply_manifest(manifests["emitter_statefulset"])
+    rollout_status(args.namespace, "statefulset", "log-emitter", timeout_sec=120)
 
     emit_phase_signal(
         args=args,
@@ -344,6 +367,14 @@ def run_smoke_phase(
     artifacts_dir = results_dir / "artifacts"
     artifacts_dir.mkdir(parents=True, exist_ok=True)
 
+    emitter_pods = get_pod_names(args.namespace, "app.kubernetes.io/name=log-emitter")
+    emitter_reported_total, emitter_reported_stats = collect_emitter_reported_total(args.namespace, emitter_pods)
+    result.emitter_reported_events_total = emitter_reported_total
+
+    # Give the collector a brief chance to drain rows up to the emitter snapshot
+    # before we capture sink artifacts.
+    time.sleep(2)
+
     sink_pod = get_first_pod_name(args.namespace, "app.kubernetes.io/name=logfwd-capture")
     if not sink_pod:
         raise CommandError("sink pod not found after rollout")
@@ -357,9 +388,6 @@ def run_smoke_phase(
     )
     collect_sink_capture(args.namespace, sink_pod, artifacts_dir / "sink-capture.ndjson")
 
-    emitter_pods = get_pod_names(args.namespace, "app.kubernetes.io/name=log-emitter")
-    emitter_reported_total, emitter_reported_stats = collect_emitter_reported_total(args.namespace, emitter_pods)
-    result.emitter_reported_events_total = emitter_reported_total
     collect_pod_logs(
         namespace=args.namespace,
         pod_names=emitter_pods,
@@ -376,8 +404,14 @@ def run_smoke_phase(
             tail=200,
         )
 
-    sink_rows = benchmark_rows(load_json_lines(artifacts_dir / "sink-capture.ndjson"), result.benchmark_id)
-    source_rows = benchmark_rows(load_json_lines(artifacts_dir / "emitter-logs.txt"), result.benchmark_id)
+    sink_rows = filter_rows_to_emitter_snapshot(
+        benchmark_rows(load_json_lines(artifacts_dir / "sink-capture.ndjson"), result.benchmark_id),
+        emitter_reported_stats,
+    )
+    source_rows = filter_rows_to_emitter_snapshot(
+        benchmark_rows(load_json_lines(artifacts_dir / "emitter-logs.txt"), result.benchmark_id),
+        emitter_reported_stats,
+    )
     expected_sources = expected_emitter_pods("log-emitter", profile.pods)
     comparison = compare_source_and_sink(
         source_rows=source_rows,
