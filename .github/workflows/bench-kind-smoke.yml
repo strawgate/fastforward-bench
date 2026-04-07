@@ -16,7 +16,7 @@ on:
         description: memagent branch, tag, or SHA to test
         required: false
         type: string
-        default: master
+        default: main
       collector:
         description: collector adapter to benchmark
         required: false
@@ -32,7 +32,7 @@ permissions:
   packages: read
 
 env:
-  MEMAGENT_REF: ${{ inputs.memagent_ref || 'master' }}
+  MEMAGENT_REF: ${{ inputs.memagent_ref || 'main' }}
   BENCH_COLLECTOR: ${{ inputs.collector || 'logfwd' }}
   BENCHKIT_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}--kind-bench-smoke-${{ inputs.collector || 'logfwd' }}
   PERSIST_BENCH_DATA: ${{ github.event_name != 'pull_request' && 'true' || 'false' }}
