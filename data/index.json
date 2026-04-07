@@ -1,8 +1,24 @@
 {
   "runs": [
     {
+      "id": "24097782241-1--kind-bench-smoke-otlp-t1m-single-otelcol",
+      "timestamp": "2026-04-07T18:39:45.154Z",
+      "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
+      "ref": "refs/heads/codex/eps-target-sweep",
+      "benchmarks": 0,
+      "metrics": []
+    },
+    {
+      "id": "24097782241-1--kind-bench-smoke-otlp-t100k-single-otelcol",
+      "timestamp": "2026-04-07T18:39:45.153Z",
+      "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
+      "ref": "refs/heads/codex/eps-target-sweep",
+      "benchmarks": 0,
+      "metrics": []
+    },
+    {
       "id": "24092902509-1--kind-bench-smoke-tmax-single-vector",
-      "timestamp": "2026-04-07T18:17:20.153Z",
+      "timestamp": "2026-04-07T18:39:45.126Z",
       "commit": "8728b2520567fe55f8544ee9827159c2bc067f26",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -10,7 +26,7 @@
     },
     {
       "id": "24092902509-1--kind-bench-smoke-tmax-single-otelcol",
-      "timestamp": "2026-04-07T18:17:20.153Z",
+      "timestamp": "2026-04-07T18:39:45.126Z",
       "commit": "8728b2520567fe55f8544ee9827159c2bc067f26",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -18,7 +34,7 @@
     },
     {
       "id": "24092902509-1--kind-bench-smoke-tmax-multi-vector",
-      "timestamp": "2026-04-07T18:17:20.153Z",
+      "timestamp": "2026-04-07T18:39:45.126Z",
       "commit": "8728b2520567fe55f8544ee9827159c2bc067f26",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -26,7 +42,7 @@
     },
     {
       "id": "24092480398-1--kind-bench-smoke-profile-smoke-single-vector",
-      "timestamp": "2026-04-07T18:17:20.151Z",
+      "timestamp": "2026-04-07T18:39:45.126Z",
       "commit": "e353482c67c2e71ff4deb7fd37212264e976922d",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -34,7 +50,7 @@
     },
     {
       "id": "24092480398-1--kind-bench-smoke-profile-smoke-multi-vector",
-      "timestamp": "2026-04-07T18:17:20.151Z",
+      "timestamp": "2026-04-07T18:39:45.126Z",
       "commit": "e353482c67c2e71ff4deb7fd37212264e976922d",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -42,7 +58,7 @@
     },
     {
       "id": "24090514698-1--kind-bench-smoke-t100k-single-logfwd",
-      "timestamp": "2026-04-07T18:17:20.151Z",
+      "timestamp": "2026-04-07T18:39:45.126Z",
       "commit": "795369e4a4d5032483d8585a80808ebe391b6dd0",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -50,7 +66,7 @@
     },
     {
       "id": "24089288411-1--kind-bench-smoke-target-max-single-logfwd",
-      "timestamp": "2026-04-07T18:17:20.151Z",
+      "timestamp": "2026-04-07T18:39:45.126Z",
       "commit": "689cb2943152294233f12fc73eadb7ee55feced7",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -58,7 +74,7 @@
     },
     {
       "id": "24089087310-1--kind-bench-smoke-target-max-single-logfwd",
-      "timestamp": "2026-04-07T18:17:20.151Z",
+      "timestamp": "2026-04-07T18:39:45.126Z",
       "commit": "80c09d05001fb974dfbda389497988207179023e",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -66,7 +82,7 @@
     },
     {
       "id": "24088457868-1--kind-bench-smoke-target-max-single-logfwd",
-      "timestamp": "2026-04-07T18:17:20.151Z",
+      "timestamp": "2026-04-07T18:39:45.126Z",
       "commit": "baa4422026b45b2f97a6a380bf200c1d0c55b3da",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -74,15 +90,15 @@
     },
     {
       "id": "24088165741-1--kind-bench-smoke-target-max-single-logfwd",
-      "timestamp": "2026-04-07T18:17:20.150Z",
+      "timestamp": "2026-04-07T18:39:45.126Z",
       "commit": "c9277487896b5a0510f17051418961868ff70cd6",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
       "metrics": []
     },
     {
-      "id": "24097059068-1--kind-bench-smoke-file-profile-smoke-single-vector",
-      "timestamp": "2026-04-07T18:13:31.000Z",
+      "id": "24097782241-1--kind-bench-smoke-file-t1k-single-vector",
+      "timestamp": "2026-04-07T18:35:29.000Z",
       "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 1,
@@ -108,8 +124,30 @@
       ]
     },
     {
-      "id": "24097059068-1--kind-bench-smoke-file-profile-smoke-single-logfwd",
-      "timestamp": "2026-04-07T18:13:31.000Z",
+      "id": "24097782241-1--kind-bench-smoke-otlp-t1k-multi-logfwd",
+      "timestamp": "2026-04-07T18:35:26.000Z",
+      "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
+      "ref": "refs/heads/codex/eps-target-sweep",
+      "benchmarks": 1,
+      "metrics": [
+        "captured_rows_total",
+        "collector_cpu_cores_avg",
+        "collector_cpu_cores_p95",
+        "collector_rss_mb_avg",
+        "collector_rss_mb_p95",
+        "drop_estimate",
+        "emitter_reported_events_total",
+        "sink_lines_per_sec_avg",
+        "sink_lines_per_sec_p50",
+        "sink_lines_per_sec_p95",
+        "sink_lines_per_sec_p99",
+        "sink_lines_total",
+        "sink_reported_events_total"
+      ]
+    },
+    {
+      "id": "24097782241-1--kind-bench-smoke-file-t10-single-vector",
+      "timestamp": "2026-04-07T18:35:24.000Z",
       "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 1,
@@ -135,8 +173,8 @@
       ]
     },
     {
-      "id": "24097059068-1--kind-bench-smoke-file-profile-smoke-multi-logfwd",
-      "timestamp": "2026-04-07T18:13:31.000Z",
+      "id": "24097782241-1--kind-bench-smoke-file-t1m-multi-logfwd",
+      "timestamp": "2026-04-07T18:35:20.000Z",
       "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 1,
@@ -162,8 +200,30 @@
       ]
     },
     {
-      "id": "24097059068-1--kind-bench-smoke-file-profile-smoke-multi-otelcol",
-      "timestamp": "2026-04-07T18:13:25.000Z",
+      "id": "24097782241-1--kind-bench-smoke-otlp-t1m-multi-otelcol",
+      "timestamp": "2026-04-07T18:35:12.000Z",
+      "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
+      "ref": "refs/heads/codex/eps-target-sweep",
+      "benchmarks": 1,
+      "metrics": [
+        "captured_rows_total",
+        "collector_cpu_cores_avg",
+        "collector_cpu_cores_p95",
+        "collector_rss_mb_avg",
+        "collector_rss_mb_p95",
+        "drop_estimate",
+        "emitter_reported_events_total",
+        "sink_lines_per_sec_avg",
+        "sink_lines_per_sec_p50",
+        "sink_lines_per_sec_p95",
+        "sink_lines_per_sec_p99",
+        "sink_lines_total",
+        "sink_reported_events_total"
+      ]
+    },
+    {
+      "id": "24097782241-1--kind-bench-smoke-file-t1k-single-otelcol",
+      "timestamp": "2026-04-07T18:35:09.000Z",
       "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 1,
@@ -189,8 +249,96 @@
       ]
     },
     {
-      "id": "24097059068-1--kind-bench-smoke-file-profile-smoke-single-otelcol",
-      "timestamp": "2026-04-07T18:13:23.000Z",
+      "id": "24097782241-1--kind-bench-smoke-otlp-t1-multi-otelcol",
+      "timestamp": "2026-04-07T18:34:59.000Z",
+      "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
+      "ref": "refs/heads/codex/eps-target-sweep",
+      "benchmarks": 1,
+      "metrics": [
+        "captured_rows_total",
+        "collector_cpu_cores_avg",
+        "collector_cpu_cores_p95",
+        "collector_rss_mb_avg",
+        "collector_rss_mb_p95",
+        "drop_estimate",
+        "emitter_reported_events_total",
+        "sink_lines_per_sec_avg",
+        "sink_lines_per_sec_p50",
+        "sink_lines_per_sec_p95",
+        "sink_lines_per_sec_p99",
+        "sink_lines_total",
+        "sink_reported_events_total"
+      ]
+    },
+    {
+      "id": "24097782241-1--kind-bench-smoke-otlp-t1m-single-logfwd",
+      "timestamp": "2026-04-07T18:34:56.000Z",
+      "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
+      "ref": "refs/heads/codex/eps-target-sweep",
+      "benchmarks": 1,
+      "metrics": [
+        "captured_rows_total",
+        "collector_cpu_cores_avg",
+        "collector_cpu_cores_p95",
+        "collector_rss_mb_avg",
+        "collector_rss_mb_p95",
+        "drop_estimate",
+        "emitter_reported_events_total",
+        "sink_lines_per_sec_avg",
+        "sink_lines_per_sec_p50",
+        "sink_lines_per_sec_p95",
+        "sink_lines_per_sec_p99",
+        "sink_lines_total",
+        "sink_reported_events_total"
+      ]
+    },
+    {
+      "id": "24097782241-1--kind-bench-smoke-otlp-t10k-single-logfwd",
+      "timestamp": "2026-04-07T18:34:52.000Z",
+      "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
+      "ref": "refs/heads/codex/eps-target-sweep",
+      "benchmarks": 1,
+      "metrics": [
+        "captured_rows_total",
+        "collector_cpu_cores_avg",
+        "collector_cpu_cores_p95",
+        "collector_rss_mb_avg",
+        "collector_rss_mb_p95",
+        "drop_estimate",
+        "emitter_reported_events_total",
+        "sink_lines_per_sec_avg",
+        "sink_lines_per_sec_p50",
+        "sink_lines_per_sec_p95",
+        "sink_lines_per_sec_p99",
+        "sink_lines_total",
+        "sink_reported_events_total"
+      ]
+    },
+    {
+      "id": "24097782241-1--kind-bench-smoke-otlp-t500-multi-logfwd",
+      "timestamp": "2026-04-07T18:34:49.000Z",
+      "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
+      "ref": "refs/heads/codex/eps-target-sweep",
+      "benchmarks": 1,
+      "metrics": [
+        "captured_rows_total",
+        "collector_cpu_cores_avg",
+        "collector_cpu_cores_p95",
+        "collector_rss_mb_avg",
+        "collector_rss_mb_p95",
+        "drop_estimate",
+        "emitter_reported_events_total",
+        "sink_lines_per_sec_avg",
+        "sink_lines_per_sec_p50",
+        "sink_lines_per_sec_p95",
+        "sink_lines_per_sec_p99",
+        "sink_lines_total",
+        "sink_reported_events_total"
+      ]
+    },
+    {
+      "id": "24097782241-1--kind-bench-smoke-file-t10-multi-vector",
+      "timestamp": "2026-04-07T18:34:39.000Z",
       "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 1,
@@ -216,9 +364,75 @@
       ]
     },
     {
-      "id": "24095250363-1--kind-bench-smoke-file-profile-smoke-single-otelcol",
-      "timestamp": "2026-04-07T17:32:03.000Z",
-      "commit": "35f2db79867d81e9695bfe3a83be56738e715baa",
+      "id": "24097782241-1--kind-bench-smoke-otlp-t10-single-logfwd",
+      "timestamp": "2026-04-07T18:34:38.000Z",
+      "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
+      "ref": "refs/heads/codex/eps-target-sweep",
+      "benchmarks": 1,
+      "metrics": [
+        "captured_rows_total",
+        "collector_cpu_cores_avg",
+        "collector_cpu_cores_p95",
+        "collector_rss_mb_avg",
+        "collector_rss_mb_p95",
+        "drop_estimate",
+        "emitter_reported_events_total",
+        "sink_lines_per_sec_avg",
+        "sink_lines_per_sec_p50",
+        "sink_lines_per_sec_p95",
+        "sink_lines_per_sec_p99",
+        "sink_lines_total",
+        "sink_reported_events_total"
+      ]
+    },
+    {
+      "id": "24097782241-1--kind-bench-smoke-otlp-t100-single-otelcol",
+      "timestamp": "2026-04-07T18:34:19.000Z",
+      "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
+      "ref": "refs/heads/codex/eps-target-sweep",
+      "benchmarks": 1,
+      "metrics": [
+        "captured_rows_total",
+        "collector_cpu_cores_avg",
+        "collector_cpu_cores_p95",
+        "collector_rss_mb_avg",
+        "collector_rss_mb_p95",
+        "drop_estimate",
+        "emitter_reported_events_total",
+        "sink_lines_per_sec_avg",
+        "sink_lines_per_sec_p50",
+        "sink_lines_per_sec_p95",
+        "sink_lines_per_sec_p99",
+        "sink_lines_total",
+        "sink_reported_events_total"
+      ]
+    },
+    {
+      "id": "24097782241-1--kind-bench-smoke-otlp-t10k-multi-otelcol",
+      "timestamp": "2026-04-07T18:33:41.000Z",
+      "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
+      "ref": "refs/heads/codex/eps-target-sweep",
+      "benchmarks": 1,
+      "metrics": [
+        "captured_rows_total",
+        "collector_cpu_cores_avg",
+        "collector_cpu_cores_p95",
+        "collector_rss_mb_avg",
+        "collector_rss_mb_p95",
+        "drop_estimate",
+        "emitter_reported_events_total",
+        "sink_lines_per_sec_avg",
+        "sink_lines_per_sec_p50",
+        "sink_lines_per_sec_p95",
+        "sink_lines_per_sec_p99",
+        "sink_lines_total",
+        "sink_reported_events_total"
+      ]
+    },
+    {
+      "id": "24097782241-1--kind-bench-smoke-file-t100-multi-vector",
+      "timestamp": "2026-04-07T18:33:33.000Z",
+      "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 1,
       "metrics": [
@@ -243,9 +457,9 @@
       ]
     },
     {
-      "id": "24095250363-1--kind-bench-smoke-file-profile-smoke-single-vector",
-      "timestamp": "2026-04-07T17:32:00.000Z",
-      "commit": "35f2db79867d81e9695bfe3a83be56738e715baa",
+      "id": "24097782241-1--kind-bench-smoke-file-t1-multi-otelcol",
+      "timestamp": "2026-04-07T18:33:27.000Z",
+      "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 1,
       "metrics": [
@@ -270,9 +484,9 @@
       ]
     },
     {
-      "id": "24095250363-1--kind-bench-smoke-file-profile-smoke-multi-vector",
-      "timestamp": "2026-04-07T17:31:58.000Z",
-      "commit": "35f2db79867d81e9695bfe3a83be56738e715baa",
+      "id": "24097782241-1--kind-bench-smoke-file-t10k-single-otelcol",
+      "timestamp": "2026-04-07T18:33:20.000Z",
+      "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 1,
       "metrics": [
@@ -297,9 +511,9 @@
       ]
     },
     {
-      "id": "24095250363-1--kind-bench-smoke-file-profile-smoke-multi-logfwd",
-      "timestamp": "2026-04-07T17:31:56.000Z",
-      "commit": "35f2db79867d81e9695bfe3a83be56738e715baa",
+      "id": "24097782241-1--kind-bench-smoke-file-t1-single-vector",
+      "timestamp": "2026-04-07T18:33:09.000Z",
+      "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 1,
       "metrics": [
@@ -324,9 +538,9 @@
       ]
     },
     {
-      "id": "24095055919-1--kind-bench-smoke-file-profile-smoke-single-otelcol",
-      "timestamp": "2026-04-07T17:27:33.000Z",
-      "commit": "6a2378d8a8cd96003603a669feee9f9fb948b40d",
+      "id": "24097782241-1--kind-bench-smoke-file-t10k-multi-vector",
+      "timestamp": "2026-04-07T18:33:06.000Z",
+      "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 1,
       "metrics": [
@@ -351,9 +565,31 @@
       ]
     },
     {
-      "id": "24095055919-1--kind-bench-smoke-file-profile-smoke-multi-logfwd",
-      "timestamp": "2026-04-07T17:27:33.000Z",
-      "commit": "6a2378d8a8cd96003603a669feee9f9fb948b40d",
+      "id": "24097782241-1--kind-bench-smoke-otlp-t500-single-otelcol",
+      "timestamp": "2026-04-07T18:32:55.000Z",
+      "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
+      "ref": "refs/heads/codex/eps-target-sweep",
+      "benchmarks": 1,
+      "metrics": [
+        "captured_rows_total",
+        "collector_cpu_cores_avg",
+        "collector_cpu_cores_p95",
+        "collector_rss_mb_avg",
+        "collector_rss_mb_p95",
+        "drop_estimate",
+        "emitter_reported_events_total",
+        "sink_lines_per_sec_avg",
+        "sink_lines_per_sec_p50",
+        "sink_lines_per_sec_p95",
+        "sink_lines_per_sec_p99",
+        "sink_lines_total",
+        "sink_reported_events_total"
+      ]
+    },
+    {
+      "id": "24097782241-1--kind-bench-smoke-file-t1k-multi-vector",
+      "timestamp": "2026-04-07T18:32:50.000Z",
+      "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 1,
       "metrics": [
@@ -378,9 +614,31 @@
       ]
     },
     {
-      "id": "24095055919-1--kind-bench-smoke-file-profile-smoke-single-logfwd",
-      "timestamp": "2026-04-07T17:27:31.000Z",
-      "commit": "6a2378d8a8cd96003603a669feee9f9fb948b40d",
+      "id": "24097782241-1--kind-bench-smoke-otlp-t100k-multi-otelcol",
+      "timestamp": "2026-04-07T18:32:48.000Z",
+      "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
+      "ref": "refs/heads/codex/eps-target-sweep",
+      "benchmarks": 1,
+      "metrics": [
+        "captured_rows_total",
+        "collector_cpu_cores_avg",
+        "collector_cpu_cores_p95",
+        "collector_rss_mb_avg",
+        "collector_rss_mb_p95",
+        "drop_estimate",
+        "emitter_reported_events_total",
+        "sink_lines_per_sec_avg",
+        "sink_lines_per_sec_p50",
+        "sink_lines_per_sec_p95",
+        "sink_lines_per_sec_p99",
+        "sink_lines_total",
+        "sink_reported_events_total"
+      ]
+    },
+    {
+      "id": "24097782241-1--kind-bench-smoke-file-t10k-single-vector",
+      "timestamp": "2026-04-07T18:32:47.000Z",
+      "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 1,
       "metrics": [
@@ -405,9 +663,31 @@
       ]
     },
     {
-      "id": "24095055919-1--kind-bench-smoke-file-profile-smoke-multi-vector",
-      "timestamp": "2026-04-07T17:27:29.000Z",
-      "commit": "6a2378d8a8cd96003603a669feee9f9fb948b40d",
+      "id": "24097782241-1--kind-bench-smoke-otlp-t1k-single-otelcol",
+      "timestamp": "2026-04-07T18:32:46.000Z",
+      "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
+      "ref": "refs/heads/codex/eps-target-sweep",
+      "benchmarks": 1,
+      "metrics": [
+        "captured_rows_total",
+        "collector_cpu_cores_avg",
+        "collector_cpu_cores_p95",
+        "collector_rss_mb_avg",
+        "collector_rss_mb_p95",
+        "drop_estimate",
+        "emitter_reported_events_total",
+        "sink_lines_per_sec_avg",
+        "sink_lines_per_sec_p50",
+        "sink_lines_per_sec_p95",
+        "sink_lines_per_sec_p99",
+        "sink_lines_total",
+        "sink_reported_events_total"
+      ]
+    },
+    {
+      "id": "24097782241-1--kind-bench-smoke-file-t1m-single-otelcol",
+      "timestamp": "2026-04-07T18:32:44.000Z",
+      "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 1,
       "metrics": [
@@ -432,9 +712,9 @@
       ]
     },
     {
-      "id": "24094719441-1--kind-bench-smoke-file-profile-smoke-single-vector",
-      "timestamp": "2026-04-07T17:19:52.000Z",
-      "commit": "92e1a469acee44c7de8a63af0dc3999ed9dd8d55",
+      "id": "24097782241-1--kind-bench-smoke-file-t100k-single-otelcol",
+      "timestamp": "2026-04-07T18:32:38.000Z",
+      "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 1,
       "metrics": [
@@ -459,9 +739,9 @@
       ]
     },
     {
-      "id": "24094719441-1--kind-bench-smoke-file-profile-smoke-single-otelcol",
-      "timestamp": "2026-04-07T17:19:49.000Z",
-      "commit": "92e1a469acee44c7de8a63af0dc3999ed9dd8d55",
+      "id": "24097782241-1--kind-bench-smoke-file-t100k-multi-vector",
+      "timestamp": "2026-04-07T18:32:38.000Z",
+      "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 1,
       "metrics": [
@@ -486,31 +766,9 @@
       ]
     },
     {
-      "id": "24094719441-1--kind-bench-smoke-otlp-profile-smoke-single-logfwd",
-      "timestamp": "2026-04-07T17:19:48.000Z",
-      "commit": "92e1a469acee44c7de8a63af0dc3999ed9dd8d55",
-      "ref": "refs/heads/codex/eps-target-sweep",
-      "benchmarks": 1,
-      "metrics": [
-        "captured_rows_total",
-        "collector_cpu_cores_avg",
-        "collector_cpu_cores_p95",
-        "collector_rss_mb_avg",
-        "collector_rss_mb_p95",
-        "drop_estimate",
-        "emitter_reported_events_total",
-        "sink_lines_per_sec_avg",
-        "sink_lines_per_sec_p50",
-        "sink_lines_per_sec_p95",
-        "sink_lines_per_sec_p99",
-        "sink_lines_total",
-        "sink_reported_events_total"
-      ]
-    },
-    {
-      "id": "24094719441-1--kind-bench-smoke-file-profile-smoke-single-logfwd",
-      "timestamp": "2026-04-07T17:19:48.000Z",
-      "commit": "92e1a469acee44c7de8a63af0dc3999ed9dd8d55",
+      "id": "24097782241-1--kind-bench-smoke-file-t100-multi-otelcol",
+      "timestamp": "2026-04-07T18:32:34.000Z",
+      "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 1,
       "metrics": [
@@ -535,9 +793,9 @@
       ]
     },
     {
-      "id": "24094719441-1--kind-bench-smoke-file-profile-smoke-multi-vector",
-      "timestamp": "2026-04-07T17:19:48.000Z",
-      "commit": "92e1a469acee44c7de8a63af0dc3999ed9dd8d55",
+      "id": "24097782241-1--kind-bench-smoke-file-t1k-multi-otelcol",
+      "timestamp": "2026-04-07T18:32:29.000Z",
+      "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 1,
       "metrics": [
@@ -562,9 +820,9 @@
       ]
     },
     {
-      "id": "24094719441-1--kind-bench-smoke-otlp-profile-smoke-multi-otelcol",
-      "timestamp": "2026-04-07T17:19:46.000Z",
-      "commit": "92e1a469acee44c7de8a63af0dc3999ed9dd8d55",
+      "id": "24097782241-1--kind-bench-smoke-otlp-t500-multi-otelcol",
+      "timestamp": "2026-04-07T18:32:26.000Z",
+      "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 1,
       "metrics": [
@@ -584,9 +842,9 @@
       ]
     },
     {
-      "id": "24094719441-1--kind-bench-smoke-file-profile-smoke-multi-logfwd",
-      "timestamp": "2026-04-07T17:19:45.000Z",
-      "commit": "92e1a469acee44c7de8a63af0dc3999ed9dd8d55",
+      "id": "24097782241-1--kind-bench-smoke-file-t10-single-logfwd",
+      "timestamp": "2026-04-07T18:32:26.000Z",
+      "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 1,
       "metrics": [
@@ -611,97 +869,9 @@
       ]
     },
     {
-      "id": "24094553923-1--kind-bench-smoke-otlp-profile-smoke-single-logfwd",
-      "timestamp": "2026-04-07T17:15:57.000Z",
-      "commit": "92e1a469acee44c7de8a63af0dc3999ed9dd8d55",
-      "ref": "refs/heads/codex/eps-target-sweep",
-      "benchmarks": 1,
-      "metrics": [
-        "captured_rows_total",
-        "collector_cpu_cores_avg",
-        "collector_cpu_cores_p95",
-        "collector_rss_mb_avg",
-        "collector_rss_mb_p95",
-        "drop_estimate",
-        "emitter_reported_events_total",
-        "sink_lines_per_sec_avg",
-        "sink_lines_per_sec_p50",
-        "sink_lines_per_sec_p95",
-        "sink_lines_per_sec_p99",
-        "sink_lines_total",
-        "sink_reported_events_total"
-      ]
-    },
-    {
-      "id": "24094553923-1--kind-bench-smoke-otlp-profile-smoke-multi-logfwd",
-      "timestamp": "2026-04-07T17:15:54.000Z",
-      "commit": "92e1a469acee44c7de8a63af0dc3999ed9dd8d55",
-      "ref": "refs/heads/codex/eps-target-sweep",
-      "benchmarks": 1,
-      "metrics": [
-        "captured_rows_total",
-        "collector_cpu_cores_avg",
-        "collector_cpu_cores_p95",
-        "collector_rss_mb_avg",
-        "collector_rss_mb_p95",
-        "drop_estimate",
-        "emitter_reported_events_total",
-        "sink_lines_per_sec_avg",
-        "sink_lines_per_sec_p50",
-        "sink_lines_per_sec_p95",
-        "sink_lines_per_sec_p99",
-        "sink_lines_total",
-        "sink_reported_events_total"
-      ]
-    },
-    {
-      "id": "24094553923-1--kind-bench-smoke-otlp-profile-smoke-single-otelcol",
-      "timestamp": "2026-04-07T17:15:52.000Z",
-      "commit": "92e1a469acee44c7de8a63af0dc3999ed9dd8d55",
-      "ref": "refs/heads/codex/eps-target-sweep",
-      "benchmarks": 1,
-      "metrics": [
-        "captured_rows_total",
-        "collector_cpu_cores_avg",
-        "collector_cpu_cores_p95",
-        "collector_rss_mb_avg",
-        "collector_rss_mb_p95",
-        "drop_estimate",
-        "emitter_reported_events_total",
-        "sink_lines_per_sec_avg",
-        "sink_lines_per_sec_p50",
-        "sink_lines_per_sec_p95",
-        "sink_lines_per_sec_p99",
-        "sink_lines_total",
-        "sink_reported_events_total"
-      ]
-    },
-    {
-      "id": "24094553923-1--kind-bench-smoke-otlp-profile-smoke-multi-otelcol",
-      "timestamp": "2026-04-07T17:15:49.000Z",
-      "commit": "92e1a469acee44c7de8a63af0dc3999ed9dd8d55",
-      "ref": "refs/heads/codex/eps-target-sweep",
-      "benchmarks": 1,
-      "metrics": [
-        "captured_rows_total",
-        "collector_cpu_cores_avg",
-        "collector_cpu_cores_p95",
-        "collector_rss_mb_avg",
-        "collector_rss_mb_p95",
-        "drop_estimate",
-        "emitter_reported_events_total",
-        "sink_lines_per_sec_avg",
-        "sink_lines_per_sec_p50",
-        "sink_lines_per_sec_p95",
-        "sink_lines_per_sec_p99",
-        "sink_lines_total",
-        "sink_reported_events_total"
-      ]
-    },
-    {
-      "id": "24093961944-1--kind-bench-smoke-profile-smoke-multi-otelcol",
-      "timestamp": "2026-04-07T17:02:31.000Z",
-      "commit": "402b3d84f1f67fa4ae1ac0db571ee441267b5513",
+      "id": "24097782241-1--kind-bench-smoke-file-t500-multi-otelcol",
+      "timestamp": "2026-04-07T18:32:25.000Z",
+      "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 1,
       "metrics": [
@@ -726,9 +896,31 @@
       ]
     },
     {
-      "id": "24093961944-1--kind-bench-smoke-profile-smoke-multi-logfwd",
-      "timestamp": "2026-04-07T17:02:20.000Z",
-      "commit": "402b3d84f1f67fa4ae1ac0db571ee441267b5513",
+      "id": "24097782241-1--kind-bench-smoke-otlp-t10-multi-logfwd",
+      "timestamp": "2026-04-07T18:32:23.000Z",
+      "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
+      "ref": "refs/heads/codex/eps-target-sweep",
+      "benchmarks": 1,
+      "metrics": [
+        "captured_rows_total",
+        "collector_cpu_cores_avg",
+        "collector_cpu_cores_p95",
+        "collector_rss_mb_avg",
+        "collector_rss_mb_p95",
+        "drop_estimate",
+        "emitter_reported_events_total",
+        "sink_lines_per_sec_avg",
+        "sink_lines_per_sec_p50",
+        "sink_lines_per_sec_p95",
+        "sink_lines_per_sec_p99",
+        "sink_lines_total",
+        "sink_reported_events_total"
+      ]
+    },
+    {
+      "id": "24097782241-1--kind-bench-smoke-file-t1m-single-logfwd",
+      "timestamp": "2026-04-07T18:30:12.000Z",
+      "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 1,
       "metrics": [
@@ -753,9 +945,53 @@
       ]
     },
     {
-      "id": "24093961944-1--kind-bench-smoke-profile-smoke-multi-vector",
-      "timestamp": "2026-04-07T17:02:16.000Z",
-      "commit": "402b3d84f1f67fa4ae1ac0db571ee441267b5513",
+      "id": "24097782241-1--kind-bench-smoke-otlp-t100k-single-logfwd",
+      "timestamp": "2026-04-07T18:29:52.000Z",
+      "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
+      "ref": "refs/heads/codex/eps-target-sweep",
+      "benchmarks": 1,
+      "metrics": [
+        "captured_rows_total",
+        "collector_cpu_cores_avg",
+        "collector_cpu_cores_p95",
+        "collector_rss_mb_avg",
+        "collector_rss_mb_p95",
+        "drop_estimate",
+        "emitter_reported_events_total",
+        "sink_lines_per_sec_avg",
+        "sink_lines_per_sec_p50",
+        "sink_lines_per_sec_p95",
+        "sink_lines_per_sec_p99",
+        "sink_lines_total",
+        "sink_reported_events_total"
+      ]
+    },
+    {
+      "id": "24097782241-1--kind-bench-smoke-otlp-t1-single-logfwd",
+      "timestamp": "2026-04-07T18:29:51.000Z",
+      "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
+      "ref": "refs/heads/codex/eps-target-sweep",
+      "benchmarks": 1,
+      "metrics": [
+        "captured_rows_total",
+        "collector_cpu_cores_avg",
+        "collector_cpu_cores_p95",
+        "collector_rss_mb_avg",
+        "collector_rss_mb_p95",
+        "drop_estimate",
+        "emitter_reported_events_total",
+        "sink_lines_per_sec_avg",
+        "sink_lines_per_sec_p50",
+        "sink_lines_per_sec_p95",
+        "sink_lines_per_sec_p99",
+        "sink_lines_total",
+        "sink_reported_events_total"
+      ]
+    },
+    {
+      "id": "24097782241-1--kind-bench-smoke-file-t1-single-otelcol",
+      "timestamp": "2026-04-07T18:29:50.000Z",
+      "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 1,
       "metrics": [
@@ -780,9 +1016,9 @@
       ]
     },
     {
-      "id": "24093961944-1--kind-bench-smoke-profile-smoke-single-logfwd",
-      "timestamp": "2026-04-07T17:02:09.000Z",
-      "commit": "402b3d84f1f67fa4ae1ac0db571ee441267b5513",
+      "id": "24097782241-1--kind-bench-smoke-file-t1m-multi-otelcol",
+      "timestamp": "2026-04-07T18:29:49.000Z",
+      "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 1,
       "metrics": [
@@ -804,270 +1040,6 @@
         "sink_reported_events_total",
         "source_rows_total",
         "unexpected_event_count"
-      ]
-    },
-    {
-      "id": "24093750120-1--kind-bench-smoke-tmax-multi-vector",
-      "timestamp": "2026-04-07T16:57:18.000Z",
-      "commit": "402b3d84f1f67fa4ae1ac0db571ee441267b5513",
-      "ref": "refs/heads/codex/eps-target-sweep",
-      "benchmarks": 1,
-      "metrics": [
-        "captured_rows_total",
-        "collector_cpu_cores_avg",
-        "collector_cpu_cores_p95",
-        "collector_rss_mb_avg",
-        "collector_rss_mb_p95",
-        "drop_estimate",
-        "emitter_reported_events_total",
-        "sink_lines_per_sec_avg",
-        "sink_lines_per_sec_p50",
-        "sink_lines_per_sec_p95",
-        "sink_lines_per_sec_p99",
-        "sink_lines_total",
-        "sink_reported_events_total"
-      ]
-    },
-    {
-      "id": "24093750120-1--kind-bench-smoke-tmax-multi-logfwd",
-      "timestamp": "2026-04-07T16:57:17.000Z",
-      "commit": "402b3d84f1f67fa4ae1ac0db571ee441267b5513",
-      "ref": "refs/heads/codex/eps-target-sweep",
-      "benchmarks": 1,
-      "metrics": [
-        "captured_rows_total",
-        "collector_cpu_cores_avg",
-        "collector_cpu_cores_p95",
-        "collector_rss_mb_avg",
-        "collector_rss_mb_p95",
-        "drop_estimate",
-        "emitter_reported_events_total",
-        "sink_lines_per_sec_avg",
-        "sink_lines_per_sec_p50",
-        "sink_lines_per_sec_p95",
-        "sink_lines_per_sec_p99",
-        "sink_lines_total",
-        "sink_reported_events_total"
-      ]
-    },
-    {
-      "id": "24093750120-1--kind-bench-smoke-tmax-single-vector",
-      "timestamp": "2026-04-07T16:57:13.000Z",
-      "commit": "402b3d84f1f67fa4ae1ac0db571ee441267b5513",
-      "ref": "refs/heads/codex/eps-target-sweep",
-      "benchmarks": 1,
-      "metrics": [
-        "captured_rows_total",
-        "collector_cpu_cores_avg",
-        "collector_cpu_cores_p95",
-        "collector_rss_mb_avg",
-        "collector_rss_mb_p95",
-        "drop_estimate",
-        "emitter_reported_events_total",
-        "sink_lines_per_sec_avg",
-        "sink_lines_per_sec_p50",
-        "sink_lines_per_sec_p95",
-        "sink_lines_per_sec_p99",
-        "sink_lines_total",
-        "sink_reported_events_total"
-      ]
-    },
-    {
-      "id": "24093750120-1--kind-bench-smoke-tmax-single-otelcol",
-      "timestamp": "2026-04-07T16:57:13.000Z",
-      "commit": "402b3d84f1f67fa4ae1ac0db571ee441267b5513",
-      "ref": "refs/heads/codex/eps-target-sweep",
-      "benchmarks": 1,
-      "metrics": [
-        "captured_rows_total",
-        "collector_cpu_cores_avg",
-        "collector_cpu_cores_p95",
-        "collector_rss_mb_avg",
-        "collector_rss_mb_p95",
-        "drop_estimate",
-        "emitter_reported_events_total",
-        "sink_lines_per_sec_avg",
-        "sink_lines_per_sec_p50",
-        "sink_lines_per_sec_p95",
-        "sink_lines_per_sec_p99",
-        "sink_lines_total",
-        "sink_reported_events_total"
-      ]
-    },
-    {
-      "id": "24093750120-1--kind-bench-smoke-tmax-multi-otelcol",
-      "timestamp": "2026-04-07T16:57:13.000Z",
-      "commit": "402b3d84f1f67fa4ae1ac0db571ee441267b5513",
-      "ref": "refs/heads/codex/eps-target-sweep",
-      "benchmarks": 1,
-      "metrics": [
-        "captured_rows_total",
-        "collector_cpu_cores_avg",
-        "collector_cpu_cores_p95",
-        "collector_rss_mb_avg",
-        "collector_rss_mb_p95",
-        "drop_estimate",
-        "emitter_reported_events_total",
-        "sink_lines_per_sec_avg",
-        "sink_lines_per_sec_p50",
-        "sink_lines_per_sec_p95",
-        "sink_lines_per_sec_p99",
-        "sink_lines_total",
-        "sink_reported_events_total"
-      ]
-    },
-    {
-      "id": "24093750120-1--kind-bench-smoke-tmax-single-logfwd",
-      "timestamp": "2026-04-07T16:57:12.000Z",
-      "commit": "402b3d84f1f67fa4ae1ac0db571ee441267b5513",
-      "ref": "refs/heads/codex/eps-target-sweep",
-      "benchmarks": 1,
-      "metrics": [
-        "captured_rows_total",
-        "collector_cpu_cores_avg",
-        "collector_cpu_cores_p95",
-        "collector_rss_mb_avg",
-        "collector_rss_mb_p95",
-        "drop_estimate",
-        "emitter_reported_events_total",
-        "sink_lines_per_sec_avg",
-        "sink_lines_per_sec_p50",
-        "sink_lines_per_sec_p95",
-        "sink_lines_per_sec_p99",
-        "sink_lines_total",
-        "sink_reported_events_total"
-      ]
-    },
-    {
-      "id": "24093526220-1--kind-bench-smoke-tmax-multi-vector",
-      "timestamp": "2026-04-07T16:52:14.000Z",
-      "commit": "402b3d84f1f67fa4ae1ac0db571ee441267b5513",
-      "ref": "refs/heads/codex/eps-target-sweep",
-      "benchmarks": 1,
-      "metrics": [
-        "captured_rows_total",
-        "collector_cpu_cores_avg",
-        "collector_cpu_cores_p95",
-        "collector_rss_mb_avg",
-        "collector_rss_mb_p95",
-        "drop_estimate",
-        "emitter_reported_events_total",
-        "sink_lines_per_sec_avg",
-        "sink_lines_per_sec_p50",
-        "sink_lines_per_sec_p95",
-        "sink_lines_per_sec_p99",
-        "sink_lines_total",
-        "sink_reported_events_total"
-      ]
-    },
-    {
-      "id": "24093526220-1--kind-bench-smoke-tmax-single-otelcol",
-      "timestamp": "2026-04-07T16:52:13.000Z",
-      "commit": "402b3d84f1f67fa4ae1ac0db571ee441267b5513",
-      "ref": "refs/heads/codex/eps-target-sweep",
-      "benchmarks": 1,
-      "metrics": [
-        "captured_rows_total",
-        "collector_cpu_cores_avg",
-        "collector_cpu_cores_p95",
-        "collector_rss_mb_avg",
-        "collector_rss_mb_p95",
-        "drop_estimate",
-        "emitter_reported_events_total",
-        "sink_lines_per_sec_avg",
-        "sink_lines_per_sec_p50",
-        "sink_lines_per_sec_p95",
-        "sink_lines_per_sec_p99",
-        "sink_lines_total",
-        "sink_reported_events_total"
-      ]
-    },
-    {
-      "id": "24093526220-1--kind-bench-smoke-tmax-multi-otelcol",
-      "timestamp": "2026-04-07T16:52:13.000Z",
-      "commit": "402b3d84f1f67fa4ae1ac0db571ee441267b5513",
-      "ref": "refs/heads/codex/eps-target-sweep",
-      "benchmarks": 1,
-      "metrics": [
-        "captured_rows_total",
-        "collector_cpu_cores_avg",
-        "collector_cpu_cores_p95",
-        "collector_rss_mb_avg",
-        "collector_rss_mb_p95",
-        "drop_estimate",
-        "emitter_reported_events_total",
-        "sink_lines_per_sec_avg",
-        "sink_lines_per_sec_p50",
-        "sink_lines_per_sec_p95",
-        "sink_lines_per_sec_p99",
-        "sink_lines_total",
-        "sink_reported_events_total"
-      ]
-    },
-    {
-      "id": "24093526220-1--kind-bench-smoke-tmax-single-vector",
-      "timestamp": "2026-04-07T16:52:11.000Z",
-      "commit": "402b3d84f1f67fa4ae1ac0db571ee441267b5513",
-      "ref": "refs/heads/codex/eps-target-sweep",
-      "benchmarks": 1,
-      "metrics": [
-        "captured_rows_total",
-        "collector_cpu_cores_avg",
-        "collector_cpu_cores_p95",
-        "collector_rss_mb_avg",
-        "collector_rss_mb_p95",
-        "drop_estimate",
-        "emitter_reported_events_total",
-        "sink_lines_per_sec_avg",
-        "sink_lines_per_sec_p50",
-        "sink_lines_per_sec_p95",
-        "sink_lines_per_sec_p99",
-        "sink_lines_total",
-        "sink_reported_events_total"
-      ]
-    },
-    {
-      "id": "24093526220-1--kind-bench-smoke-tmax-single-logfwd",
-      "timestamp": "2026-04-07T16:52:11.000Z",
-      "commit": "402b3d84f1f67fa4ae1ac0db571ee441267b5513",
-      "ref": "refs/heads/codex/eps-target-sweep",
-      "benchmarks": 1,
-      "metrics": [
-        "captured_rows_total",
-        "collector_cpu_cores_avg",
-        "collector_cpu_cores_p95",
-        "collector_rss_mb_avg",
-        "collector_rss_mb_p95",
-        "drop_estimate",
-        "emitter_reported_events_total",
-        "sink_lines_per_sec_avg",
-        "sink_lines_per_sec_p50",
-        "sink_lines_per_sec_p95",
-        "sink_lines_per_sec_p99",
-        "sink_lines_total",
-        "sink_reported_events_total"
-      ]
-    },
-    {
-      "id": "24093526220-1--kind-bench-smoke-tmax-multi-logfwd",
-      "timestamp": "2026-04-07T16:52:11.000Z",
-      "commit": "402b3d84f1f67fa4ae1ac0db571ee441267b5513",
-      "ref": "refs/heads/codex/eps-target-sweep",
-      "benchmarks": 1,
-      "metrics": [
-        "captured_rows_total",
-        "collector_cpu_cores_avg",
-        "collector_cpu_cores_p95",
-        "collector_rss_mb_avg",
-        "collector_rss_mb_p95",
-        "drop_estimate",
-        "emitter_reported_events_total",
-        "sink_lines_per_sec_avg",
-        "sink_lines_per_sec_p50",
-        "sink_lines_per_sec_p95",
-        "sink_lines_per_sec_p99",
-        "sink_lines_total",
-        "sink_reported_events_total"
       ]
     }
   ],
