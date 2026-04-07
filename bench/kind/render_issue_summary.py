@@ -215,7 +215,7 @@ def render_markdown(
                     [
                         f"### Ingest: `{ingest_mode}`",
                         "",
-                        "| Collector | Target EPS | Status | EPS Avg | EPS/Target | Missing | Unexpected | Duplicates | Drop Estimate | Collector CPU Avg |",
+                        "| Collector | Target EPS | Status | EPS Avg | EPS/Target | Missing | Unexpected | Duplicates | Drop Estimate | Collector CPU Avg (%) |",
                         "| --- | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
                     ]
                 )
@@ -241,7 +241,7 @@ def render_markdown(
                             unexpected=fmt_int(result.unexpected_event_count),
                             dup=fmt_int(result.dup_estimate),
                             drop=fmt_int(result.drop_estimate),
-                            cpu_avg=fmt_float(result.collector_cpu_cores_avg),
+                            cpu_avg=fmt_percent(result.collector_cpu_cores_avg),
                         )
                     )
                 lines.append("")

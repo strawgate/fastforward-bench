@@ -84,6 +84,13 @@ CPU behavior is controlled separately via `--cpu-profile`:
 Local runs default to `single`. CI runs can matrix both `single` and `multi`
 for apples-to-apples comparisons.
 
+High-EPS tuning in the harness:
+
+- generator batch size scales with target rate (`10k+` uses larger batches)
+- single-emitter high-rate runs (`100k+` EPS/pod) can borrow spare node CPU
+  after collector/sink allocation so generator throughput is less likely to
+  bottleneck before collector ingestion
+
 These timing windows now have real runtime meaning in the harness:
 
 - `warmup`
