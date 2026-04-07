@@ -12,6 +12,7 @@ runs:
     - name: Validate result files
       shell: bash
       run: |
+        mkdir -p "${{ inputs.results-dir }}"
         ls -la "${{ inputs.results-dir }}"
         if [[ ! -f "${{ inputs.results-dir }}/summary.md" ]]; then
           printf '## e2e failure\n\n- Summary missing; scenario likely failed before verify.\n' >"${{ inputs.results-dir }}/summary.md"

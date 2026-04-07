@@ -84,7 +84,6 @@ jobs:
       cpu_profiles: ${{ steps.plan.outputs.cpu_profiles }}
       ingest_modes: ${{ steps.plan.outputs.ingest_modes }}
       workloads: ${{ steps.plan.outputs.workloads }}
-      aggregate_trigger_label: ${{ steps.plan.outputs.aggregate_trigger_label }}
     steps:
       - id: plan
         env:
@@ -106,23 +105,18 @@ jobs:
             profile)
               if [[ "${INPUT_PROFILE}" == "default" ]]; then
                 echo 'workloads=[{"label":"profile-default","pods":30,"eps_per_pod":300}]' >>"$GITHUB_OUTPUT"
-                echo 'aggregate_trigger_label=profile-default' >>"$GITHUB_OUTPUT"
               else
                 echo 'workloads=[{"label":"profile-smoke","pods":5,"eps_per_pod":100}]' >>"$GITHUB_OUTPUT"
-                echo 'aggregate_trigger_label=profile-smoke' >>"$GITHUB_OUTPUT"
               fi
               ;;
             ladder)
               echo 'workloads=[{"label":"t1","pods":1,"eps_per_pod":1},{"label":"t10","pods":1,"eps_per_pod":10},{"label":"t100","pods":1,"eps_per_pod":100},{"label":"t500","pods":1,"eps_per_pod":500},{"label":"t1k","pods":1,"eps_per_pod":1000},{"label":"t10k","pods":1,"eps_per_pod":10000},{"label":"t100k","pods":1,"eps_per_pod":100000},{"label":"t1m","pods":1,"eps_per_pod":1000000}]' >>"$GITHUB_OUTPUT"
-              echo 'aggregate_trigger_label=t1' >>"$GITHUB_OUTPUT"
               ;;
             ladder_and_max)
               echo 'workloads=[{"label":"t1","pods":1,"eps_per_pod":1},{"label":"t10","pods":1,"eps_per_pod":10},{"label":"t100","pods":1,"eps_per_pod":100},{"label":"t500","pods":1,"eps_per_pod":500},{"label":"t1k","pods":1,"eps_per_pod":1000},{"label":"t10k","pods":1,"eps_per_pod":10000},{"label":"t100k","pods":1,"eps_per_pod":100000},{"label":"t1m","pods":1,"eps_per_pod":1000000},{"label":"tmax","pods":1,"eps_per_pod":0}]' >>"$GITHUB_OUTPUT"
-              echo 'aggregate_trigger_label=tmax' >>"$GITHUB_OUTPUT"
               ;;
             max)
               echo 'workloads=[{"label":"tmax","pods":1,"eps_per_pod":0}]' >>"$GITHUB_OUTPUT"
-              echo 'aggregate_trigger_label=tmax' >>"$GITHUB_OUTPUT"
               ;;
             *)
               echo "unsupported target_set: ${TARGET_SET}" >&2
@@ -182,12 +176,42 @@ jobs:
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
-      - uses: actions/checkout@v6
+      - id: checkout_memagent
+        continue-on-error: true
+        uses: actions/checkout@v6
         with:
           repository: strawgate/memagent
           ref: ${{ env.MEMAGENT_REF }}
           path: memagent
           persist-credentials: false
+      - if: steps.checkout_memagent.outcome == 'failure'
+        name: Fallback clone memagent checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          repo_url="https://github.com/strawgate/memagent.git"
+          ref="${MEMAGENT_REF}"
+          rm -rf memagent
+          for attempt in 1 2 3; do
+            echo "Fallback clone attempt ${attempt}/3 for ref ${ref}"
+            if [[ "$ref" =~ ^[0-9a-f]{40}$ ]]; then
+              if git clone --no-tags --depth 1 "$repo_url" memagent \
+                && git -C memagent fetch --no-tags --depth 1 origin "$ref" \
+                && git -C memagent checkout --detach FETCH_HEAD; then
+                break
+              fi
+            else
+              if git clone --no-tags --depth 1 --branch "$ref" "$repo_url" memagent; then
+                break
+              fi
+            fi
+            rm -rf memagent
+            if [[ "$attempt" -eq 3 ]]; then
+              echo "Failed to clone memagent ref ${ref} after retries" >&2
+              exit 1
+            fi
+            sleep $((attempt * 5))
+          done
       - uses: ./.github/actions/setup-memagent-build
         with:
           memagent-repo-root: memagent
@@ -239,12 +263,6 @@ jobs:
           format: otlp
           run-id: ${{ env.BENCHKIT_RUN_ID }}
           summary: true
-      - if: env.PERSIST_BENCH_DATA == 'true' && matrix.ingest_mode == 'file' && matrix.collector == 'logfwd' && matrix.cpu_profile == 'single' && matrix.workload.label == needs.plan.outputs.aggregate_trigger_label
-        name: Trigger aggregate
-        continue-on-error: true
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh workflow run bench-kind-aggregate.yml --repo ${{ github.repository }}
       - if: always()
         name: Publish summary
         run: |
@@ -289,6 +307,12 @@ jobs:
             bench-summary.md
             bench-summary.json
           retention-days: 7
+      - if: env.PERSIST_BENCH_DATA == 'true'
+        name: Trigger aggregate
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run bench-kind-aggregate.yml --repo ${{ github.repository }}
       - if: github.event_name == 'schedule'
         name: Upsert nightly benchmark issue
         env:
