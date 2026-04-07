@@ -62,7 +62,7 @@ All source-vs-sink and steady-state throughput fields remain `null`.
 
 The smoke phase currently runs one narrow benchmark mode:
 
-- collector: `logfwd`
+- collectors: `logfwd`, `otelcol`
 - mode: `baseline-pass-through`
 - oracle: compare benchmark-tagged sink rows against the emitter logs captured
   from the source pods

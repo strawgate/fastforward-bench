@@ -33,8 +33,8 @@ from lib.kube import (
 )
 from lib.measure import (
     avg,
+    collect_bench_samples,
     collect_emitter_reported_total,
-    collect_logfwd_samples,
     collect_sink_reported_stats,
     cpu_cores_series,
     diff_output_lines,
@@ -66,6 +66,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--cluster-name", default="memagent-bench")
     parser.add_argument("--namespace", default="memagent-bench")
     parser.add_argument("--memagent-image", default="logfwd:e2e")
+    parser.add_argument("--collector-image", default=None)
     parser.add_argument("--results-dir", default=None)
     parser.add_argument("--benchkit-run-id", default=None)
     parser.add_argument("--benchkit-kind", choices=["workflow", "hybrid"], default="workflow")
@@ -254,6 +255,7 @@ def render_manifests(
     substitutions = {
         "NAMESPACE": args.namespace,
         "MEMAGENT_IMAGE": args.memagent_image,
+        "COLLECTOR_IMAGE": args.collector_image or adapter.collector_image or args.memagent_image,
         "BENCHMARK_ID": benchmark_id,
         "EPS_PER_POD": str(profile.eps_per_pod),
         "POD_REPLICAS": str(profile.pods),
@@ -307,10 +309,12 @@ def run_smoke_phase(
         phase_name="warmup",
         event="start",
     )
-    sink_samples, collector_samples = collect_logfwd_samples(
+    sink_samples, collector_samples = collect_bench_samples(
         args.namespace,
         "deployment/logfwd-capture",
         adapter.diagnostics_target_format.format(pod_name=collector_pod),
+        collector_stats_kind=adapter.collector_stats_kind,
+        collector_stats_port=adapter.collector_stats_port,
         warmup_sec=profile.warmup_sec,
         measure_sec=profile.measure_sec,
         on_measure_start=lambda: emit_phase_signal(

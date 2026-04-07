@@ -27,7 +27,7 @@ The harness currently supports two phases:
 
 The current smoke implementation is intentionally narrow:
 
-- collector support: `logfwd` only
+- collector support: `logfwd`, `otelcol`
 - benchmark mode: `baseline-pass-through`
 - sink transport: OTLP/HTTP into a `logfwd` capture sink
 
@@ -116,6 +116,8 @@ Useful flags:
   Leaves the KIND cluster running for inspection.
 - `--namespace`
   Overrides the benchmark namespace.
+- `--collector-image`
+  Overrides the collector image for adapters that do not use `--memagent-image`.
 - `--protocol`
   Records the target sink protocol in metadata. Defaults to `otlp_http`.
 
