@@ -596,6 +596,8 @@ def main() -> int:
                 namespace=args.namespace,
                 deployment="logfwd-capture",
                 selector="app.kubernetes.io/name=logfwd-capture",
+                collector_selector=adapter.pod_selector,
+                emitter_selector="app.kubernetes.io/name=log-emitter",
             )
         except Exception as exc:  # noqa: BLE001
             artifacts_dir = results_dir / "artifacts"
