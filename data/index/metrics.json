@@ -1,0 +1,110 @@
+[
+  {
+    "metric": "captured_rows_total",
+    "latestSeriesCount": 6,
+    "latestRunId": "24071801166-1--kind-bench-smoke-multi-vector",
+    "latestTimestamp": "2026-04-07T08:24:29.000Z"
+  },
+  {
+    "metric": "collector_cpu_cores_avg",
+    "latestSeriesCount": 6,
+    "latestRunId": "24071801166-1--kind-bench-smoke-multi-vector",
+    "latestTimestamp": "2026-04-07T08:24:29.000Z"
+  },
+  {
+    "metric": "collector_cpu_cores_p95",
+    "latestSeriesCount": 6,
+    "latestRunId": "24071801166-1--kind-bench-smoke-multi-vector",
+    "latestTimestamp": "2026-04-07T08:24:29.000Z"
+  },
+  {
+    "metric": "collector_rss_mb_avg",
+    "latestSeriesCount": 6,
+    "latestRunId": "24071801166-1--kind-bench-smoke-multi-vector",
+    "latestTimestamp": "2026-04-07T08:24:29.000Z"
+  },
+  {
+    "metric": "collector_rss_mb_p95",
+    "latestSeriesCount": 6,
+    "latestRunId": "24071801166-1--kind-bench-smoke-multi-vector",
+    "latestTimestamp": "2026-04-07T08:24:29.000Z"
+  },
+  {
+    "metric": "drop_estimate",
+    "latestSeriesCount": 6,
+    "latestRunId": "24071801166-1--kind-bench-smoke-multi-vector",
+    "latestTimestamp": "2026-04-07T08:24:29.000Z"
+  },
+  {
+    "metric": "dup_estimate",
+    "latestSeriesCount": 6,
+    "latestRunId": "24071801166-1--kind-bench-smoke-multi-vector",
+    "latestTimestamp": "2026-04-07T08:24:29.000Z"
+  },
+  {
+    "metric": "emitter_reported_events_total",
+    "latestSeriesCount": 6,
+    "latestRunId": "24071801166-1--kind-bench-smoke-multi-vector",
+    "latestTimestamp": "2026-04-07T08:24:29.000Z"
+  },
+  {
+    "metric": "missing_event_count",
+    "latestSeriesCount": 6,
+    "latestRunId": "24071801166-1--kind-bench-smoke-multi-vector",
+    "latestTimestamp": "2026-04-07T08:24:29.000Z"
+  },
+  {
+    "metric": "missing_source_count",
+    "latestSeriesCount": 6,
+    "latestRunId": "24071801166-1--kind-bench-smoke-multi-vector",
+    "latestTimestamp": "2026-04-07T08:24:29.000Z"
+  },
+  {
+    "metric": "sink_lines_per_sec_avg",
+    "latestSeriesCount": 6,
+    "latestRunId": "24071801166-1--kind-bench-smoke-multi-vector",
+    "latestTimestamp": "2026-04-07T08:24:29.000Z"
+  },
+  {
+    "metric": "sink_lines_per_sec_p50",
+    "latestSeriesCount": 6,
+    "latestRunId": "24071801166-1--kind-bench-smoke-multi-vector",
+    "latestTimestamp": "2026-04-07T08:24:29.000Z"
+  },
+  {
+    "metric": "sink_lines_per_sec_p95",
+    "latestSeriesCount": 6,
+    "latestRunId": "24071801166-1--kind-bench-smoke-multi-vector",
+    "latestTimestamp": "2026-04-07T08:24:29.000Z"
+  },
+  {
+    "metric": "sink_lines_per_sec_p99",
+    "latestSeriesCount": 6,
+    "latestRunId": "24071801166-1--kind-bench-smoke-multi-vector",
+    "latestTimestamp": "2026-04-07T08:24:29.000Z"
+  },
+  {
+    "metric": "sink_lines_total",
+    "latestSeriesCount": 6,
+    "latestRunId": "24071801166-1--kind-bench-smoke-multi-vector",
+    "latestTimestamp": "2026-04-07T08:24:29.000Z"
+  },
+  {
+    "metric": "sink_reported_events_total",
+    "latestSeriesCount": 6,
+    "latestRunId": "24071801166-1--kind-bench-smoke-multi-vector",
+    "latestTimestamp": "2026-04-07T08:24:29.000Z"
+  },
+  {
+    "metric": "source_rows_total",
+    "latestSeriesCount": 6,
+    "latestRunId": "24071801166-1--kind-bench-smoke-multi-vector",
+    "latestTimestamp": "2026-04-07T08:24:29.000Z"
+  },
+  {
+    "metric": "unexpected_event_count",
+    "latestSeriesCount": 6,
+    "latestRunId": "24071801166-1--kind-bench-smoke-multi-vector",
+    "latestTimestamp": "2026-04-07T08:24:29.000Z"
+  }
+]
