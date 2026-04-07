@@ -615,6 +615,10 @@ def run_smoke_phase(
     sink_stats_kind = "capture_reader" if adapter.sink_transport == "http_ndjson" else "logfwd"
     sink_stats_port = 8081 if adapter.sink_transport == "http_ndjson" else 9090
     drain_timeout_sec = 45 if adapter.sink_transport == "http_ndjson" else 10
+    if profile.eps_per_pod >= SOURCE_ORACLE_MAX_TARGET_EPS_PER_POD:
+        # High-rate runs can end with a larger in-flight queue; allow extra drain time
+        # before assessing diagnostics-based drop estimates.
+        drain_timeout_sec = max(drain_timeout_sec, 30)
     sink_reported_stats = wait_for_sink_catch_up(
         namespace=args.namespace,
         sink_pod=sink_pod,
