@@ -254,6 +254,28 @@
           "run_id": "24071801166-1--kind-bench-smoke-single-vector"
         }
       ]
+    },
+    "kind/smoke/baseline-pass-through [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=logfwd,benchkit.namespace=memagent-bench,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]": {
+      "tags": {
+        "benchkit.cluster": "kind-single-node",
+        "benchkit.cluster_cpu_limit_cores": "1.0",
+        "benchkit.cpu_profile": "single",
+        "benchkit.impl": "logfwd",
+        "benchkit.namespace": "memagent-bench",
+        "benchkit.pods": "1",
+        "benchkit.profile": "smoke",
+        "benchkit.protocol": "otlp_http",
+        "benchkit.target_eps_per_pod": "0",
+        "benchkit.total_target_eps": "0"
+      },
+      "points": [
+        {
+          "timestamp": "2026-04-07T15:08:18.000Z",
+          "value": 6683.92,
+          "commit": "951b01d1a20e7a956994fcc61292d8edecd5296d",
+          "run_id": "24088711810-1--kind-bench-smoke-target-max-single-logfwd"
+        }
+      ]
     }
   }
 }
