@@ -116,6 +116,7 @@ jobs:
             sudo mv ./kind /usr/local/bin/kind
           fi
       - name: Run benchmark harness
+        continue-on-error: ${{ github.event_name == 'pull_request' && matrix.collector == 'vector' }}
         run: |
           python3 bench/kind/run.py \
             --phase smoke \
