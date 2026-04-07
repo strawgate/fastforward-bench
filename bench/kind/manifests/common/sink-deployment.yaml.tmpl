@@ -20,6 +20,13 @@ spec:
           image: ${MEMAGENT_IMAGE}
           imagePullPolicy: IfNotPresent
           args: ["--config", "/etc/logfwd/config.yaml"]
+          resources:
+            requests:
+              cpu: ${SINK_CPU_REQUEST}
+              memory: ${SINK_MEMORY_REQUEST}
+            limits:
+              cpu: ${SINK_CPU_LIMIT}
+              memory: ${SINK_MEMORY_LIMIT}
           ports:
             - name: otlp-http
               containerPort: 4318
@@ -41,6 +48,13 @@ spec:
           image: python:3.12-alpine
           imagePullPolicy: IfNotPresent
           command: ["python", "/etc/logfwd/capture-stats.py"]
+          resources:
+            requests:
+              cpu: ${CAPTURE_READER_CPU_REQUEST}
+              memory: ${CAPTURE_READER_MEMORY_REQUEST}
+            limits:
+              cpu: ${CAPTURE_READER_CPU_LIMIT}
+              memory: ${CAPTURE_READER_MEMORY_LIMIT}
           env:
             - name: BENCHMARK_ID
               value: "${BENCHMARK_ID}"

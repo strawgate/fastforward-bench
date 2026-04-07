@@ -34,6 +34,13 @@ spec:
           image: ${MEMAGENT_IMAGE}
           imagePullPolicy: IfNotPresent
           args: ["--config", "/etc/logfwd/config.yaml"]
+          resources:
+            requests:
+              cpu: ${EMITTER_CPU_REQUEST}
+              memory: ${EMITTER_MEMORY_REQUEST}
+            limits:
+              cpu: ${EMITTER_CPU_LIMIT}
+              memory: ${EMITTER_MEMORY_LIMIT}
           ports:
             - name: diagnostics
               containerPort: 9090

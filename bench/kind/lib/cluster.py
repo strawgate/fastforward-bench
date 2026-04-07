@@ -53,3 +53,23 @@ def delete_kind_cluster(name: str) -> None:
 
 def load_image_into_kind(name: str, image: str) -> None:
     run(["kind", "load", "docker-image", image, "--name", name])
+
+
+def set_kind_control_plane_cpu_limit(name: str, cpus: float) -> None:
+    if cpus <= 0:
+        raise CommandError("kind control-plane CPU limit must be > 0")
+    candidates = [f"{name}-control-plane", f"kind-{name}-control-plane"]
+    last_detail = "control-plane container not found"
+    for container_name in candidates:
+        completed = subprocess.run(
+            ["docker", "update", "--cpus", str(cpus), container_name],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if completed.returncode == 0:
+            return
+        stderr = (completed.stderr or "").strip()
+        stdout = (completed.stdout or "").strip()
+        last_detail = stderr or stdout or f"exit code {completed.returncode}"
+    raise CommandError(f"failed to set CPU limit on kind control-plane: {last_detail}")

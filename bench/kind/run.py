@@ -11,6 +11,7 @@ import time
 import traceback
 import uuid
 import urllib.request
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -20,7 +21,14 @@ from lib.analyze import (
     expected_emitter_pods,
     load_json_lines,
 )
-from lib.cluster import CommandError, create_kind_cluster, delete_kind_cluster, load_image_into_kind, require_tool
+from lib.cluster import (
+    CommandError,
+    create_kind_cluster,
+    delete_kind_cluster,
+    load_image_into_kind,
+    require_tool,
+    set_kind_control_plane_cpu_limit,
+)
 from lib.collectors import CollectorAdapter, get_collector_adapter
 from lib.kube import (
     apply_manifest,
@@ -57,6 +65,64 @@ COLLECTOR_MANIFESTS_ROOT = BENCH_ROOT / "manifests" / "collectors"
 WORKLOAD_MANIFESTS_ROOT = BENCH_ROOT / "manifests" / "workload"
 
 
+@dataclass(frozen=True)
+class CpuProfile:
+    name: str
+    cluster_cpu_cores: float
+    collector_cpu_mcpu_min: int
+    collector_cpu_mcpu_target: int
+    emitter_cpu_mcpu_per_pod: int
+    sink_cpu_mcpu: int
+    capture_reader_cpu_mcpu: int
+    collector_memory_limit: str
+    emitter_memory_limit: str
+    sink_memory_limit: str
+    capture_reader_memory_limit: str
+
+
+@dataclass(frozen=True)
+class ResourcePlan:
+    cpu_profile: CpuProfile
+    collector_cpu: str
+    emitter_cpu: str
+    sink_cpu: str
+    capture_reader_cpu: str
+    collector_memory: str
+    emitter_memory: str
+    sink_memory: str
+    capture_reader_memory: str
+
+
+CPU_PROFILES: dict[str, CpuProfile] = {
+    "single": CpuProfile(
+        name="single",
+        cluster_cpu_cores=1.0,
+        collector_cpu_mcpu_min=500,
+        collector_cpu_mcpu_target=900,
+        emitter_cpu_mcpu_per_pod=60,
+        sink_cpu_mcpu=100,
+        capture_reader_cpu_mcpu=20,
+        collector_memory_limit="512Mi",
+        emitter_memory_limit="96Mi",
+        sink_memory_limit="256Mi",
+        capture_reader_memory_limit="128Mi",
+    ),
+    "multi": CpuProfile(
+        name="multi",
+        cluster_cpu_cores=2.0,
+        collector_cpu_mcpu_min=1200,
+        collector_cpu_mcpu_target=1800,
+        emitter_cpu_mcpu_per_pod=60,
+        sink_cpu_mcpu=120,
+        capture_reader_cpu_mcpu=20,
+        collector_memory_limit="1Gi",
+        emitter_memory_limit="96Mi",
+        sink_memory_limit="256Mi",
+        capture_reader_memory_limit="128Mi",
+    ),
+}
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run the KIND competitive benchmark harness.")
     parser.add_argument("--phase", choices=["infra", "smoke"], default="smoke")
@@ -72,6 +138,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--benchkit-kind", choices=["workflow", "hybrid"], default="workflow")
     parser.add_argument("--benchkit-service-name", default="memagent-e2e.kind-bench")
     parser.add_argument("--benchkit-otlp-http-endpoint", default=None)
+    parser.add_argument("--cpu-profile", choices=sorted(CPU_PROFILES), default="single")
     parser.add_argument("--keep-cluster", action="store_true")
     return parser.parse_args()
 
@@ -116,6 +183,47 @@ def normalize_otlp_metrics_url(endpoint: str) -> str:
     if trimmed.endswith("/v1/metrics"):
         return trimmed
     return f"{trimmed}/v1/metrics"
+
+
+def format_cpu_quantity(mcpu: int) -> str:
+    if mcpu < 0:
+        raise ValueError("cpu quantity cannot be negative")
+    if mcpu % 1000 == 0:
+        return str(mcpu // 1000)
+    return f"{mcpu}m"
+
+
+def build_resource_plan(*, cpu_profile: CpuProfile, emitter_pods: int) -> ResourcePlan:
+    if emitter_pods <= 0:
+        raise ValueError("emitter pod count must be > 0")
+
+    node_budget_mcpu = int(cpu_profile.cluster_cpu_cores * 1000)
+    reserved_mcpu = cpu_profile.sink_cpu_mcpu + cpu_profile.capture_reader_cpu_mcpu
+    emitter_mcpu = cpu_profile.emitter_cpu_mcpu_per_pod
+    collector_mcpu = node_budget_mcpu - reserved_mcpu - (emitter_mcpu * emitter_pods)
+
+    if collector_mcpu < cpu_profile.collector_cpu_mcpu_min:
+        emitter_budget = max(1, (node_budget_mcpu - reserved_mcpu - cpu_profile.collector_cpu_mcpu_min) // emitter_pods)
+        emitter_mcpu = min(emitter_mcpu, emitter_budget)
+        collector_mcpu = node_budget_mcpu - reserved_mcpu - (emitter_mcpu * emitter_pods)
+
+    collector_mcpu = min(collector_mcpu, cpu_profile.collector_cpu_mcpu_target)
+    if collector_mcpu < 100:
+        raise ValueError(
+            f"cpu profile '{cpu_profile.name}' leaves only {collector_mcpu}m for collector with {emitter_pods} emitter pods"
+        )
+
+    return ResourcePlan(
+        cpu_profile=cpu_profile,
+        collector_cpu=format_cpu_quantity(collector_mcpu),
+        emitter_cpu=format_cpu_quantity(emitter_mcpu),
+        sink_cpu=format_cpu_quantity(cpu_profile.sink_cpu_mcpu),
+        capture_reader_cpu=format_cpu_quantity(cpu_profile.capture_reader_cpu_mcpu),
+        collector_memory=cpu_profile.collector_memory_limit,
+        emitter_memory=cpu_profile.emitter_memory_limit,
+        sink_memory=cpu_profile.sink_memory_limit,
+        capture_reader_memory=cpu_profile.capture_reader_memory_limit,
+    )
 
 
 def emit_otlp_metrics(*, endpoint: str, payload: dict[str, object], timeout_sec: int = 10) -> None:
@@ -244,11 +352,59 @@ def filter_rows_to_emitter_snapshot(
     return filtered
 
 
+def sink_reported_events_total(
+    sink_reported_stats: dict[str, object],
+    *,
+    sink_stats_kind: str,
+) -> int:
+    if sink_stats_kind == "capture_reader":
+        return int(sink_reported_stats.get("benchmark_rows_total", 0) or 0)
+    return int(sink_reported_stats.get("output_lines", 0) or 0)
+
+
+def wait_for_sink_catch_up(
+    *,
+    namespace: str,
+    sink_pod: str,
+    sink_stats_kind: str,
+    sink_stats_port: int,
+    target_events_total: int | None,
+    timeout_sec: int,
+    poll_sec: float = 1.0,
+) -> dict[str, object]:
+    deadline = time.time() + timeout_sec
+    last_stats: dict[str, object] = {}
+    while True:
+        try:
+            last_stats = collect_sink_reported_stats(
+                namespace,
+                sink_pod,
+                sink_stats_kind=sink_stats_kind,
+                sink_stats_port=sink_stats_port,
+            )
+        except Exception:  # noqa: BLE001
+            if time.time() >= deadline:
+                return last_stats
+            time.sleep(poll_sec)
+            continue
+
+        if target_events_total is None:
+            return last_stats
+
+        if sink_reported_events_total(last_stats, sink_stats_kind=sink_stats_kind) >= target_events_total:
+            return last_stats
+
+        if time.time() >= deadline:
+            return last_stats
+        time.sleep(poll_sec)
+
+
 def render_manifests(
     *,
     args: argparse.Namespace,
     profile: Profile,
     adapter: CollectorAdapter,
+    resource_plan: ResourcePlan,
     benchmark_id: str,
     rendered_dir: Path,
 ) -> dict[str, Path]:
@@ -259,6 +415,22 @@ def render_manifests(
         "BENCHMARK_ID": benchmark_id,
         "EPS_PER_POD": str(profile.eps_per_pod),
         "POD_REPLICAS": str(profile.pods),
+        "COLLECTOR_CPU_REQUEST": resource_plan.collector_cpu,
+        "COLLECTOR_CPU_LIMIT": resource_plan.collector_cpu,
+        "COLLECTOR_MEMORY_REQUEST": resource_plan.collector_memory,
+        "COLLECTOR_MEMORY_LIMIT": resource_plan.collector_memory,
+        "EMITTER_CPU_REQUEST": resource_plan.emitter_cpu,
+        "EMITTER_CPU_LIMIT": resource_plan.emitter_cpu,
+        "EMITTER_MEMORY_REQUEST": resource_plan.emitter_memory,
+        "EMITTER_MEMORY_LIMIT": resource_plan.emitter_memory,
+        "SINK_CPU_REQUEST": resource_plan.sink_cpu,
+        "SINK_CPU_LIMIT": resource_plan.sink_cpu,
+        "SINK_MEMORY_REQUEST": resource_plan.sink_memory,
+        "SINK_MEMORY_LIMIT": resource_plan.sink_memory,
+        "CAPTURE_READER_CPU_REQUEST": resource_plan.capture_reader_cpu,
+        "CAPTURE_READER_CPU_LIMIT": resource_plan.capture_reader_cpu,
+        "CAPTURE_READER_MEMORY_REQUEST": resource_plan.capture_reader_memory,
+        "CAPTURE_READER_MEMORY_LIMIT": resource_plan.capture_reader_memory,
     }
     manifests = {
         "namespace": rendered_dir / "namespace.yaml",
@@ -377,25 +549,25 @@ def run_smoke_phase(
     emitter_reported_total, emitter_reported_stats = collect_emitter_reported_total(args.namespace, emitter_pods)
     result.emitter_reported_events_total = emitter_reported_total
 
-    # Give the collector a brief chance to drain rows up to the emitter snapshot
-    # before we capture sink artifacts.
-    time.sleep(2)
-
     sink_pod = get_first_pod_name(args.namespace, "app.kubernetes.io/name=logfwd-capture")
     if not sink_pod:
         raise CommandError("sink pod not found after rollout")
-    sink_reported_stats = collect_sink_reported_stats(
-        args.namespace,
-        sink_pod,
-        sink_stats_kind="capture_reader" if adapter.sink_transport == "http_ndjson" else "logfwd",
-        sink_stats_port=8081 if adapter.sink_transport == "http_ndjson" else 9090,
+
+    sink_stats_kind = "capture_reader" if adapter.sink_transport == "http_ndjson" else "logfwd"
+    sink_stats_port = 8081 if adapter.sink_transport == "http_ndjson" else 9090
+    drain_timeout_sec = 45 if adapter.sink_transport == "http_ndjson" else 10
+    sink_reported_stats = wait_for_sink_catch_up(
+        namespace=args.namespace,
+        sink_pod=sink_pod,
+        sink_stats_kind=sink_stats_kind,
+        sink_stats_port=sink_stats_port,
+        target_events_total=emitter_reported_total,
+        timeout_sec=drain_timeout_sec,
     )
-    if adapter.sink_transport == "http_ndjson":
-        result.sink_reported_events_total = int(
-            sink_reported_stats.get("benchmark_rows_total", 0) or 0
-        )
-    else:
-        result.sink_reported_events_total = int(sink_reported_stats.get("output_lines", 0) or 0)
+    result.sink_reported_events_total = sink_reported_events_total(
+        sink_reported_stats,
+        sink_stats_kind=sink_stats_kind,
+    )
     collect_pod_logs(
         namespace=args.namespace,
         pod_names=[sink_pod],
@@ -496,6 +668,8 @@ def main() -> int:
     args = parse_args()
     profile = PROFILES[args.profile]
     adapter = get_collector_adapter(args.collector)
+    cpu_profile = CPU_PROFILES[args.cpu_profile]
+    resource_plan = build_resource_plan(cpu_profile=cpu_profile, emitter_pods=profile.pods)
     results_dir = resolve_results_dir(args.results_dir)
     rendered_dir = results_dir / "rendered-manifests"
     rendered_dir.mkdir(parents=True, exist_ok=True)
@@ -512,6 +686,8 @@ def main() -> int:
         namespace=args.namespace,
         collector=args.collector,
         protocol=adapter.sink_transport if args.protocol == "otlp_http" else args.protocol,
+        cpu_profile=args.cpu_profile,
+        cluster_cpu_limit_cores=cpu_profile.cluster_cpu_cores,
         pods=profile.pods,
         target_eps_per_pod=profile.eps_per_pod,
         total_target_eps=profile.total_target_eps,
@@ -550,6 +726,7 @@ def main() -> int:
         args=args,
         profile=profile,
         adapter=adapter,
+        resource_plan=resource_plan,
         benchmark_id=benchmark_id,
         rendered_dir=rendered_dir,
     )
@@ -565,6 +742,7 @@ def main() -> int:
             event="start",
         )
         create_kind_cluster(args.cluster_name)
+        set_kind_control_plane_cpu_limit(args.cluster_name, cpu_profile.cluster_cpu_cores)
         result.cluster_ready = True
         load_image_into_kind(args.cluster_name, args.memagent_image)
 
