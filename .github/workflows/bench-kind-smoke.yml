@@ -250,6 +250,14 @@ jobs:
             --benchkit-otlp-http-endpoint "${{ steps.monitor.outputs.otlp-http-endpoint }}" \
             --results-dir "${BENCH_RESULTS_DIR}"
       - if: env.PERSIST_BENCH_DATA == 'true'
+        name: Stash jitter
+        shell: bash
+        run: |
+          seed="$(printf '%s' "${BENCHKIT_RUN_ID}" | cksum | awk '{print $1}')"
+          sleep_seconds=$(( (seed % 17) + 3 ))
+          echo "Delaying stash push by ${sleep_seconds}s to reduce bench-data contention"
+          sleep "${sleep_seconds}"
+      - if: env.PERSIST_BENCH_DATA == 'true'
         name: Stash benchmark run
         continue-on-error: true
         env:
