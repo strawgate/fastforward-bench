@@ -66,8 +66,6 @@ COLLECTOR_MANIFESTS_ROOT = BENCH_ROOT / "manifests" / "collectors"
 WORKLOAD_MANIFESTS_ROOT = BENCH_ROOT / "manifests" / "workload"
 SOURCE_ORACLE_MAX_TARGET_EPS_PER_POD = 100_000
 KIND_NODE_SYSTEM_HEADROOM_MCPU = 500
-HIGH_EPS_EMITTER_BURST_THRESHOLD = 100_000
-KIND_NODE_SINGLE_EMITTER_BURST_HEADROOM_MCPU = 300
 
 
 @dataclass(frozen=True)
@@ -220,12 +218,9 @@ def build_resource_plan(
     *,
     cpu_profile: CpuProfile,
     emitter_pods: int,
-    target_eps_per_pod: int,
 ) -> ResourcePlan:
     if emitter_pods <= 0:
         raise ValueError("emitter pod count must be > 0")
-    if target_eps_per_pod < 0:
-        raise ValueError("target_eps_per_pod must be >= 0")
 
     configured_budget_mcpu = int(cpu_profile.cluster_cpu_cores * 1000)
     system_headroom_mcpu = KIND_NODE_SYSTEM_HEADROOM_MCPU if emitter_pods > 1 else 0
@@ -247,17 +242,6 @@ def build_resource_plan(
         raise ValueError(
             f"cpu profile '{cpu_profile.name}' leaves only {collector_mcpu}m for collector with {emitter_pods} emitter pods"
         )
-
-    # For high-rate single-emitter probes, let the emitter borrow any leftover
-    # node CPU after collector capping so generation is less likely to bottleneck
-    # before the collector.
-    if emitter_pods == 1 and (
-        target_eps_per_pod == 0 or target_eps_per_pod >= HIGH_EPS_EMITTER_BURST_THRESHOLD
-    ):
-        spare_mcpu = node_budget_mcpu - reserved_mcpu - collector_mcpu - emitter_mcpu
-        burst_mcpu = spare_mcpu - KIND_NODE_SINGLE_EMITTER_BURST_HEADROOM_MCPU
-        if burst_mcpu > 0:
-            emitter_mcpu += burst_mcpu
 
     # Keep generator and sink memory fixed at 1Gi for benchmark stability.
     # This avoids memory-limit artifacts while we tune throughput behavior.
@@ -1040,7 +1024,6 @@ def main() -> int:
     resource_plan = build_resource_plan(
         cpu_profile=cpu_profile,
         emitter_pods=profile.pods,
-        target_eps_per_pod=profile.eps_per_pod,
     )
     results_dir = resolve_results_dir(args.results_dir)
     rendered_dir = results_dir / "rendered-manifests"
