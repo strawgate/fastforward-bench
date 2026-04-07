@@ -101,10 +101,11 @@ def scan_artifacts(root: Path) -> list[BenchResult]:
     if not root.exists():
         return results
 
-    for artifact_dir in sorted(path for path in root.iterdir() if path.is_dir()):
-        result_path = artifact_dir / "result.json"
-        if result_path.exists():
-            results.append(load_result(result_path, artifact_dir.name))
+    # actions/download-artifact extracts differently depending on the number of
+    # artifacts downloaded. When exactly one artifact matches, files may be
+    # unpacked directly under `root` instead of `root/<artifact-name>/...`.
+    for result_path in sorted(root.rglob("result.json")):
+        results.append(load_result(result_path, result_path.parent.name))
     return results
 
 
