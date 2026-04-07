@@ -471,7 +471,8 @@ def run_smoke_phase(
 
     apply_manifest(manifests["emitter_configmap"])
     apply_manifest(manifests["emitter_statefulset"])
-    rollout_status(args.namespace, "statefulset", "log-emitter", timeout_sec=120)
+    emitter_rollout_timeout = max(120, profile.pods * 12)
+    rollout_status(args.namespace, "statefulset", "log-emitter", timeout_sec=emitter_rollout_timeout)
 
     emit_phase_signal(
         args=args,
