@@ -223,7 +223,12 @@ def build_resource_plan(
         raise ValueError("emitter pod count must be > 0")
 
     node_budget_mcpu = int(cpu_profile.cluster_cpu_cores * 1000)
-    reserved_mcpu = cpu_profile.sink_cpu_mcpu + cpu_profile.capture_reader_cpu_mcpu
+    sink_mcpu = cpu_profile.sink_cpu_mcpu
+    # High-rate workloads saturate the sink at 100m and flatten around ~10k EPS.
+    # Rebalance CPU so sink has more headroom while staying within node budget.
+    if eps_per_pod >= 100_000 or unbounded_generator:
+        sink_mcpu = max(sink_mcpu, 300)
+    reserved_mcpu = sink_mcpu + cpu_profile.capture_reader_cpu_mcpu
     emitter_mcpu = cpu_profile.emitter_cpu_mcpu_per_pod
     if eps_per_pod >= 100_000:
         emitter_mcpu = max(emitter_mcpu, 200)
@@ -251,7 +256,7 @@ def build_resource_plan(
         cpu_profile=cpu_profile,
         collector_cpu=format_cpu_quantity(collector_mcpu),
         emitter_cpu=format_cpu_quantity(emitter_mcpu),
-        sink_cpu=format_cpu_quantity(cpu_profile.sink_cpu_mcpu),
+        sink_cpu=format_cpu_quantity(sink_mcpu),
         capture_reader_cpu=format_cpu_quantity(cpu_profile.capture_reader_cpu_mcpu),
         collector_memory=cpu_profile.collector_memory_limit,
         emitter_memory=emitter_memory_limit,
