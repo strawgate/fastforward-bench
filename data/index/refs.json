@@ -2,8 +2,15 @@
   {
     "ref": "refs/heads/codex/eps-target-sweep",
     "latestRunId": "24097782241-1--kind-bench-smoke-otlp-t1m-single-otelcol",
-    "latestTimestamp": "2026-04-07T19:56:15.907Z",
+    "latestTimestamp": "2026-04-07T20:21:29.624Z",
     "latestCommit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
-    "runCount": 50
+    "runCount": 43
+  },
+  {
+    "ref": "refs/heads/master",
+    "latestRunId": "24102332929-1--kind-bench-smoke-file-t1m-single-logfwd",
+    "latestTimestamp": "2026-04-07T20:16:48.000Z",
+    "latestCommit": "211d46c749d1509d3937ad07d11c8b72fdb54107",
+    "runCount": 7
   }
 ]
