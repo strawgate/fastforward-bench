@@ -1,110 +1,110 @@
 [
   {
     "metric": "captured_rows_total",
-    "latestSeriesCount": 7,
-    "latestRunId": "24088711810-1--kind-bench-smoke-target-max-single-logfwd",
-    "latestTimestamp": "2026-04-07T15:08:18.000Z"
+    "latestSeriesCount": 10,
+    "latestRunId": "24089711508-1--kind-bench-smoke-t1k-single-logfwd",
+    "latestTimestamp": "2026-04-07T15:28:52.000Z"
   },
   {
     "metric": "collector_cpu_cores_avg",
-    "latestSeriesCount": 7,
-    "latestRunId": "24088711810-1--kind-bench-smoke-target-max-single-logfwd",
-    "latestTimestamp": "2026-04-07T15:08:18.000Z"
+    "latestSeriesCount": 10,
+    "latestRunId": "24089711508-1--kind-bench-smoke-t1k-single-logfwd",
+    "latestTimestamp": "2026-04-07T15:28:52.000Z"
   },
   {
     "metric": "collector_cpu_cores_p95",
-    "latestSeriesCount": 7,
-    "latestRunId": "24088711810-1--kind-bench-smoke-target-max-single-logfwd",
-    "latestTimestamp": "2026-04-07T15:08:18.000Z"
+    "latestSeriesCount": 10,
+    "latestRunId": "24089711508-1--kind-bench-smoke-t1k-single-logfwd",
+    "latestTimestamp": "2026-04-07T15:28:52.000Z"
   },
   {
     "metric": "collector_rss_mb_avg",
-    "latestSeriesCount": 7,
-    "latestRunId": "24088711810-1--kind-bench-smoke-target-max-single-logfwd",
-    "latestTimestamp": "2026-04-07T15:08:18.000Z"
+    "latestSeriesCount": 10,
+    "latestRunId": "24089711508-1--kind-bench-smoke-t1k-single-logfwd",
+    "latestTimestamp": "2026-04-07T15:28:52.000Z"
   },
   {
     "metric": "collector_rss_mb_p95",
-    "latestSeriesCount": 7,
-    "latestRunId": "24088711810-1--kind-bench-smoke-target-max-single-logfwd",
-    "latestTimestamp": "2026-04-07T15:08:18.000Z"
+    "latestSeriesCount": 10,
+    "latestRunId": "24089711508-1--kind-bench-smoke-t1k-single-logfwd",
+    "latestTimestamp": "2026-04-07T15:28:52.000Z"
   },
   {
     "metric": "drop_estimate",
-    "latestSeriesCount": 7,
-    "latestRunId": "24088711810-1--kind-bench-smoke-target-max-single-logfwd",
-    "latestTimestamp": "2026-04-07T15:08:18.000Z"
+    "latestSeriesCount": 10,
+    "latestRunId": "24089711508-1--kind-bench-smoke-t1k-single-logfwd",
+    "latestTimestamp": "2026-04-07T15:28:52.000Z"
   },
   {
     "metric": "dup_estimate",
-    "latestSeriesCount": 7,
-    "latestRunId": "24088711810-1--kind-bench-smoke-target-max-single-logfwd",
-    "latestTimestamp": "2026-04-07T15:08:18.000Z"
+    "latestSeriesCount": 10,
+    "latestRunId": "24089711508-1--kind-bench-smoke-t1k-single-logfwd",
+    "latestTimestamp": "2026-04-07T15:28:52.000Z"
   },
   {
     "metric": "emitter_reported_events_total",
-    "latestSeriesCount": 7,
-    "latestRunId": "24088711810-1--kind-bench-smoke-target-max-single-logfwd",
-    "latestTimestamp": "2026-04-07T15:08:18.000Z"
+    "latestSeriesCount": 10,
+    "latestRunId": "24089711508-1--kind-bench-smoke-t1k-single-logfwd",
+    "latestTimestamp": "2026-04-07T15:28:52.000Z"
   },
   {
     "metric": "missing_event_count",
-    "latestSeriesCount": 7,
-    "latestRunId": "24088711810-1--kind-bench-smoke-target-max-single-logfwd",
-    "latestTimestamp": "2026-04-07T15:08:18.000Z"
+    "latestSeriesCount": 10,
+    "latestRunId": "24089711508-1--kind-bench-smoke-t1k-single-logfwd",
+    "latestTimestamp": "2026-04-07T15:28:52.000Z"
   },
   {
     "metric": "missing_source_count",
-    "latestSeriesCount": 7,
-    "latestRunId": "24088711810-1--kind-bench-smoke-target-max-single-logfwd",
-    "latestTimestamp": "2026-04-07T15:08:18.000Z"
+    "latestSeriesCount": 10,
+    "latestRunId": "24089711508-1--kind-bench-smoke-t1k-single-logfwd",
+    "latestTimestamp": "2026-04-07T15:28:52.000Z"
   },
   {
     "metric": "sink_lines_per_sec_avg",
-    "latestSeriesCount": 7,
-    "latestRunId": "24088711810-1--kind-bench-smoke-target-max-single-logfwd",
-    "latestTimestamp": "2026-04-07T15:08:18.000Z"
+    "latestSeriesCount": 10,
+    "latestRunId": "24089711508-1--kind-bench-smoke-t1k-single-logfwd",
+    "latestTimestamp": "2026-04-07T15:28:52.000Z"
   },
   {
     "metric": "sink_lines_per_sec_p50",
-    "latestSeriesCount": 7,
-    "latestRunId": "24088711810-1--kind-bench-smoke-target-max-single-logfwd",
-    "latestTimestamp": "2026-04-07T15:08:18.000Z"
+    "latestSeriesCount": 10,
+    "latestRunId": "24089711508-1--kind-bench-smoke-t1k-single-logfwd",
+    "latestTimestamp": "2026-04-07T15:28:52.000Z"
   },
   {
     "metric": "sink_lines_per_sec_p95",
-    "latestSeriesCount": 7,
-    "latestRunId": "24088711810-1--kind-bench-smoke-target-max-single-logfwd",
-    "latestTimestamp": "2026-04-07T15:08:18.000Z"
+    "latestSeriesCount": 10,
+    "latestRunId": "24089711508-1--kind-bench-smoke-t1k-single-logfwd",
+    "latestTimestamp": "2026-04-07T15:28:52.000Z"
   },
   {
     "metric": "sink_lines_per_sec_p99",
-    "latestSeriesCount": 7,
-    "latestRunId": "24088711810-1--kind-bench-smoke-target-max-single-logfwd",
-    "latestTimestamp": "2026-04-07T15:08:18.000Z"
+    "latestSeriesCount": 10,
+    "latestRunId": "24089711508-1--kind-bench-smoke-t1k-single-logfwd",
+    "latestTimestamp": "2026-04-07T15:28:52.000Z"
   },
   {
     "metric": "sink_lines_total",
-    "latestSeriesCount": 7,
-    "latestRunId": "24088711810-1--kind-bench-smoke-target-max-single-logfwd",
-    "latestTimestamp": "2026-04-07T15:08:18.000Z"
+    "latestSeriesCount": 10,
+    "latestRunId": "24089711508-1--kind-bench-smoke-t1k-single-logfwd",
+    "latestTimestamp": "2026-04-07T15:28:52.000Z"
   },
   {
     "metric": "sink_reported_events_total",
-    "latestSeriesCount": 7,
-    "latestRunId": "24088711810-1--kind-bench-smoke-target-max-single-logfwd",
-    "latestTimestamp": "2026-04-07T15:08:18.000Z"
+    "latestSeriesCount": 10,
+    "latestRunId": "24089711508-1--kind-bench-smoke-t1k-single-logfwd",
+    "latestTimestamp": "2026-04-07T15:28:52.000Z"
   },
   {
     "metric": "source_rows_total",
-    "latestSeriesCount": 7,
-    "latestRunId": "24088711810-1--kind-bench-smoke-target-max-single-logfwd",
-    "latestTimestamp": "2026-04-07T15:08:18.000Z"
+    "latestSeriesCount": 10,
+    "latestRunId": "24089711508-1--kind-bench-smoke-t1k-single-logfwd",
+    "latestTimestamp": "2026-04-07T15:28:52.000Z"
   },
   {
     "metric": "unexpected_event_count",
-    "latestSeriesCount": 7,
-    "latestRunId": "24088711810-1--kind-bench-smoke-target-max-single-logfwd",
-    "latestTimestamp": "2026-04-07T15:08:18.000Z"
+    "latestSeriesCount": 10,
+    "latestRunId": "24089711508-1--kind-bench-smoke-t1k-single-logfwd",
+    "latestTimestamp": "2026-04-07T15:28:52.000Z"
   }
 ]
