@@ -65,6 +65,7 @@ COMMON_MANIFESTS_ROOT = BENCH_ROOT / "manifests" / "common"
 COLLECTOR_MANIFESTS_ROOT = BENCH_ROOT / "manifests" / "collectors"
 WORKLOAD_MANIFESTS_ROOT = BENCH_ROOT / "manifests" / "workload"
 SOURCE_ORACLE_MAX_TARGET_EPS_PER_POD = 100_000
+KIND_NODE_SYSTEM_HEADROOM_MCPU = 500
 
 
 @dataclass(frozen=True)
@@ -221,7 +222,11 @@ def build_resource_plan(
     if emitter_pods <= 0:
         raise ValueError("emitter pod count must be > 0")
 
-    node_budget_mcpu = int(cpu_profile.cluster_cpu_cores * 1000)
+    configured_budget_mcpu = int(cpu_profile.cluster_cpu_cores * 1000)
+    system_headroom_mcpu = KIND_NODE_SYSTEM_HEADROOM_MCPU if emitter_pods > 1 else 0
+    # Keep scheduler/system daemon headroom on the kind node so profile-mode
+    # workloads with multiple emitter pods do not starve during scheduling.
+    node_budget_mcpu = max(500, configured_budget_mcpu - system_headroom_mcpu)
     sink_mcpu = cpu_profile.sink_cpu_mcpu
     reserved_mcpu = sink_mcpu + cpu_profile.capture_reader_cpu_mcpu
     emitter_mcpu = cpu_profile.emitter_cpu_mcpu_per_pod
