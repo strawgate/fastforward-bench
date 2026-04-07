@@ -61,6 +61,12 @@ spec:
           ports:
             - name: capture-stats
               containerPort: 8081
+          readinessProbe:
+            httpGet:
+              path: /stats
+              port: capture-stats
+            initialDelaySeconds: 2
+            periodSeconds: 2
           volumeMounts:
             - name: state
               mountPath: /var/lib/logfwd

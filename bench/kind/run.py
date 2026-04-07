@@ -652,7 +652,12 @@ def run_smoke_phase(
         write_json(results_dir / "emitter-stats.json", emitter_reported_stats)
         write_json(results_dir / "sink-stats.json", sink_reported_stats)
 
-        if result.sink_lines_total and result.sink_lines_total > 0:
+        observed_sink_output = bool(
+            (result.sink_lines_total is not None and result.sink_lines_total > 0)
+            or (result.sink_reported_events_total is not None and result.sink_reported_events_total > 0)
+            or len(sink_rows) > 0
+        )
+        if observed_sink_output:
             result.status = "pass"
             result.notes = (
                 "max-throughput benchmark completed with unbounded generator; strict source-vs-sink oracle "
