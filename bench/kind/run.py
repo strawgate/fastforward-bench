@@ -516,8 +516,6 @@ def render_manifests(
 def resolve_generator_batch_size(*, eps_per_pod: int) -> int:
     if eps_per_pod == 0:
         return 8192
-    if eps_per_pod >= 1_000_000:
-        return 8192
     if eps_per_pod >= 100_000:
         return 4096
     if eps_per_pod >= 10_000:
