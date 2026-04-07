@@ -2,22 +2,8 @@
   {
     "ref": "refs/heads/codex/eps-target-sweep",
     "latestRunId": "24092902509-1--kind-bench-smoke-tmax-single-vector",
-    "latestTimestamp": "2026-04-07T17:00:17.086Z",
+    "latestTimestamp": "2026-04-07T17:05:00.116Z",
     "latestCommit": "8728b2520567fe55f8544ee9827159c2bc067f26",
-    "runCount": 46
-  },
-  {
-    "ref": "refs/heads/codex/nightly-eps-report",
-    "latestRunId": "24086735572-1--kind-bench-smoke-single-logfwd",
-    "latestTimestamp": "2026-04-07T14:28:07.000Z",
-    "latestCommit": "84970602417d6f16a53feb704d9bc55907136bb1",
-    "runCount": 3
-  },
-  {
-    "ref": "refs/heads/master",
-    "latestRunId": "24071801166-1--kind-bench-smoke-multi-vector",
-    "latestTimestamp": "2026-04-07T08:24:29.000Z",
-    "latestCommit": "6a9c19d50789e7ffaa7165c30ea8109de3454163",
-    "runCount": 1
+    "runCount": 50
   }
 ]
