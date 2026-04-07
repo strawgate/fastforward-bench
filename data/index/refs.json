@@ -2,9 +2,9 @@
   {
     "ref": "refs/heads/codex/eps-target-sweep",
     "latestRunId": "24092902509-1--kind-bench-smoke-tmax-single-vector",
-    "latestTimestamp": "2026-04-07T16:41:37.907Z",
+    "latestTimestamp": "2026-04-07T17:00:17.086Z",
     "latestCommit": "8728b2520567fe55f8544ee9827159c2bc067f26",
-    "runCount": 36
+    "runCount": 46
   },
   {
     "ref": "refs/heads/codex/nightly-eps-report",
@@ -18,13 +18,6 @@
     "latestRunId": "24071801166-1--kind-bench-smoke-multi-vector",
     "latestTimestamp": "2026-04-07T08:24:29.000Z",
     "latestCommit": "6a9c19d50789e7ffaa7165c30ea8109de3454163",
-    "runCount": 10
-  },
-  {
-    "ref": "refs/heads/codex/bench-workflow-reliability",
-    "latestRunId": "24070568173-1--kind-bench-smoke-single-vector",
-    "latestTimestamp": "2026-04-07T07:51:48.000Z",
-    "latestCommit": "f1cdf51903743aa077dc680fbfa62b6d03e8d3ad",
     "runCount": 1
   }
 ]
