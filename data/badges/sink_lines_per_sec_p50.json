@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
   "label": "sink lines per sec p50",
-  "message": "9.2k events/sec",
+  "message": "94.6k events/sec",
   "color": "brightgreen"
 }
