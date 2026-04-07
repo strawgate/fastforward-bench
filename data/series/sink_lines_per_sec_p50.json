@@ -18,12 +18,6 @@
       },
       "points": [
         {
-          "timestamp": "2026-04-07T07:41:45.000Z",
-          "value": 1.98,
-          "commit": "67d5808a34404522cf813a3f4b1cf49c1c47dc6f",
-          "run_id": "24070198275-1--kind-bench-smoke-single-otelcol"
-        },
-        {
           "timestamp": "2026-04-07T07:46:06.000Z",
           "value": 0,
           "commit": "1d4cce3c02f2a0cfe331a3bd42fc7a60ae8cff3b",
@@ -64,12 +58,6 @@
       },
       "points": [
         {
-          "timestamp": "2026-04-07T07:41:46.000Z",
-          "value": 0,
-          "commit": "67d5808a34404522cf813a3f4b1cf49c1c47dc6f",
-          "run_id": "24070198275-1--kind-bench-smoke-multi-logfwd"
-        },
-        {
           "timestamp": "2026-04-07T07:46:09.000Z",
           "value": 0,
           "commit": "1d4cce3c02f2a0cfe331a3bd42fc7a60ae8cff3b",
@@ -92,46 +80,12 @@
           "value": 0,
           "commit": "6a9c19d50789e7ffaa7165c30ea8109de3454163",
           "run_id": "24071801166-1--kind-bench-smoke-multi-logfwd"
-        }
-      ]
-    },
-    "kind/smoke/baseline-pass-through [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]": {
-      "tags": {
-        "benchkit.cluster": "kind-single-node",
-        "benchkit.cluster_cpu_limit_cores": "2.0",
-        "benchkit.cpu_profile": "multi",
-        "benchkit.impl": "otelcol",
-        "benchkit.namespace": "memagent-bench",
-        "benchkit.pods": "5",
-        "benchkit.profile": "smoke",
-        "benchkit.protocol": "otlp_http",
-        "benchkit.target_eps_per_pod": "100",
-        "benchkit.total_target_eps": "500"
-      },
-      "points": [
-        {
-          "timestamp": "2026-04-07T07:41:47.000Z",
-          "value": 1.98,
-          "commit": "67d5808a34404522cf813a3f4b1cf49c1c47dc6f",
-          "run_id": "24070198275-1--kind-bench-smoke-multi-otelcol"
         },
         {
-          "timestamp": "2026-04-07T07:46:05.000Z",
-          "value": 1.98,
-          "commit": "1d4cce3c02f2a0cfe331a3bd42fc7a60ae8cff3b",
-          "run_id": "24070361659-1--kind-bench-smoke-multi-otelcol"
-        },
-        {
-          "timestamp": "2026-04-07T08:09:20.000Z",
-          "value": 1.98,
-          "commit": "6a9c19d50789e7ffaa7165c30ea8109de3454163",
-          "run_id": "24071218271-1--kind-bench-smoke-multi-otelcol"
-        },
-        {
-          "timestamp": "2026-04-07T08:24:27.000Z",
-          "value": 1012.65,
-          "commit": "6a9c19d50789e7ffaa7165c30ea8109de3454163",
-          "run_id": "24071801166-1--kind-bench-smoke-multi-otelcol"
+          "timestamp": "2026-04-07T16:32:18.000Z",
+          "value": 0,
+          "commit": "8728b2520567fe55f8544ee9827159c2bc067f26",
+          "run_id": "24092637090-1--kind-bench-smoke-profile-smoke-multi-logfwd"
         }
       ]
     },
@@ -149,18 +103,6 @@
         "benchkit.total_target_eps": "500"
       },
       "points": [
-        {
-          "timestamp": "2026-04-07T07:41:50.000Z",
-          "value": 0,
-          "commit": "67d5808a34404522cf813a3f4b1cf49c1c47dc6f",
-          "run_id": "24070198275-1--kind-bench-smoke-single-logfwd"
-        },
-        {
-          "timestamp": "2026-04-07T07:46:05.000Z",
-          "value": 1015.83,
-          "commit": "1d4cce3c02f2a0cfe331a3bd42fc7a60ae8cff3b",
-          "run_id": "24070361659-1--kind-bench-smoke-single-logfwd"
-        },
         {
           "timestamp": "2026-04-07T07:51:44.000Z",
           "value": 1015.69,
@@ -184,6 +126,12 @@
           "value": 0,
           "commit": "84970602417d6f16a53feb704d9bc55907136bb1",
           "run_id": "24086735572-1--kind-bench-smoke-single-logfwd"
+        },
+        {
+          "timestamp": "2026-04-07T16:32:24.000Z",
+          "value": 0,
+          "commit": "8728b2520567fe55f8544ee9827159c2bc067f26",
+          "run_id": "24092637090-1--kind-bench-smoke-profile-smoke-single-logfwd"
         }
       ]
     },
@@ -218,6 +166,12 @@
           "value": 0,
           "commit": "6a9c19d50789e7ffaa7165c30ea8109de3454163",
           "run_id": "24071801166-1--kind-bench-smoke-multi-vector"
+        },
+        {
+          "timestamp": "2026-04-07T16:32:18.000Z",
+          "value": 0,
+          "commit": "8728b2520567fe55f8544ee9827159c2bc067f26",
+          "run_id": "24092637090-1--kind-bench-smoke-profile-smoke-multi-vector"
         }
       ]
     },
@@ -252,6 +206,40 @@
           "value": 0,
           "commit": "6a9c19d50789e7ffaa7165c30ea8109de3454163",
           "run_id": "24071801166-1--kind-bench-smoke-single-vector"
+        }
+      ]
+    },
+    "kind/smoke/baseline-pass-through [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]": {
+      "tags": {
+        "benchkit.cluster": "kind-single-node",
+        "benchkit.cluster_cpu_limit_cores": "2.0",
+        "benchkit.cpu_profile": "multi",
+        "benchkit.impl": "otelcol",
+        "benchkit.namespace": "memagent-bench",
+        "benchkit.pods": "5",
+        "benchkit.profile": "smoke",
+        "benchkit.protocol": "otlp_http",
+        "benchkit.target_eps_per_pod": "100",
+        "benchkit.total_target_eps": "500"
+      },
+      "points": [
+        {
+          "timestamp": "2026-04-07T08:09:20.000Z",
+          "value": 1.98,
+          "commit": "6a9c19d50789e7ffaa7165c30ea8109de3454163",
+          "run_id": "24071218271-1--kind-bench-smoke-multi-otelcol"
+        },
+        {
+          "timestamp": "2026-04-07T08:24:27.000Z",
+          "value": 1012.65,
+          "commit": "6a9c19d50789e7ffaa7165c30ea8109de3454163",
+          "run_id": "24071801166-1--kind-bench-smoke-multi-otelcol"
+        },
+        {
+          "timestamp": "2026-04-07T16:32:22.000Z",
+          "value": 1013.29,
+          "commit": "8728b2520567fe55f8544ee9827159c2bc067f26",
+          "run_id": "24092637090-1--kind-bench-smoke-profile-smoke-multi-otelcol"
         }
       ]
     },

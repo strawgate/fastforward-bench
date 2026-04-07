@@ -1,10 +1,10 @@
 [
   {
     "ref": "refs/heads/codex/eps-target-sweep",
-    "latestRunId": "24090514698-1--kind-bench-smoke-t100k-single-logfwd",
-    "latestTimestamp": "2026-04-07T15:49:00.735Z",
-    "latestCommit": "795369e4a4d5032483d8585a80808ebe391b6dd0",
-    "runCount": 24
+    "latestRunId": "24092480398-1--kind-bench-smoke-profile-smoke-single-vector",
+    "latestTimestamp": "2026-04-07T16:34:43.368Z",
+    "latestCommit": "e353482c67c2e71ff4deb7fd37212264e976922d",
+    "runCount": 30
   },
   {
     "ref": "refs/heads/codex/nightly-eps-report",
@@ -18,13 +18,13 @@
     "latestRunId": "24071801166-1--kind-bench-smoke-multi-vector",
     "latestTimestamp": "2026-04-07T08:24:29.000Z",
     "latestCommit": "6a9c19d50789e7ffaa7165c30ea8109de3454163",
-    "runCount": 14
+    "runCount": 10
   },
   {
     "ref": "refs/heads/codex/bench-workflow-reliability",
     "latestRunId": "24070568173-1--kind-bench-smoke-single-vector",
     "latestTimestamp": "2026-04-07T07:51:48.000Z",
     "latestCommit": "f1cdf51903743aa077dc680fbfa62b6d03e8d3ad",
-    "runCount": 9
+    "runCount": 7
   }
 ]
