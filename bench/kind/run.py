@@ -64,6 +64,7 @@ BENCH_ROOT = Path(__file__).resolve().parent
 COMMON_MANIFESTS_ROOT = BENCH_ROOT / "manifests" / "common"
 COLLECTOR_MANIFESTS_ROOT = BENCH_ROOT / "manifests" / "collectors"
 WORKLOAD_MANIFESTS_ROOT = BENCH_ROOT / "manifests" / "workload"
+SOURCE_ORACLE_MAX_TARGET_EPS_PER_POD = 100_000
 
 
 @dataclass(frozen=True)
@@ -632,15 +633,27 @@ def run_smoke_phase(
         destination=artifacts_dir / "sink-logs.txt",
         tail=-1,
     )
-    collect_sink_capture(args.namespace, sink_pod, artifacts_dir / "sink-capture.ndjson")
-
-    sink_rows = filter_rows_to_emitter_snapshot(
-        benchmark_rows(load_json_lines(artifacts_dir / "sink-capture.ndjson"), result.benchmark_id),
-        emitter_reported_stats,
+    source_oracle_enabled = (
+        args.ingest_mode == "file"
+        and not max_throughput_mode
+        and profile.eps_per_pod < SOURCE_ORACLE_MAX_TARGET_EPS_PER_POD
     )
 
+    sink_rows: list[dict[str, object]] = []
+    if source_oracle_enabled:
+        collect_sink_capture(args.namespace, sink_pod, artifacts_dir / "sink-capture.ndjson")
+        sink_rows = filter_rows_to_emitter_snapshot(
+            benchmark_rows(load_json_lines(artifacts_dir / "sink-capture.ndjson"), result.benchmark_id),
+            emitter_reported_stats,
+        )
+    else:
+        (artifacts_dir / "sink-capture.ndjson").write_text("", encoding="utf-8")
+
+    captured_rows_fallback = int(result.sink_reported_events_total or result.sink_lines_total or 0)
+    captured_rows_total = len(sink_rows) if source_oracle_enabled else captured_rows_fallback
+
     if max_throughput_mode:
-        result.captured_rows_total = len(sink_rows)
+        result.captured_rows_total = captured_rows_total
         result.source_rows_total = None
         result.missing_source_count = None
         result.missing_event_count = None
@@ -660,7 +673,7 @@ def run_smoke_phase(
                 "source_oracle": "skipped",
                 "emitter_reported_events_total": result.emitter_reported_events_total,
                 "sink_reported_events_total": result.sink_reported_events_total,
-                "sink_row_count": len(sink_rows),
+                "sink_row_count": result.captured_rows_total,
                 "sink_lines_total": result.sink_lines_total,
                 "sink_lines_per_sec_avg": result.sink_lines_per_sec_avg,
                 "drop_estimate": result.drop_estimate,
@@ -694,7 +707,7 @@ def run_smoke_phase(
         return 1
 
     if args.ingest_mode == "otlp":
-        result.captured_rows_total = len(sink_rows)
+        result.captured_rows_total = captured_rows_total
         result.source_rows_total = None
         result.missing_source_count = None
         result.missing_event_count = None
@@ -714,7 +727,7 @@ def run_smoke_phase(
                 "source_oracle": "skipped",
                 "emitter_reported_events_total": result.emitter_reported_events_total,
                 "sink_reported_events_total": result.sink_reported_events_total,
-                "sink_row_count": len(sink_rows),
+                "sink_row_count": result.captured_rows_total,
                 "sink_lines_total": result.sink_lines_total,
                 "sink_lines_per_sec_avg": result.sink_lines_per_sec_avg,
                 "drop_estimate": result.drop_estimate,
@@ -744,6 +757,84 @@ def run_smoke_phase(
         result.notes = (
             f"smoke benchmark did not observe sink output with ingest_mode={args.ingest_mode}; "
             f"sink_lines_total={result.sink_lines_total}, sink_reported_events_total={result.sink_reported_events_total}."
+        )
+        return 1
+
+    if not source_oracle_enabled:
+        expected_sources = expected_emitter_pods("log-emitter", profile.pods)
+        missing_source_count = max(0, len(expected_sources) - len(emitter_pods))
+
+        result.captured_rows_total = captured_rows_total
+        result.source_rows_total = None
+        result.missing_source_count = missing_source_count
+        result.missing_event_count = None
+        result.unexpected_event_count = None
+        result.dup_estimate = None
+        if result.emitter_reported_events_total is not None and result.sink_reported_events_total is not None:
+            result.drop_estimate = max(0, result.emitter_reported_events_total - result.sink_reported_events_total)
+        else:
+            result.drop_estimate = None
+
+        write_json(results_dir / "actual_rows.json", [])
+        write_json(results_dir / "source_rows.json", [])
+        write_json(
+            results_dir / "stream-summary.json",
+            {
+                "mode": "source-oracle-skipped-high-rate",
+                "source_oracle": "skipped",
+                "reason": f"target_eps_per_pod >= {SOURCE_ORACLE_MAX_TARGET_EPS_PER_POD}",
+                "emitter_reported_events_total": result.emitter_reported_events_total,
+                "sink_reported_events_total": result.sink_reported_events_total,
+                "sink_row_count": result.captured_rows_total,
+                "sink_lines_total": result.sink_lines_total,
+                "sink_lines_per_sec_avg": result.sink_lines_per_sec_avg,
+                "missing_source_count": result.missing_source_count,
+                "drop_estimate": result.drop_estimate,
+            },
+        )
+        write_json(results_dir / "emitter-stats.json", emitter_reported_stats)
+        write_json(results_dir / "sink-stats.json", sink_reported_stats)
+
+        observed_sink_output = bool(
+            (result.sink_lines_total is not None and result.sink_lines_total > 0)
+            or (result.sink_reported_events_total is not None and result.sink_reported_events_total > 0)
+            or (result.captured_rows_total is not None and result.captured_rows_total > 0)
+        )
+        diagnostics_available = result.emitter_reported_events_total is not None and result.sink_reported_events_total is not None
+        diagnostics_oracle_clean = (
+            diagnostics_available
+            and result.sink_reported_events_total >= result.emitter_reported_events_total
+            and missing_source_count == 0
+        )
+
+        if diagnostics_oracle_clean and observed_sink_output:
+            result.status = "pass"
+            result.notes = (
+                f"smoke benchmark passed in {adapter.benchmark_mode} with source oracle skipped for high-rate file input "
+                f"(target_eps_per_pod={profile.eps_per_pod}); diagnostics totals remained clean. "
+                f"sink_lines_total={result.sink_lines_total}, sink_lines_per_sec_avg={result.sink_lines_per_sec_avg}, "
+                f"emitter_reported_events_total={result.emitter_reported_events_total}, "
+                f"sink_reported_events_total={result.sink_reported_events_total}, "
+                f"missing_source_count={missing_source_count}, drop_estimate={result.drop_estimate}."
+            )
+            return 0
+
+        if diagnostics_available:
+            result.status = "fail"
+            result.notes = (
+                f"smoke benchmark failed in {adapter.benchmark_mode} with source oracle skipped for high-rate file input "
+                f"(target_eps_per_pod={profile.eps_per_pod}); diagnostics reported sink behind emitter. "
+                f"sink_lines_total={result.sink_lines_total}, sink_lines_per_sec_avg={result.sink_lines_per_sec_avg}, "
+                f"emitter_reported_events_total={result.emitter_reported_events_total}, "
+                f"sink_reported_events_total={result.sink_reported_events_total}, "
+                f"missing_source_count={missing_source_count}, drop_estimate={result.drop_estimate}."
+            )
+            return 1
+
+        result.status = "fail"
+        result.notes = (
+            f"smoke benchmark failed in {adapter.benchmark_mode} with source oracle skipped for high-rate file input "
+            f"(target_eps_per_pod={profile.eps_per_pod}) due to missing diagnostics totals."
         )
         return 1
 
