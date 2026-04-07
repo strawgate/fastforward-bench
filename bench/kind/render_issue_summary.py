@@ -120,6 +120,12 @@ def fmt_int(value: int | None) -> str:
     return str(value)
 
 
+def fmt_percent(ratio: float | None) -> str:
+    if ratio is None:
+        return "n/a"
+    return f"{ratio * 100.0:.1f}%"
+
+
 def status_rank(status: str) -> int:
     normalized = status.lower()
     if normalized == "pass":
@@ -186,43 +192,65 @@ def render_markdown(
         f"- Updated: `{updated_at}`",
         f"- Workflow run: [view run]({run_url})",
         f"- Benchmarks: `{total}` total, `{passed}` passed, `{failed}` failed",
-        "",
-        "| Collector | Ingest | CPU Profile | Pods | Target EPS/Pod | Target EPS | Status | EPS Avg | EPS/Target | Missing | Unexpected | Duplicates | Drop Estimate | Collector CPU Avg |",
-        "| --- | --- | --- | ---: | ---: | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
 
     if not sorted_results:
-        lines.append("| _none_ | n/a | n/a | n/a | n/a | n/a | FAIL | n/a | n/a | n/a | n/a | n/a | n/a | n/a |")
+        lines.extend(["", "_No benchmark artifacts found._"])
     else:
-        for result in sorted_results:
-            eps_ratio = None
-            if result.sink_lines_per_sec_avg is not None and result.total_target_eps > 0:
-                eps_ratio = result.sink_lines_per_sec_avg / result.total_target_eps
+        cpu_profiles = sorted({result.cpu_profile for result in sorted_results}, key=cpu_rank)
+        ingest_modes = sorted({result.ingest_mode for result in sorted_results}, key=ingest_rank)
 
-            lines.append(
-                "| {collector} | `{ingest}` | `{cpu}` | {pods} | {target_eps_per_pod} | {target_eps} | {status} | {eps_avg} | {ratio} | {missing} | {unexpected} | {dup} | {drop} | {cpu_avg} |".format(
-                    collector=result.collector,
-                    ingest=result.ingest_mode,
-                    cpu=result.cpu_profile,
-                    pods=fmt_int(result.pods),
-                    target_eps_per_pod=fmt_int(result.target_eps_per_pod),
-                    target_eps="max" if result.total_target_eps == 0 else fmt_int(result.total_target_eps),
-                    status=result.status.upper(),
-                    eps_avg=fmt_float(result.sink_lines_per_sec_avg),
-                    ratio=fmt_float(eps_ratio, digits=3),
-                    missing=fmt_int(result.missing_event_count),
-                    unexpected=fmt_int(result.unexpected_event_count),
-                    dup=fmt_int(result.dup_estimate),
-                    drop=fmt_int(result.drop_estimate),
-                    cpu_avg=fmt_float(result.collector_cpu_cores_avg),
+        for cpu_profile in cpu_profiles:
+            lines.extend(["", f"## CPU: `{cpu_profile}`", ""])
+            for ingest_mode in ingest_modes:
+                subset = [
+                    result
+                    for result in sorted_results
+                    if result.cpu_profile == cpu_profile and result.ingest_mode == ingest_mode
+                ]
+                if not subset:
+                    continue
+                lines.extend(
+                    [
+                        f"### Ingest: `{ingest_mode}`",
+                        "",
+                        "| Collector | Target EPS | Status | EPS Avg | EPS/Target | Missing | Unexpected | Duplicates | Drop Estimate | Collector CPU Avg |",
+                        "| --- | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+                    ]
                 )
-            )
+                for result in sorted(
+                    subset,
+                    key=lambda item: (
+                        collector_rank(item.collector),
+                        target_rank(item.total_target_eps),
+                        status_rank(item.status),
+                    ),
+                ):
+                    eps_ratio = None
+                    if result.sink_lines_per_sec_avg is not None and result.total_target_eps > 0:
+                        eps_ratio = result.sink_lines_per_sec_avg / result.total_target_eps
+                    lines.append(
+                        "| {collector} | {target_eps} | {status} | {eps_avg} | {ratio} | {missing} | {unexpected} | {dup} | {drop} | {cpu_avg} |".format(
+                            collector=result.collector,
+                            target_eps="max" if result.total_target_eps == 0 else fmt_int(result.total_target_eps),
+                            status=result.status.upper(),
+                            eps_avg=fmt_float(result.sink_lines_per_sec_avg),
+                            ratio=fmt_percent(eps_ratio),
+                            missing=fmt_int(result.missing_event_count),
+                            unexpected=fmt_int(result.unexpected_event_count),
+                            dup=fmt_int(result.dup_estimate),
+                            drop=fmt_int(result.drop_estimate),
+                            cpu_avg=fmt_float(result.collector_cpu_cores_avg),
+                        )
+                    )
+                lines.append("")
 
     failing = [result for result in sorted_results if not result.passed]
     if failing:
         lines.extend(["", "## Failing Benchmarks", ""])
         for result in failing:
-            lines.append(f"### {result.collector} / {result.ingest_mode} / {result.cpu_profile}")
+            target_label = "max" if result.total_target_eps == 0 else str(result.total_target_eps)
+            lines.append(f"### {result.collector} / {result.ingest_mode} / {result.cpu_profile} / target={target_label}")
             lines.append("")
             lines.append(f"- Status: `{result.status}`")
             lines.append(f"- Notes: {result.notes or 'n/a'}")

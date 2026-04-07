@@ -25,11 +25,20 @@ data:
         type: remap
         inputs: ["kubernetes_logs"]
         source: |
+          if !exists(.kubernetes.pod_name) {
+            abort
+          }
+
+          if !starts_with(string!(.kubernetes.pod_name), "log-emitter-") {
+            abort
+          }
+
           if !starts_with(string!(.message), "{") {
             abort
           }
 
-          . = object!(parse_json!(string!(.message)))
+          parsed = object!(parse_json!(string!(.message)))
+          . = parsed
 
     sinks:
       bench_out:

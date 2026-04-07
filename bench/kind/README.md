@@ -29,7 +29,7 @@ The current smoke implementation is intentionally narrow:
 
 - collector support: `logfwd`, `otelcol`, `vector`
 - ingest modes:
-  - `file` (collector tails pod/container logs from node filesystem)
+  - `file` (collector tails emitter pod/container logs from node filesystem)
   - `otlp` (emitters send OTLP directly to the collector service)
 - benchmark mode: `baseline-pass-through`
 - sink transport:

@@ -14,7 +14,7 @@ data:
 
     input:
       type: file
-      path: /var/log/pods/**/*.log
+      path: /var/log/pods/${NAMESPACE}_log-emitter-*/*/*.log
       format: cri
 
     transform: |

@@ -793,6 +793,56 @@ def run_smoke_phase(
     write_json(results_dir / "emitter-stats.json", emitter_reported_stats)
     write_json(results_dir / "sink-stats.json", sink_reported_stats)
 
+    source_oracle_incomplete = (
+        result.emitter_reported_events_total is not None
+        and comparison.source_row_count < result.emitter_reported_events_total
+    )
+    diagnostics_available = result.emitter_reported_events_total is not None and result.sink_reported_events_total is not None
+    diagnostics_oracle_clean = (
+        diagnostics_available
+        and result.sink_reported_events_total >= result.emitter_reported_events_total
+        and comparison.missing_source_count == 0
+    )
+    observed_any_sink_output = bool((result.sink_lines_total is not None and result.sink_lines_total > 0) or comparison.sink_row_count > 0)
+
+    if source_oracle_incomplete:
+        result.missing_event_count = None
+        result.unexpected_event_count = None
+        result.dup_estimate = None
+        if diagnostics_available:
+            result.drop_estimate = max(0, result.emitter_reported_events_total - result.sink_reported_events_total)
+        else:
+            result.drop_estimate = None
+
+        if diagnostics_oracle_clean and observed_any_sink_output:
+            result.status = "pass"
+            result.notes = (
+                f"smoke benchmark passed in {adapter.benchmark_mode} with degraded source oracle; "
+                f"source rows captured ({comparison.source_row_count}) were lower than emitter diagnostics total "
+                f"({result.emitter_reported_events_total}), so pass/fail used emitter/sink diagnostics totals instead. "
+                f"captured_rows_total={comparison.sink_row_count}, sink_lines_total={result.sink_lines_total}, "
+                f"sink_reported_events_total={result.sink_reported_events_total}, drop_estimate={result.drop_estimate}."
+            )
+            return 0
+
+        if diagnostics_available:
+            result.status = "fail"
+            result.notes = (
+                f"smoke benchmark failed in {adapter.benchmark_mode} with degraded source oracle; "
+                f"source rows captured ({comparison.source_row_count}) were lower than emitter diagnostics total "
+                f"({result.emitter_reported_events_total}), and sink diagnostics remained behind "
+                f"({result.sink_reported_events_total}). captured_rows_total={comparison.sink_row_count}, "
+                f"sink_lines_total={result.sink_lines_total}, drop_estimate={result.drop_estimate}."
+            )
+        else:
+            result.status = "fail"
+            result.notes = (
+                f"smoke benchmark failed in {adapter.benchmark_mode} with degraded source oracle and missing diagnostics; "
+                f"source_rows_total={comparison.source_row_count}, captured_rows_total={comparison.sink_row_count}, "
+                f"sink_lines_total={result.sink_lines_total}."
+            )
+        return 1
+
     strict_oracle_clean = (
         comparison.missing_source_count == 0
         and comparison.missing_event_count == 0
@@ -800,19 +850,6 @@ def run_smoke_phase(
         and comparison.duplicate_event_count == 0
         and comparison.gap_count == 0
     )
-    source_oracle_incomplete = (
-        result.emitter_reported_events_total is not None
-        and comparison.source_row_count < result.emitter_reported_events_total
-    )
-    diagnostics_oracle_clean = (
-        source_oracle_incomplete
-        and result.emitter_reported_events_total is not None
-        and result.sink_reported_events_total is not None
-        and result.sink_reported_events_total >= result.emitter_reported_events_total
-        and comparison.missing_source_count == 0
-    )
-    observed_any_sink_output = bool((result.sink_lines_total is not None and result.sink_lines_total > 0) or comparison.sink_row_count > 0)
-
     if strict_oracle_clean and observed_any_sink_output:
         result.status = "pass"
         result.notes = (
@@ -820,24 +857,6 @@ def run_smoke_phase(
             f"captured_rows_total={comparison.sink_row_count}, sink_lines_total={result.sink_lines_total}, "
             f"missing_events={comparison.missing_event_count}, unexpected_events={comparison.unexpected_event_count}, "
             f"duplicates={comparison.duplicate_event_count}, gaps={comparison.gap_count}."
-        )
-        return 0
-
-    if diagnostics_oracle_clean and observed_any_sink_output:
-        result.status = "pass"
-        result.missing_event_count = None
-        result.unexpected_event_count = None
-        result.dup_estimate = None
-        result.drop_estimate = max(
-            0,
-            result.emitter_reported_events_total - result.sink_reported_events_total,
-        )
-        result.notes = (
-            f"smoke benchmark passed in {adapter.benchmark_mode} with degraded source oracle; "
-            f"source rows captured ({comparison.source_row_count}) were lower than emitter diagnostics total "
-            f"({result.emitter_reported_events_total}), so pass/fail used emitter/sink diagnostics totals instead. "
-            f"captured_rows_total={comparison.sink_row_count}, sink_lines_total={result.sink_lines_total}, "
-            f"sink_reported_events_total={result.sink_reported_events_total}, drop_estimate={result.drop_estimate}."
         )
         return 0
 
