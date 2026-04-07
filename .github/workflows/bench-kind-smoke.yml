@@ -290,10 +290,12 @@ jobs:
         with:
           path: artifacts
       - name: Render benchmark summary
+        env:
+          SUITE_NAME: ${{ github.event_name == 'schedule' && 'Bench Nightly EPS' || 'Bench Competitive Benchmarks' }}
         run: |
           python3 bench/kind/render_issue_summary.py \
             --artifacts-root artifacts \
-            --suite-name "Bench Nightly EPS" \
+            --suite-name "${SUITE_NAME}" \
             --suite-key kind-bench-${{ needs.plan.outputs.bench_profile }}-${{ needs.plan.outputs.target_set }} \
             --memagent-ref "${MEMAGENT_REF}" \
             --bench-profile "${{ needs.plan.outputs.bench_profile }}" \
