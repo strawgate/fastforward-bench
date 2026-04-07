@@ -3,29 +3,6 @@
   "unit": "events",
   "direction": "smaller_is_better",
   "series": {
-    "kind/smoke/baseline-pass-through/file [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=logfwd,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=1000,benchkit.total_target_eps=1000]": {
-      "tags": {
-        "benchkit.cluster": "kind-single-node",
-        "benchkit.cluster_cpu_limit_cores": "1.0",
-        "benchkit.cpu_profile": "single",
-        "benchkit.impl": "logfwd",
-        "benchkit.ingest_mode": "file",
-        "benchkit.namespace": "memagent-bench",
-        "benchkit.pods": "1",
-        "benchkit.profile": "smoke",
-        "benchkit.protocol": "otlp_http",
-        "benchkit.target_eps_per_pod": "1000",
-        "benchkit.total_target_eps": "1000"
-      },
-      "points": [
-        {
-          "timestamp": "2026-04-07T20:28:34.000Z",
-          "value": 0,
-          "commit": "771eeeb96bd37f44489851e777af428f539077f9",
-          "run_id": "24102839402-1--kind-bench-smoke-file-t1k-single-logfwd"
-        }
-      ]
-    },
     "kind/smoke/baseline-pass-through/file [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=logfwd,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=10,benchkit.total_target_eps=10]": {
       "tags": {
         "benchkit.cluster": "kind-single-node",
@@ -291,6 +268,12 @@
           "value": 0,
           "commit": "df2cb04df0109f74dabc63699f0bcec6bcc1e497",
           "run_id": "24107213191-1--kind-bench-smoke-file-profile-smoke-single-logfwd"
+        },
+        {
+          "timestamp": "2026-04-07T22:25:18.000Z",
+          "value": 1,
+          "commit": "cd88e00dc4411bcf49089028a91cd0185ee6093d",
+          "run_id": "24107390828-1--kind-bench-smoke-file-profile-smoke-single-logfwd"
         }
       ]
     }
