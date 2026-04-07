@@ -54,6 +54,15 @@ on:
           - all
           - single
           - multi
+      ingest_mode:
+        description: collector ingest mode to benchmark
+        required: false
+        type: choice
+        default: all
+        options:
+          - all
+          - file
+          - otlp
 
 permissions:
   contents: write
@@ -73,6 +82,7 @@ jobs:
       target_set: ${{ steps.plan.outputs.target_set }}
       collectors: ${{ steps.plan.outputs.collectors }}
       cpu_profiles: ${{ steps.plan.outputs.cpu_profiles }}
+      ingest_modes: ${{ steps.plan.outputs.ingest_modes }}
       workloads: ${{ steps.plan.outputs.workloads }}
       aggregate_trigger_label: ${{ steps.plan.outputs.aggregate_trigger_label }}
     steps:
@@ -82,6 +92,7 @@ jobs:
           INPUT_TARGET_SET: ${{ inputs.target_set || 'profile' }}
           INPUT_COLLECTOR: ${{ inputs.collector || 'all' }}
           INPUT_CPU_PROFILE: ${{ inputs.cpu_profile || 'all' }}
+          INPUT_INGEST_MODE: ${{ inputs.ingest_mode || 'all' }}
         run: |
           echo "bench_profile=${INPUT_PROFILE}" >>"$GITHUB_OUTPUT"
           if [[ "${{ github.event_name }}" == "schedule" ]]; then
@@ -131,6 +142,15 @@ jobs:
           else
             echo 'cpu_profiles=["single","multi"]' >>"$GITHUB_OUTPUT"
           fi
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            if [[ "${INPUT_INGEST_MODE}" != "all" ]]; then
+              echo "ingest_modes=[\"${INPUT_INGEST_MODE}\"]" >>"$GITHUB_OUTPUT"
+            else
+              echo 'ingest_modes=["file","otlp"]' >>"$GITHUB_OUTPUT"
+            fi
+          else
+            echo 'ingest_modes=["file"]' >>"$GITHUB_OUTPUT"
+          fi
 
   kind-bench-smoke:
     needs: plan
@@ -139,20 +159,25 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        ingest_mode: ${{ fromJSON(needs.plan.outputs.ingest_modes) }}
         collector: ${{ fromJSON(needs.plan.outputs.collectors) }}
         cpu_profile: ${{ fromJSON(needs.plan.outputs.cpu_profiles) }}
         workload: ${{ fromJSON(needs.plan.outputs.workloads) }}
+        exclude:
+          - ingest_mode: otlp
+            collector: vector
     env:
       MEMAGENT_REPO_ROOT: ${{ github.workspace }}/memagent
       BENCH_PROFILE: ${{ needs.plan.outputs.bench_profile }}
-      BENCH_RESULTS_DIR: ${{ github.workspace }}/bench/kind/results/${{ needs.plan.outputs.bench_profile }}/${{ matrix.workload.label }}/${{ matrix.cpu_profile }}/${{ matrix.collector }}
-      CLUSTER_NAME: b-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}-${{ matrix.workload.label }}
+      BENCH_RESULTS_DIR: ${{ github.workspace }}/bench/kind/results/${{ needs.plan.outputs.bench_profile }}/${{ matrix.ingest_mode }}/${{ matrix.workload.label }}/${{ matrix.cpu_profile }}/${{ matrix.collector }}
+      CLUSTER_NAME: b-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.ingest_mode }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}-${{ matrix.workload.label }}
       BENCH_COLLECTOR: ${{ matrix.collector }}
+      BENCH_INGEST_MODE: ${{ matrix.ingest_mode }}
       BENCH_CPU_PROFILE: ${{ matrix.cpu_profile }}
       BENCH_WORKLOAD_LABEL: ${{ matrix.workload.label }}
       BENCH_PODS: ${{ matrix.workload.pods }}
       BENCH_EPS_PER_POD: ${{ matrix.workload.eps_per_pod }}
-      BENCHKIT_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}--kind-bench-${{ needs.plan.outputs.bench_profile }}-${{ matrix.workload.label }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}
+      BENCHKIT_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}--kind-bench-${{ needs.plan.outputs.bench_profile }}-${{ matrix.ingest_mode }}-${{ matrix.workload.label }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -192,6 +217,7 @@ jobs:
             --pods "${BENCH_PODS}" \
             --eps-per-pod "${BENCH_EPS_PER_POD}" \
             --collector "${BENCH_COLLECTOR}" \
+            --ingest-mode "${BENCH_INGEST_MODE}" \
             --cpu-profile "${BENCH_CPU_PROFILE}" \
             --protocol otlp_http \
             --cluster-name "${CLUSTER_NAME}" \
@@ -213,7 +239,7 @@ jobs:
           format: otlp
           run-id: ${{ env.BENCHKIT_RUN_ID }}
           summary: true
-      - if: env.PERSIST_BENCH_DATA == 'true' && matrix.collector == 'logfwd' && matrix.cpu_profile == 'single' && matrix.workload.label == needs.plan.outputs.aggregate_trigger_label
+      - if: env.PERSIST_BENCH_DATA == 'true' && matrix.ingest_mode == 'file' && matrix.collector == 'logfwd' && matrix.cpu_profile == 'single' && matrix.workload.label == needs.plan.outputs.aggregate_trigger_label
         name: Trigger aggregate
         continue-on-error: true
         env:
@@ -228,7 +254,7 @@ jobs:
       - if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: kind-bench-${{ needs.plan.outputs.bench_profile }}-${{ matrix.workload.label }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}
+          name: kind-bench-${{ needs.plan.outputs.bench_profile }}-${{ matrix.ingest_mode }}-${{ matrix.workload.label }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}
           path: ${{ env.BENCH_RESULTS_DIR }}
           retention-days: 7
 

@@ -7,23 +7,43 @@ from dataclasses import dataclass
 class CollectorAdapter:
     name: str
     benchmark_mode: str
-    config_template: str
-    workload_template: str
+    file_config_template: str
+    file_workload_template: str
     rollout_kind: str
     rollout_name: str
     pod_selector: str
     diagnostics_target_format: str
+    otlp_config_template: str | None = None
+    otlp_workload_template: str | None = None
     collector_image: str | None = None
     collector_stats_kind: str = "logfwd"
     collector_stats_port: int = 9090
     sink_transport: str = "otlp_http"
 
+    def supports_ingest_mode(self, ingest_mode: str) -> bool:
+        if ingest_mode == "file":
+            return True
+        if ingest_mode == "otlp":
+            return self.otlp_config_template is not None and self.otlp_workload_template is not None
+        return False
+
+    def templates_for_ingest_mode(self, ingest_mode: str) -> tuple[str, str]:
+        if ingest_mode == "file":
+            return self.file_config_template, self.file_workload_template
+        if ingest_mode == "otlp":
+            if self.otlp_config_template is None or self.otlp_workload_template is None:
+                raise NotImplementedError(f"collector '{self.name}' does not support ingest mode '{ingest_mode}'")
+            return self.otlp_config_template, self.otlp_workload_template
+        raise ValueError(f"unsupported ingest mode: {ingest_mode}")
+
 
 LOGFWD_COLLECTOR = CollectorAdapter(
     name="logfwd",
     benchmark_mode="baseline-pass-through",
-    config_template="collectors/logfwd-configmap.yaml.tmpl",
-    workload_template="collectors/logfwd-daemonset.yaml.tmpl",
+    file_config_template="collectors/logfwd-configmap.yaml.tmpl",
+    file_workload_template="collectors/logfwd-daemonset.yaml.tmpl",
+    otlp_config_template="collectors/logfwd-otlp-configmap.yaml.tmpl",
+    otlp_workload_template="collectors/logfwd-otlp-daemonset.yaml.tmpl",
     rollout_kind="daemonset",
     rollout_name="logfwd-bench-collector",
     pod_selector="app.kubernetes.io/name=logfwd-bench-collector",
@@ -33,8 +53,10 @@ LOGFWD_COLLECTOR = CollectorAdapter(
 OTELCOL_COLLECTOR = CollectorAdapter(
     name="otelcol",
     benchmark_mode="baseline-pass-through",
-    config_template="collectors/otelcol-configmap.yaml.tmpl",
-    workload_template="collectors/otelcol-daemonset.yaml.tmpl",
+    file_config_template="collectors/otelcol-configmap.yaml.tmpl",
+    file_workload_template="collectors/otelcol-daemonset.yaml.tmpl",
+    otlp_config_template="collectors/otelcol-otlp-configmap.yaml.tmpl",
+    otlp_workload_template="collectors/otelcol-otlp-daemonset.yaml.tmpl",
     rollout_kind="daemonset",
     rollout_name="otelcol-bench-collector",
     pod_selector="app.kubernetes.io/name=otelcol-bench-collector",
@@ -47,8 +69,8 @@ OTELCOL_COLLECTOR = CollectorAdapter(
 VECTOR_COLLECTOR = CollectorAdapter(
     name="vector",
     benchmark_mode="baseline-pass-through",
-    config_template="collectors/vector-configmap.yaml.tmpl",
-    workload_template="collectors/vector-daemonset.yaml.tmpl",
+    file_config_template="collectors/vector-configmap.yaml.tmpl",
+    file_workload_template="collectors/vector-daemonset.yaml.tmpl",
     rollout_kind="daemonset",
     rollout_name="vector-bench-collector",
     pod_selector="app.kubernetes.io/name=vector-bench-collector",

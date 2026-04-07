@@ -13,6 +13,7 @@ from pathlib import Path
 class BenchResult:
     artifact_name: str
     collector: str
+    ingest_mode: str
     cpu_profile: str
     pods: int
     target_eps_per_pod: int
@@ -78,6 +79,7 @@ def load_result(path: Path, artifact_name: str) -> BenchResult:
     return BenchResult(
         artifact_name=artifact_name,
         collector=str(payload.get("collector") or "unknown"),
+        ingest_mode=str(payload.get("ingest_mode") or "file"),
         cpu_profile=str(payload.get("cpu_profile") or "unknown"),
         pods=as_int(payload.get("pods")) or 0,
         target_eps_per_pod=as_int(payload.get("target_eps_per_pod")) or 0,
@@ -137,6 +139,11 @@ def cpu_rank(name: str) -> tuple[int, str]:
     return (order.get(name, 99), name)
 
 
+def ingest_rank(name: str) -> tuple[int, str]:
+    order = {"file": 0, "otlp": 1}
+    return (order.get(name, 99), name)
+
+
 def target_rank(total_target_eps: int) -> tuple[int, int]:
     if total_target_eps == 0:
         return (1, 0)
@@ -162,6 +169,7 @@ def render_markdown(
         results,
         key=lambda result: (
             collector_rank(result.collector),
+            ingest_rank(result.ingest_mode),
             cpu_rank(result.cpu_profile),
             target_rank(result.total_target_eps),
             status_rank(result.status),
@@ -179,12 +187,12 @@ def render_markdown(
         f"- Workflow run: [view run]({run_url})",
         f"- Benchmarks: `{total}` total, `{passed}` passed, `{failed}` failed",
         "",
-        "| Collector | CPU Profile | Pods | Target EPS/Pod | Target EPS | Status | EPS Avg | EPS/Target | Missing | Unexpected | Duplicates | Drop Estimate | Collector CPU Avg |",
-        "| --- | --- | ---: | ---: | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+        "| Collector | Ingest | CPU Profile | Pods | Target EPS/Pod | Target EPS | Status | EPS Avg | EPS/Target | Missing | Unexpected | Duplicates | Drop Estimate | Collector CPU Avg |",
+        "| --- | --- | --- | ---: | ---: | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
 
     if not sorted_results:
-        lines.append("| _none_ | n/a | n/a | n/a | n/a | FAIL | n/a | n/a | n/a | n/a | n/a | n/a | n/a |")
+        lines.append("| _none_ | n/a | n/a | n/a | n/a | n/a | FAIL | n/a | n/a | n/a | n/a | n/a | n/a | n/a |")
     else:
         for result in sorted_results:
             eps_ratio = None
@@ -192,8 +200,9 @@ def render_markdown(
                 eps_ratio = result.sink_lines_per_sec_avg / result.total_target_eps
 
             lines.append(
-                "| {collector} | `{cpu}` | {pods} | {target_eps_per_pod} | {target_eps} | {status} | {eps_avg} | {ratio} | {missing} | {unexpected} | {dup} | {drop} | {cpu_avg} |".format(
+                "| {collector} | `{ingest}` | `{cpu}` | {pods} | {target_eps_per_pod} | {target_eps} | {status} | {eps_avg} | {ratio} | {missing} | {unexpected} | {dup} | {drop} | {cpu_avg} |".format(
                     collector=result.collector,
+                    ingest=result.ingest_mode,
                     cpu=result.cpu_profile,
                     pods=fmt_int(result.pods),
                     target_eps_per_pod=fmt_int(result.target_eps_per_pod),
@@ -213,7 +222,7 @@ def render_markdown(
     if failing:
         lines.extend(["", "## Failing Benchmarks", ""])
         for result in failing:
-            lines.append(f"### {result.collector} / {result.cpu_profile}")
+            lines.append(f"### {result.collector} / {result.ingest_mode} / {result.cpu_profile}")
             lines.append("")
             lines.append(f"- Status: `{result.status}`")
             lines.append(f"- Notes: {result.notes or 'n/a'}")
@@ -249,6 +258,7 @@ def main() -> None:
             {
                 "artifact_name": result.artifact_name,
                 "collector": result.collector,
+                "ingest_mode": result.ingest_mode,
                 "cpu_profile": result.cpu_profile,
                 "pods": result.pods,
                 "target_eps_per_pod": result.target_eps_per_pod,

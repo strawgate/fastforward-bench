@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: log-emitter-config
+  namespace: ${NAMESPACE}
+data:
+  config.yaml: |
+    server:
+      diagnostics: 0.0.0.0:9090
+    input:
+      type: generator
+      generator:
+        events_per_sec: ${EPS_PER_POD}
+        batch_size: ${GENERATOR_BATCH_SIZE}
+        profile: record
+        attributes:
+          benchmark_id: ${BENCHMARK_ID}
+          pod_name: ${POD_NAME}
+          stream_id: ${POD_NAME}
+          service: bench-emitter
+        sequence:
+          field: seq
+        event_created_unix_nano_field: event_created_unix_nano
+    transform: |
+      SELECT
+        benchmark_id,
+        pod_name,
+        stream_id,
+        concat(stream_id, ':', CAST(seq AS VARCHAR)) AS event_id,
+        CAST(seq AS BIGINT) AS seq,
+        CAST(event_created_unix_nano AS BIGINT) AS event_created_unix_nano,
+        CASE CAST(seq % 4 AS BIGINT)
+          WHEN 0 THEN 'ERROR'
+          WHEN 1 THEN 'INFO'
+          WHEN 2 THEN 'DEBUG'
+          ELSE 'WARN'
+        END AS level,
+        concat('bench event ', CAST(seq AS VARCHAR)) AS message,
+        CASE
+          WHEN CAST(seq % 4 AS BIGINT) = 0 THEN 500
+          ELSE 200
+        END AS status,
+        CAST((seq % 250) + 1 AS BIGINT) AS duration_ms,
+        service
+      FROM logs
+    output:
+      type: otlp
+      endpoint: http://bench-collector.${NAMESPACE}.svc.cluster.local:4318/v1/logs

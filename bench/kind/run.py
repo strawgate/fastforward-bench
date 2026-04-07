@@ -128,6 +128,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--phase", choices=["infra", "smoke"], default="smoke")
     parser.add_argument("--profile", choices=sorted(PROFILES), default="smoke")
     parser.add_argument("--collector", default="logfwd")
+    parser.add_argument("--ingest-mode", choices=["file", "otlp"], default="file")
     parser.add_argument("--protocol", default="otlp_http")
     parser.add_argument("--cluster-name", default="memagent-bench")
     parser.add_argument("--namespace", default="memagent-bench")
@@ -483,9 +484,15 @@ def render_manifests(
     render_template("sink-configmap.yaml.tmpl", manifests["sink_configmap"], substitutions)
     render_template("sink-deployment.yaml.tmpl", manifests["sink_deployment"], substitutions)
     if args.phase == "smoke":
-        render_template(adapter.config_template, manifests["collector_configmap"], substitutions)
-        render_template(adapter.workload_template, manifests["collector_workload"], substitutions)
-        render_template("workload/log-emitter-configmap.yaml.tmpl", manifests["emitter_configmap"], substitutions)
+        collector_config_template, collector_workload_template = adapter.templates_for_ingest_mode(args.ingest_mode)
+        emitter_config_template = (
+            "workload/log-emitter-configmap-otlp.yaml.tmpl"
+            if args.ingest_mode == "otlp"
+            else "workload/log-emitter-configmap.yaml.tmpl"
+        )
+        render_template(collector_config_template, manifests["collector_configmap"], substitutions)
+        render_template(collector_workload_template, manifests["collector_workload"], substitutions)
+        render_template(emitter_config_template, manifests["emitter_configmap"], substitutions)
         render_template("workload/log-emitter-statefulset.yaml.tmpl", manifests["emitter_statefulset"], substitutions)
     return manifests
 
@@ -676,6 +683,60 @@ def run_smoke_phase(
         )
         return 1
 
+    if args.ingest_mode == "otlp":
+        result.captured_rows_total = len(sink_rows)
+        result.source_rows_total = None
+        result.missing_source_count = None
+        result.missing_event_count = None
+        result.unexpected_event_count = None
+        result.dup_estimate = None
+        if result.emitter_reported_events_total is not None and result.sink_reported_events_total is not None:
+            result.drop_estimate = max(0, result.emitter_reported_events_total - result.sink_reported_events_total)
+        else:
+            result.drop_estimate = None
+
+        write_json(results_dir / "actual_rows.json", sink_rows)
+        write_json(results_dir / "source_rows.json", [])
+        write_json(
+            results_dir / "stream-summary.json",
+            {
+                "mode": "ingest-otlp",
+                "source_oracle": "skipped",
+                "emitter_reported_events_total": result.emitter_reported_events_total,
+                "sink_reported_events_total": result.sink_reported_events_total,
+                "sink_row_count": len(sink_rows),
+                "sink_lines_total": result.sink_lines_total,
+                "sink_lines_per_sec_avg": result.sink_lines_per_sec_avg,
+                "drop_estimate": result.drop_estimate,
+            },
+        )
+        write_json(results_dir / "emitter-stats.json", emitter_reported_stats)
+        write_json(results_dir / "sink-stats.json", sink_reported_stats)
+
+        observed_sink_output = bool(
+            (result.sink_lines_total is not None and result.sink_lines_total > 0)
+            or (result.sink_reported_events_total is not None and result.sink_reported_events_total > 0)
+            or len(sink_rows) > 0
+        )
+        if observed_sink_output:
+            result.status = "pass"
+            result.notes = (
+                f"smoke benchmark completed in {adapter.benchmark_mode} with ingest_mode={args.ingest_mode}; "
+                "source-vs-sink oracle is intentionally skipped for direct-OTLP input. "
+                f"sink_lines_total={result.sink_lines_total}, sink_lines_per_sec_avg={result.sink_lines_per_sec_avg}, "
+                f"emitter_reported_events_total={result.emitter_reported_events_total}, "
+                f"sink_reported_events_total={result.sink_reported_events_total}, "
+                f"drop_estimate={result.drop_estimate}."
+            )
+            return 0
+
+        result.status = "fail"
+        result.notes = (
+            f"smoke benchmark did not observe sink output with ingest_mode={args.ingest_mode}; "
+            f"sink_lines_total={result.sink_lines_total}, sink_reported_events_total={result.sink_reported_events_total}."
+        )
+        return 1
+
     collect_pod_logs(
         namespace=args.namespace,
         pod_names=emitter_pods,
@@ -799,6 +860,8 @@ def main() -> int:
         eps_per_pod_override=args.eps_per_pod,
     )
     adapter = get_collector_adapter(args.collector)
+    if not adapter.supports_ingest_mode(args.ingest_mode):
+        raise NotImplementedError(f"collector '{args.collector}' does not support ingest mode '{args.ingest_mode}'")
     cpu_profile = CPU_PROFILES[args.cpu_profile]
     resource_plan = build_resource_plan(
         cpu_profile=cpu_profile,
@@ -822,6 +885,7 @@ def main() -> int:
         namespace=args.namespace,
         collector=args.collector,
         protocol=adapter.sink_transport if args.protocol == "otlp_http" else args.protocol,
+        ingest_mode=args.ingest_mode,
         cpu_profile=args.cpu_profile,
         cluster_cpu_limit_cores=cpu_profile.cluster_cpu_cores,
         pods=profile.pods,
