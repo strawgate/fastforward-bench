@@ -97,11 +97,11 @@ class ResourcePlan:
 CPU_PROFILES: dict[str, CpuProfile] = {
     "single": CpuProfile(
         name="single",
-        cluster_cpu_cores=1.0,
-        collector_cpu_mcpu_min=500,
-        collector_cpu_mcpu_target=900,
-        emitter_cpu_mcpu_per_pod=60,
-        sink_cpu_mcpu=100,
+        cluster_cpu_cores=3.5,
+        collector_cpu_mcpu_min=1000,
+        collector_cpu_mcpu_target=1000,
+        emitter_cpu_mcpu_per_pod=1000,
+        sink_cpu_mcpu=1000,
         capture_reader_cpu_mcpu=20,
         collector_memory_limit="512Mi",
         emitter_memory_limit="96Mi",
@@ -110,11 +110,11 @@ CPU_PROFILES: dict[str, CpuProfile] = {
     ),
     "multi": CpuProfile(
         name="multi",
-        cluster_cpu_cores=2.0,
-        collector_cpu_mcpu_min=1200,
-        collector_cpu_mcpu_target=1800,
-        emitter_cpu_mcpu_per_pod=60,
-        sink_cpu_mcpu=120,
+        cluster_cpu_cores=3.5,
+        collector_cpu_mcpu_min=1000,
+        collector_cpu_mcpu_target=1000,
+        emitter_cpu_mcpu_per_pod=1000,
+        sink_cpu_mcpu=1000,
         capture_reader_cpu_mcpu=20,
         collector_memory_limit="1Gi",
         emitter_memory_limit="96Mi",
@@ -216,24 +216,14 @@ def build_resource_plan(
     *,
     cpu_profile: CpuProfile,
     emitter_pods: int,
-    eps_per_pod: int,
-    unbounded_generator: bool = False,
 ) -> ResourcePlan:
     if emitter_pods <= 0:
         raise ValueError("emitter pod count must be > 0")
 
     node_budget_mcpu = int(cpu_profile.cluster_cpu_cores * 1000)
     sink_mcpu = cpu_profile.sink_cpu_mcpu
-    # High-rate workloads saturate the sink at 100m and flatten around ~10k EPS.
-    # Rebalance CPU so sink has more headroom while staying within node budget.
-    if eps_per_pod >= 100_000 or unbounded_generator:
-        sink_mcpu = max(sink_mcpu, 300)
     reserved_mcpu = sink_mcpu + cpu_profile.capture_reader_cpu_mcpu
     emitter_mcpu = cpu_profile.emitter_cpu_mcpu_per_pod
-    if eps_per_pod >= 100_000:
-        emitter_mcpu = max(emitter_mcpu, 200)
-    if unbounded_generator:
-        emitter_mcpu = max(emitter_mcpu, 200)
     collector_mcpu = node_budget_mcpu - reserved_mcpu - (emitter_mcpu * emitter_pods)
 
     if collector_mcpu < cpu_profile.collector_cpu_mcpu_min:
@@ -905,8 +895,6 @@ def main() -> int:
     resource_plan = build_resource_plan(
         cpu_profile=cpu_profile,
         emitter_pods=profile.pods,
-        eps_per_pod=profile.eps_per_pod,
-        unbounded_generator=profile.eps_per_pod == 0,
     )
     results_dir = resolve_results_dir(args.results_dir)
     rendered_dir = results_dir / "rendered-manifests"
