@@ -6,14 +6,10 @@ metadata:
 data:
   config.yaml: |
     receivers:
-      filelog:
-        include:
-          - /var/log/pods/${NAMESPACE}_log-emitter-*/*/*.log
-        start_at: beginning
-        include_file_path: true
-        operators:
-          - id: container-parser
-            type: container
+      otlp:
+        protocols:
+          http:
+            endpoint: 0.0.0.0:4318
 
     processors:
       transform/bench:
@@ -49,6 +45,6 @@ data:
       extensions: [health_check]
       pipelines:
         logs:
-          receivers: [filelog]
+          receivers: [otlp]
           processors: [transform/bench, batch]
           exporters: [otlphttp]

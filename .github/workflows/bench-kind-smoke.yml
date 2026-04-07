@@ -25,6 +25,16 @@ on:
         options:
           - smoke
           - default
+      target_set:
+        description: target EPS set
+        required: false
+        type: choice
+        default: profile
+        options:
+          - profile
+          - ladder
+          - ladder_and_max
+          - max
       collector:
         description: collector adapter to benchmark
         required: false
@@ -44,6 +54,15 @@ on:
           - all
           - single
           - multi
+      ingest_mode:
+        description: collector ingest mode to benchmark
+        required: false
+        type: choice
+        default: all
+        options:
+          - all
+          - file
+          - otlp
 
 permissions:
   contents: write
@@ -60,25 +79,71 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       bench_profile: ${{ steps.plan.outputs.bench_profile }}
+      target_set: ${{ steps.plan.outputs.target_set }}
       collectors: ${{ steps.plan.outputs.collectors }}
       cpu_profiles: ${{ steps.plan.outputs.cpu_profiles }}
+      ingest_modes: ${{ steps.plan.outputs.ingest_modes }}
+      workloads: ${{ steps.plan.outputs.workloads }}
     steps:
       - id: plan
         env:
           INPUT_PROFILE: ${{ inputs.profile || 'smoke' }}
+          INPUT_TARGET_SET: ${{ inputs.target_set || 'profile' }}
           INPUT_COLLECTOR: ${{ inputs.collector || 'all' }}
           INPUT_CPU_PROFILE: ${{ inputs.cpu_profile || 'all' }}
+          INPUT_INGEST_MODE: ${{ inputs.ingest_mode || 'all' }}
         run: |
           echo "bench_profile=${INPUT_PROFILE}" >>"$GITHUB_OUTPUT"
+          if [[ "${{ github.event_name }}" == "schedule" ]]; then
+            TARGET_SET="ladder_and_max"
+          else
+            TARGET_SET="${INPUT_TARGET_SET}"
+          fi
+          echo "target_set=${TARGET_SET}" >>"$GITHUB_OUTPUT"
+
+          case "${TARGET_SET}" in
+            profile)
+              if [[ "${INPUT_PROFILE}" == "default" ]]; then
+                echo 'workloads=[{"label":"profile-default","pods":30,"eps_per_pod":300}]' >>"$GITHUB_OUTPUT"
+              else
+                echo 'workloads=[{"label":"profile-smoke","pods":5,"eps_per_pod":100}]' >>"$GITHUB_OUTPUT"
+              fi
+              ;;
+            ladder)
+              echo 'workloads=[{"label":"t1","pods":1,"eps_per_pod":1},{"label":"t10","pods":1,"eps_per_pod":10},{"label":"t100","pods":1,"eps_per_pod":100},{"label":"t500","pods":1,"eps_per_pod":500},{"label":"t1k","pods":1,"eps_per_pod":1000},{"label":"t10k","pods":1,"eps_per_pod":10000},{"label":"t100k","pods":1,"eps_per_pod":100000},{"label":"t1m","pods":1,"eps_per_pod":1000000}]' >>"$GITHUB_OUTPUT"
+              ;;
+            ladder_and_max)
+              echo 'workloads=[{"label":"t1","pods":1,"eps_per_pod":1},{"label":"t10","pods":1,"eps_per_pod":10},{"label":"t100","pods":1,"eps_per_pod":100},{"label":"t500","pods":1,"eps_per_pod":500},{"label":"t1k","pods":1,"eps_per_pod":1000},{"label":"t10k","pods":1,"eps_per_pod":10000},{"label":"t100k","pods":1,"eps_per_pod":100000},{"label":"t1m","pods":1,"eps_per_pod":1000000},{"label":"tmax","pods":1,"eps_per_pod":0}]' >>"$GITHUB_OUTPUT"
+              ;;
+            max)
+              echo 'workloads=[{"label":"tmax","pods":1,"eps_per_pod":0}]' >>"$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "unsupported target_set: ${TARGET_SET}" >&2
+              exit 2
+              ;;
+          esac
+
           if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${INPUT_COLLECTOR}" != "all" ]]; then
             echo "collectors=[\"${INPUT_COLLECTOR}\"]" >>"$GITHUB_OUTPUT"
           else
             echo 'collectors=["logfwd","otelcol","vector"]' >>"$GITHUB_OUTPUT"
           fi
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${INPUT_CPU_PROFILE}" != "all" ]]; then
+          if [[ "${{ github.event_name }}" == "schedule" ]]; then
+            echo 'cpu_profiles=["single","multi"]' >>"$GITHUB_OUTPUT"
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" && "${INPUT_CPU_PROFILE}" != "all" ]]; then
             echo "cpu_profiles=[\"${INPUT_CPU_PROFILE}\"]" >>"$GITHUB_OUTPUT"
           else
             echo 'cpu_profiles=["single","multi"]' >>"$GITHUB_OUTPUT"
+          fi
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            if [[ "${INPUT_INGEST_MODE}" != "all" ]]; then
+              echo "ingest_modes=[\"${INPUT_INGEST_MODE}\"]" >>"$GITHUB_OUTPUT"
+            else
+              echo 'ingest_modes=["file","otlp"]' >>"$GITHUB_OUTPUT"
+            fi
+          else
+            echo 'ingest_modes=["file"]' >>"$GITHUB_OUTPUT"
           fi
 
   kind-bench-smoke:
@@ -88,26 +153,65 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        ingest_mode: ${{ fromJSON(needs.plan.outputs.ingest_modes) }}
         collector: ${{ fromJSON(needs.plan.outputs.collectors) }}
         cpu_profile: ${{ fromJSON(needs.plan.outputs.cpu_profiles) }}
+        workload: ${{ fromJSON(needs.plan.outputs.workloads) }}
+        exclude:
+          - ingest_mode: otlp
+            collector: vector
     env:
       MEMAGENT_REPO_ROOT: ${{ github.workspace }}/memagent
       BENCH_PROFILE: ${{ needs.plan.outputs.bench_profile }}
-      BENCH_RESULTS_DIR: ${{ github.workspace }}/bench/kind/results/${{ needs.plan.outputs.bench_profile }}/${{ matrix.cpu_profile }}/${{ matrix.collector }}
-      CLUSTER_NAME: bench-${{ needs.plan.outputs.bench_profile }}-${{ github.run_id }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}
+      BENCH_RESULTS_DIR: ${{ github.workspace }}/bench/kind/results/${{ needs.plan.outputs.bench_profile }}/${{ matrix.ingest_mode }}/${{ matrix.workload.label }}/${{ matrix.cpu_profile }}/${{ matrix.collector }}
+      CLUSTER_NAME: b-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.ingest_mode }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}-${{ matrix.workload.label }}
       BENCH_COLLECTOR: ${{ matrix.collector }}
+      BENCH_INGEST_MODE: ${{ matrix.ingest_mode }}
       BENCH_CPU_PROFILE: ${{ matrix.cpu_profile }}
-      BENCHKIT_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}--kind-bench-${{ needs.plan.outputs.bench_profile }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}
+      BENCH_WORKLOAD_LABEL: ${{ matrix.workload.label }}
+      BENCH_PODS: ${{ matrix.workload.pods }}
+      BENCH_EPS_PER_POD: ${{ matrix.workload.eps_per_pod }}
+      BENCHKIT_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}--kind-bench-${{ needs.plan.outputs.bench_profile }}-${{ matrix.ingest_mode }}-${{ matrix.workload.label }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}
     steps:
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
-      - uses: actions/checkout@v6
+      - id: checkout_memagent
+        continue-on-error: true
+        uses: actions/checkout@v6
         with:
           repository: strawgate/memagent
           ref: ${{ env.MEMAGENT_REF }}
           path: memagent
           persist-credentials: false
+      - if: steps.checkout_memagent.outcome == 'failure'
+        name: Fallback clone memagent checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          repo_url="https://github.com/strawgate/memagent.git"
+          ref="${MEMAGENT_REF}"
+          rm -rf memagent
+          for attempt in 1 2 3; do
+            echo "Fallback clone attempt ${attempt}/3 for ref ${ref}"
+            if [[ "$ref" =~ ^[0-9a-f]{40}$ ]]; then
+              if git clone --no-tags --depth 1 "$repo_url" memagent \
+                && git -C memagent fetch --no-tags --depth 1 origin "$ref" \
+                && git -C memagent checkout --detach FETCH_HEAD; then
+                break
+              fi
+            else
+              if git clone --no-tags --depth 1 --branch "$ref" "$repo_url" memagent; then
+                break
+              fi
+            fi
+            rm -rf memagent
+            if [[ "$attempt" -eq 3 ]]; then
+              echo "Failed to clone memagent ref ${ref} after retries" >&2
+              exit 1
+            fi
+            sleep $((attempt * 5))
+          done
       - uses: ./.github/actions/setup-memagent-build
         with:
           memagent-repo-root: memagent
@@ -129,12 +233,15 @@ jobs:
             sudo mv ./kind /usr/local/bin/kind
           fi
       - name: Run benchmark harness
-        continue-on-error: ${{ matrix.collector == 'vector' }}
+        continue-on-error: ${{ github.event_name == 'schedule' || matrix.collector == 'vector' || matrix.workload.label == 'tmax' || matrix.workload.eps_per_pod >= 10000 }}
         run: |
           python3 bench/kind/run.py \
             --phase smoke \
             --profile "${BENCH_PROFILE}" \
+            --pods "${BENCH_PODS}" \
+            --eps-per-pod "${BENCH_EPS_PER_POD}" \
             --collector "${BENCH_COLLECTOR}" \
+            --ingest-mode "${BENCH_INGEST_MODE}" \
             --cpu-profile "${BENCH_CPU_PROFILE}" \
             --protocol otlp_http \
             --cluster-name "${CLUSTER_NAME}" \
@@ -142,6 +249,14 @@ jobs:
             --benchkit-kind "hybrid" \
             --benchkit-otlp-http-endpoint "${{ steps.monitor.outputs.otlp-http-endpoint }}" \
             --results-dir "${BENCH_RESULTS_DIR}"
+      - if: env.PERSIST_BENCH_DATA == 'true'
+        name: Stash jitter
+        shell: bash
+        run: |
+          seed="$(printf '%s' "${BENCHKIT_RUN_ID}" | cksum | awk '{print $1}')"
+          sleep_seconds=$(( (seed % 17) + 3 ))
+          echo "Delaying stash push by ${sleep_seconds}s to reduce bench-data contention"
+          sleep "${sleep_seconds}"
       - if: env.PERSIST_BENCH_DATA == 'true'
         name: Stash benchmark run
         continue-on-error: true
@@ -156,22 +271,10 @@ jobs:
           format: otlp
           run-id: ${{ env.BENCHKIT_RUN_ID }}
           summary: true
-      - if: env.PERSIST_BENCH_DATA == 'true' && matrix.collector == 'logfwd' && matrix.cpu_profile == 'single'
-        name: Trigger aggregate
-        continue-on-error: true
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh workflow run bench-kind-aggregate.yml --repo ${{ github.repository }}
-      - if: always()
-        name: Publish summary
-        run: |
-          if [[ -f "${BENCH_RESULTS_DIR}/summary.md" ]]; then
-            cat "${BENCH_RESULTS_DIR}/summary.md" >>"$GITHUB_STEP_SUMMARY"
-          fi
       - if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: kind-bench-${{ needs.plan.outputs.bench_profile }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}
+          name: kind-bench-${{ needs.plan.outputs.bench_profile }}-${{ matrix.ingest_mode }}-${{ matrix.workload.label }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}
           path: ${{ env.BENCH_RESULTS_DIR }}
           retention-days: 7
 
@@ -187,11 +290,13 @@ jobs:
         with:
           path: artifacts
       - name: Render benchmark summary
+        env:
+          SUITE_NAME: ${{ github.event_name == 'schedule' && 'Bench Nightly EPS' || 'Bench Competitive Benchmarks' }}
         run: |
           python3 bench/kind/render_issue_summary.py \
             --artifacts-root artifacts \
-            --suite-name "Bench Nightly EPS" \
-            --suite-key kind-bench-${{ needs.plan.outputs.bench_profile }} \
+            --suite-name "${SUITE_NAME}" \
+            --suite-key kind-bench-${{ needs.plan.outputs.bench_profile }}-${{ needs.plan.outputs.target_set }} \
             --memagent-ref "${MEMAGENT_REF}" \
             --bench-profile "${{ needs.plan.outputs.bench_profile }}" \
             --run-url "https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
@@ -206,10 +311,36 @@ jobs:
             bench-summary.md
             bench-summary.json
           retention-days: 7
-      - if: github.event_name == 'schedule'
-        name: Upsert nightly benchmark issue
+      - if: env.PERSIST_BENCH_DATA == 'true'
+        name: Trigger aggregate
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
-          ISSUE_TITLE: Bench Nightly EPS Report
+        run: gh workflow run bench-kind-aggregate.yml --repo ${{ github.repository }}
+      - if: github.event_name != 'pull_request'
+        id: issue_meta
+        name: Compute benchmark issue metadata
+        run: |
+          if [[ "${GITHUB_EVENT_NAME}" == "schedule" ]]; then
+            {
+              echo "title_base=Bench Nightly EPS Report"
+              echo "suite_key=bench-nightly-eps"
+              echo "labels=live-suite-report,report:bench,report:bench-nightly-eps"
+            } >>"$GITHUB_OUTPUT"
+          else
+            {
+              echo "title_base=Bench Competitive Benchmarks Report"
+              echo "suite_key=bench-competitive"
+              echo "labels=live-suite-report,report:bench,report:bench-competitive"
+            } >>"$GITHUB_OUTPUT"
+          fi
+      - if: github.event_name != 'pull_request'
+        name: Upsert benchmark issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_TITLE_BASE: ${{ steps.issue_meta.outputs.title_base }}
           ISSUE_BODY_FILE: ${{ github.workspace }}/bench-summary.md
+          ISSUE_SUMMARY_JSON_FILE: ${{ github.workspace }}/bench-summary.json
+          ISSUE_SUITE_KEY: ${{ steps.issue_meta.outputs.suite_key }}
+          ISSUE_LABELS: ${{ steps.issue_meta.outputs.labels }}
         run: tests/e2e/lib/upsert_issue.sh

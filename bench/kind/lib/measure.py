@@ -6,7 +6,9 @@ import socket
 import statistics
 import subprocess
 import time
+import urllib.error
 import urllib.request
+from http.client import RemoteDisconnected
 from contextlib import ExitStack
 from dataclasses import dataclass
 from typing import Callable
@@ -48,6 +50,17 @@ class PortForward:
         self.ready_check = ready_check or fetch_stats
         self.process: subprocess.Popen[str] | None = None
 
+    def _stop_process(self) -> None:
+        if self.process is None:
+            return
+        if self.process.poll() is None:
+            self.process.terminate()
+            try:
+                self.process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                self.process.kill()
+                self.process.wait(timeout=5)
+
     def __enter__(self) -> "PortForward":
         self.process = subprocess.Popen(
             [
@@ -58,37 +71,71 @@ class PortForward:
                 self.target,
                 f"{self.local_port}:{self.remote_port}",
             ],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             text=True,
         )
-        deadline = time.time() + 10
-        while time.time() < deadline:
-            try:
-                self.ready_check(self.local_port)
-                return self
-            except Exception:  # noqa: BLE001
-                time.sleep(0.25)
-        raise RuntimeError(f"port-forward did not become ready: {self.target}")
+        deadline = time.time() + 30
+        try:
+            while time.time() < deadline:
+                if self.process.poll() is not None:
+                    stderr = ""
+                    if self.process.stderr is not None:
+                        stderr = self.process.stderr.read().strip()
+                    raise RuntimeError(
+                        f"port-forward exited early for {self.target} "
+                        f"(code={self.process.returncode}): {stderr or 'no stderr output'}"
+                    )
+                try:
+                    self.ready_check(self.local_port)
+                    return self
+                except Exception:  # noqa: BLE001
+                    time.sleep(0.25)
+            raise RuntimeError(f"port-forward did not become ready: {self.target}")
+        except Exception:
+            self._stop_process()
+            raise
 
     def __exit__(self, exc_type, exc, tb) -> None:
-        if self.process is not None:
-            self.process.terminate()
-            try:
-                self.process.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                self.process.kill()
-                self.process.wait(timeout=5)
+        self._stop_process()
+
+
+def _fetch_json_with_retries(
+    local_port: int,
+    path: str,
+    *,
+    timeout_sec: int = 5,
+    attempts: int = 4,
+) -> dict[str, object]:
+    last_exc: Exception | None = None
+    for attempt in range(attempts):
+        try:
+            with urllib.request.urlopen(f"http://127.0.0.1:{local_port}{path}", timeout=timeout_sec) as response:
+                return json.loads(response.read().decode("utf-8"))
+        except (
+            urllib.error.URLError,
+            TimeoutError,
+            ConnectionResetError,
+            ConnectionAbortedError,
+            ConnectionRefusedError,
+            OSError,
+            RemoteDisconnected,
+            json.JSONDecodeError,
+        ) as exc:
+            last_exc = exc
+            if attempt + 1 < attempts:
+                time.sleep(0.1 * (attempt + 1))
+    if last_exc is None:
+        raise RuntimeError(f"failed to fetch JSON from {path}")
+    raise RuntimeError(f"failed to fetch JSON from {path}: {last_exc}") from last_exc
 
 
 def fetch_stats(local_port: int) -> dict[str, object]:
-    with urllib.request.urlopen(f"http://127.0.0.1:{local_port}/api/stats", timeout=5) as response:
-        return json.loads(response.read().decode("utf-8"))
+    return _fetch_json_with_retries(local_port, "/api/stats")
 
 
 def fetch_capture_stats(local_port: int) -> dict[str, object]:
-    with urllib.request.urlopen(f"http://127.0.0.1:{local_port}/stats", timeout=5) as response:
-        return json.loads(response.read().decode("utf-8"))
+    return _fetch_json_with_retries(local_port, "/stats")
 
 
 def fetch_text(local_port: int, path: str) -> str:
@@ -239,12 +286,14 @@ def collect_bench_samples(
     else:
         raise ValueError(f"unknown collector_stats_kind: {collector_stats_kind}")
 
+    sink_local_port = reserve_local_port()
+    collector_local_port = reserve_local_port()
     with ExitStack() as stack:
         stack.enter_context(
             PortForward(
                 namespace,
                 sink_target,
-                19090,
+                sink_local_port,
                 sink_stats_port,
                 ready_check=sink_ready_check,
             )
@@ -253,7 +302,7 @@ def collect_bench_samples(
             PortForward(
                 namespace,
                 collector_target,
-                19091,
+                collector_local_port,
                 collector_stats_port,
                 ready_check=collector_ready_check,
             )
@@ -269,8 +318,35 @@ def collect_bench_samples(
         deadline = time.time() + measure_sec
 
         while True:
-            sink_samples.append(sink_fetch_sample(19090))
-            collector_samples.append(collector_fetch_sample(19091))
+            try:
+                sink_sample = sink_fetch_sample(sink_local_port)
+            except Exception:
+                if sink_samples:
+                    prev = sink_samples[-1]
+                    sink_sample = StatsSample(
+                        timestamp=time.time(),
+                        output_lines=prev.output_lines,
+                        rss_bytes=prev.rss_bytes,
+                        cpu_total_ms=prev.cpu_total_ms,
+                    )
+                else:
+                    raise
+            sink_samples.append(sink_sample)
+
+            try:
+                collector_sample = collector_fetch_sample(collector_local_port)
+            except Exception:
+                if collector_samples:
+                    prev = collector_samples[-1]
+                    collector_sample = StatsSample(
+                        timestamp=time.time(),
+                        output_lines=prev.output_lines,
+                        rss_bytes=prev.rss_bytes,
+                        cpu_total_ms=prev.cpu_total_ms,
+                    )
+                else:
+                    raise
+            collector_samples.append(collector_sample)
             if time.time() >= deadline:
                 break
             time.sleep(1)

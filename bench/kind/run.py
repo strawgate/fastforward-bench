@@ -11,7 +11,7 @@ import time
 import traceback
 import uuid
 import urllib.request
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -40,6 +40,7 @@ from lib.kube import (
     wait_for_namespace,
 )
 from lib.measure import (
+    StatsSample,
     avg,
     collect_bench_samples,
     collect_emitter_reported_total,
@@ -128,6 +129,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--phase", choices=["infra", "smoke"], default="smoke")
     parser.add_argument("--profile", choices=sorted(PROFILES), default="smoke")
     parser.add_argument("--collector", default="logfwd")
+    parser.add_argument("--ingest-mode", choices=["file", "otlp"], default="file")
     parser.add_argument("--protocol", default="otlp_http")
     parser.add_argument("--cluster-name", default="memagent-bench")
     parser.add_argument("--namespace", default="memagent-bench")
@@ -139,6 +141,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--benchkit-service-name", default="memagent-e2e.kind-bench")
     parser.add_argument("--benchkit-otlp-http-endpoint", default=None)
     parser.add_argument("--cpu-profile", choices=sorted(CPU_PROFILES), default="single")
+    parser.add_argument("--pods", type=int, default=None)
+    parser.add_argument("--eps-per-pod", type=int, default=None)
     parser.add_argument("--keep-cluster", action="store_true")
     return parser.parse_args()
 
@@ -176,6 +180,21 @@ def write_json(path: Path, payload: object) -> None:
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
+def write_samples(path: Path, samples: list[StatsSample]) -> None:
+    write_json(
+        path,
+        [
+            {
+                "timestamp": sample.timestamp,
+                "output_lines": sample.output_lines,
+                "rss_bytes": sample.rss_bytes,
+                "cpu_total_ms": sample.cpu_total_ms,
+            }
+            for sample in samples
+        ],
+    )
+
+
 def normalize_otlp_metrics_url(endpoint: str) -> str:
     trimmed = endpoint.strip().rstrip("/")
     if not trimmed:
@@ -193,13 +212,23 @@ def format_cpu_quantity(mcpu: int) -> str:
     return f"{mcpu}m"
 
 
-def build_resource_plan(*, cpu_profile: CpuProfile, emitter_pods: int) -> ResourcePlan:
+def build_resource_plan(
+    *,
+    cpu_profile: CpuProfile,
+    emitter_pods: int,
+    eps_per_pod: int,
+    unbounded_generator: bool = False,
+) -> ResourcePlan:
     if emitter_pods <= 0:
         raise ValueError("emitter pod count must be > 0")
 
     node_budget_mcpu = int(cpu_profile.cluster_cpu_cores * 1000)
     reserved_mcpu = cpu_profile.sink_cpu_mcpu + cpu_profile.capture_reader_cpu_mcpu
     emitter_mcpu = cpu_profile.emitter_cpu_mcpu_per_pod
+    if eps_per_pod >= 100_000:
+        emitter_mcpu = max(emitter_mcpu, 200)
+    if unbounded_generator:
+        emitter_mcpu = max(emitter_mcpu, 200)
     collector_mcpu = node_budget_mcpu - reserved_mcpu - (emitter_mcpu * emitter_pods)
 
     if collector_mcpu < cpu_profile.collector_cpu_mcpu_min:
@@ -213,6 +242,11 @@ def build_resource_plan(*, cpu_profile: CpuProfile, emitter_pods: int) -> Resour
             f"cpu profile '{cpu_profile.name}' leaves only {collector_mcpu}m for collector with {emitter_pods} emitter pods"
         )
 
+    # Keep generator and sink memory fixed at 1Gi for benchmark stability.
+    # This avoids memory-limit artifacts while we tune throughput behavior.
+    emitter_memory_limit = "1Gi"
+    sink_memory_limit = "1Gi"
+
     return ResourcePlan(
         cpu_profile=cpu_profile,
         collector_cpu=format_cpu_quantity(collector_mcpu),
@@ -220,10 +254,26 @@ def build_resource_plan(*, cpu_profile: CpuProfile, emitter_pods: int) -> Resour
         sink_cpu=format_cpu_quantity(cpu_profile.sink_cpu_mcpu),
         capture_reader_cpu=format_cpu_quantity(cpu_profile.capture_reader_cpu_mcpu),
         collector_memory=cpu_profile.collector_memory_limit,
-        emitter_memory=cpu_profile.emitter_memory_limit,
-        sink_memory=cpu_profile.sink_memory_limit,
+        emitter_memory=emitter_memory_limit,
+        sink_memory=sink_memory_limit,
         capture_reader_memory=cpu_profile.capture_reader_memory_limit,
     )
+
+
+def resolve_profile(
+    *,
+    profile_name: str,
+    pods_override: int | None,
+    eps_per_pod_override: int | None,
+) -> Profile:
+    profile = PROFILES[profile_name]
+    pods = pods_override if pods_override is not None else profile.pods
+    eps_per_pod = eps_per_pod_override if eps_per_pod_override is not None else profile.eps_per_pod
+    if pods <= 0:
+        raise ValueError("pods must be > 0")
+    if eps_per_pod < 0:
+        raise ValueError("eps_per_pod must be >= 0")
+    return replace(profile, pods=pods, eps_per_pod=eps_per_pod)
 
 
 def emit_otlp_metrics(*, endpoint: str, payload: dict[str, object], timeout_sec: int = 10) -> None:
@@ -408,12 +458,14 @@ def render_manifests(
     benchmark_id: str,
     rendered_dir: Path,
 ) -> dict[str, Path]:
+    generator_batch_size = 64 if profile.eps_per_pod == 0 else 1024
     substitutions = {
         "NAMESPACE": args.namespace,
         "MEMAGENT_IMAGE": args.memagent_image,
         "COLLECTOR_IMAGE": args.collector_image or adapter.collector_image or args.memagent_image,
         "BENCHMARK_ID": benchmark_id,
         "EPS_PER_POD": str(profile.eps_per_pod),
+        "GENERATOR_BATCH_SIZE": str(generator_batch_size),
         "POD_REPLICAS": str(profile.pods),
         "COLLECTOR_CPU_REQUEST": resource_plan.collector_cpu,
         "COLLECTOR_CPU_LIMIT": resource_plan.collector_cpu,
@@ -445,9 +497,15 @@ def render_manifests(
     render_template("sink-configmap.yaml.tmpl", manifests["sink_configmap"], substitutions)
     render_template("sink-deployment.yaml.tmpl", manifests["sink_deployment"], substitutions)
     if args.phase == "smoke":
-        render_template(adapter.config_template, manifests["collector_configmap"], substitutions)
-        render_template(adapter.workload_template, manifests["collector_workload"], substitutions)
-        render_template("workload/log-emitter-configmap.yaml.tmpl", manifests["emitter_configmap"], substitutions)
+        collector_config_template, collector_workload_template = adapter.templates_for_ingest_mode(args.ingest_mode)
+        emitter_config_template = (
+            "workload/log-emitter-configmap-otlp.yaml.tmpl"
+            if args.ingest_mode == "otlp"
+            else "workload/log-emitter-configmap.yaml.tmpl"
+        )
+        render_template(collector_config_template, manifests["collector_configmap"], substitutions)
+        render_template(collector_workload_template, manifests["collector_workload"], substitutions)
+        render_template(emitter_config_template, manifests["emitter_configmap"], substitutions)
         render_template("workload/log-emitter-statefulset.yaml.tmpl", manifests["emitter_statefulset"], substitutions)
     return manifests
 
@@ -461,6 +519,8 @@ def run_smoke_phase(
     results_dir: Path,
     result: BenchmarkResult,
 ) -> int:
+    max_throughput_mode = profile.eps_per_pod == 0
+
     apply_manifest(manifests["collector_configmap"])
     apply_manifest(manifests["collector_workload"])
     rollout_status(args.namespace, adapter.rollout_kind, adapter.rollout_name, timeout_sec=120)
@@ -509,6 +569,8 @@ def run_smoke_phase(
             event="complete",
         ),
     )
+    write_samples(results_dir / "sink-samples.json", sink_samples)
+    write_samples(results_dir / "collector-samples.json", collector_samples)
 
     if profile.cooldown_sec > 0:
         emit_phase_signal(
@@ -577,6 +639,119 @@ def run_smoke_phase(
     )
     collect_sink_capture(args.namespace, sink_pod, artifacts_dir / "sink-capture.ndjson")
 
+    sink_rows = filter_rows_to_emitter_snapshot(
+        benchmark_rows(load_json_lines(artifacts_dir / "sink-capture.ndjson"), result.benchmark_id),
+        emitter_reported_stats,
+    )
+
+    if max_throughput_mode:
+        result.captured_rows_total = len(sink_rows)
+        result.source_rows_total = None
+        result.missing_source_count = None
+        result.missing_event_count = None
+        result.unexpected_event_count = None
+        result.dup_estimate = None
+        if result.emitter_reported_events_total is not None and result.sink_reported_events_total is not None:
+            result.drop_estimate = max(0, result.emitter_reported_events_total - result.sink_reported_events_total)
+        else:
+            result.drop_estimate = None
+
+        write_json(results_dir / "actual_rows.json", sink_rows)
+        write_json(results_dir / "source_rows.json", [])
+        write_json(
+            results_dir / "stream-summary.json",
+            {
+                "mode": "max-throughput",
+                "source_oracle": "skipped",
+                "emitter_reported_events_total": result.emitter_reported_events_total,
+                "sink_reported_events_total": result.sink_reported_events_total,
+                "sink_row_count": len(sink_rows),
+                "sink_lines_total": result.sink_lines_total,
+                "sink_lines_per_sec_avg": result.sink_lines_per_sec_avg,
+                "drop_estimate": result.drop_estimate,
+            },
+        )
+        write_json(results_dir / "emitter-stats.json", emitter_reported_stats)
+        write_json(results_dir / "sink-stats.json", sink_reported_stats)
+
+        observed_sink_output = bool(
+            (result.sink_lines_total is not None and result.sink_lines_total > 0)
+            or (result.sink_reported_events_total is not None and result.sink_reported_events_total > 0)
+            or len(sink_rows) > 0
+        )
+        if observed_sink_output:
+            result.status = "pass"
+            result.notes = (
+                "max-throughput benchmark completed with unbounded generator; strict source-vs-sink oracle "
+                "is intentionally skipped in this mode. "
+                f"sink_lines_total={result.sink_lines_total}, sink_lines_per_sec_avg={result.sink_lines_per_sec_avg}, "
+                f"emitter_reported_events_total={result.emitter_reported_events_total}, "
+                f"sink_reported_events_total={result.sink_reported_events_total}, "
+                f"drop_estimate={result.drop_estimate}."
+            )
+            return 0
+
+        result.status = "fail"
+        result.notes = (
+            "max-throughput benchmark did not observe sink output in unbounded mode; "
+            f"sink_lines_total={result.sink_lines_total}, sink_reported_events_total={result.sink_reported_events_total}."
+        )
+        return 1
+
+    if args.ingest_mode == "otlp":
+        result.captured_rows_total = len(sink_rows)
+        result.source_rows_total = None
+        result.missing_source_count = None
+        result.missing_event_count = None
+        result.unexpected_event_count = None
+        result.dup_estimate = None
+        if result.emitter_reported_events_total is not None and result.sink_reported_events_total is not None:
+            result.drop_estimate = max(0, result.emitter_reported_events_total - result.sink_reported_events_total)
+        else:
+            result.drop_estimate = None
+
+        write_json(results_dir / "actual_rows.json", sink_rows)
+        write_json(results_dir / "source_rows.json", [])
+        write_json(
+            results_dir / "stream-summary.json",
+            {
+                "mode": "ingest-otlp",
+                "source_oracle": "skipped",
+                "emitter_reported_events_total": result.emitter_reported_events_total,
+                "sink_reported_events_total": result.sink_reported_events_total,
+                "sink_row_count": len(sink_rows),
+                "sink_lines_total": result.sink_lines_total,
+                "sink_lines_per_sec_avg": result.sink_lines_per_sec_avg,
+                "drop_estimate": result.drop_estimate,
+            },
+        )
+        write_json(results_dir / "emitter-stats.json", emitter_reported_stats)
+        write_json(results_dir / "sink-stats.json", sink_reported_stats)
+
+        observed_sink_output = bool(
+            (result.sink_lines_total is not None and result.sink_lines_total > 0)
+            or (result.sink_reported_events_total is not None and result.sink_reported_events_total > 0)
+            or len(sink_rows) > 0
+        )
+        if observed_sink_output:
+            result.status = "pass"
+            result.notes = (
+                f"smoke benchmark completed in {adapter.benchmark_mode} with ingest_mode={args.ingest_mode}; "
+                "source-vs-sink oracle is intentionally skipped for direct-OTLP input. "
+                f"sink_lines_total={result.sink_lines_total}, sink_lines_per_sec_avg={result.sink_lines_per_sec_avg}, "
+                f"emitter_reported_events_total={result.emitter_reported_events_total}, "
+                f"sink_reported_events_total={result.sink_reported_events_total}, "
+                f"drop_estimate={result.drop_estimate}."
+            )
+            return 0
+
+        result.status = "fail"
+        result.notes = (
+            f"smoke benchmark did not observe sink output with ingest_mode={args.ingest_mode}; "
+            f"sink_lines_total={result.sink_lines_total}, sink_reported_events_total={result.sink_reported_events_total}."
+        )
+        return 1
+
     collect_pod_logs(
         namespace=args.namespace,
         pod_names=emitter_pods,
@@ -593,10 +768,6 @@ def run_smoke_phase(
             tail=200,
         )
 
-    sink_rows = filter_rows_to_emitter_snapshot(
-        benchmark_rows(load_json_lines(artifacts_dir / "sink-capture.ndjson"), result.benchmark_id),
-        emitter_reported_stats,
-    )
     source_rows = filter_rows_to_emitter_snapshot(
         benchmark_rows(load_json_lines(artifacts_dir / "emitter-logs.txt"), result.benchmark_id),
         emitter_reported_stats,
@@ -637,14 +808,64 @@ def run_smoke_phase(
     write_json(results_dir / "emitter-stats.json", emitter_reported_stats)
     write_json(results_dir / "sink-stats.json", sink_reported_stats)
 
-    if (
-        result.sink_lines_total
+    source_oracle_incomplete = (
+        result.emitter_reported_events_total is not None
+        and comparison.source_row_count < result.emitter_reported_events_total
+    )
+    diagnostics_available = result.emitter_reported_events_total is not None and result.sink_reported_events_total is not None
+    diagnostics_oracle_clean = (
+        diagnostics_available
+        and result.sink_reported_events_total >= result.emitter_reported_events_total
         and comparison.missing_source_count == 0
+    )
+    observed_any_sink_output = bool((result.sink_lines_total is not None and result.sink_lines_total > 0) or comparison.sink_row_count > 0)
+
+    if source_oracle_incomplete:
+        result.missing_event_count = None
+        result.unexpected_event_count = None
+        result.dup_estimate = None
+        if diagnostics_available:
+            result.drop_estimate = max(0, result.emitter_reported_events_total - result.sink_reported_events_total)
+        else:
+            result.drop_estimate = None
+
+        if diagnostics_oracle_clean and observed_any_sink_output:
+            result.status = "pass"
+            result.notes = (
+                f"smoke benchmark passed in {adapter.benchmark_mode} with degraded source oracle; "
+                f"source rows captured ({comparison.source_row_count}) were lower than emitter diagnostics total "
+                f"({result.emitter_reported_events_total}), so pass/fail used emitter/sink diagnostics totals instead. "
+                f"captured_rows_total={comparison.sink_row_count}, sink_lines_total={result.sink_lines_total}, "
+                f"sink_reported_events_total={result.sink_reported_events_total}, drop_estimate={result.drop_estimate}."
+            )
+            return 0
+
+        if diagnostics_available:
+            result.status = "fail"
+            result.notes = (
+                f"smoke benchmark failed in {adapter.benchmark_mode} with degraded source oracle; "
+                f"source rows captured ({comparison.source_row_count}) were lower than emitter diagnostics total "
+                f"({result.emitter_reported_events_total}), and sink diagnostics remained behind "
+                f"({result.sink_reported_events_total}). captured_rows_total={comparison.sink_row_count}, "
+                f"sink_lines_total={result.sink_lines_total}, drop_estimate={result.drop_estimate}."
+            )
+        else:
+            result.status = "fail"
+            result.notes = (
+                f"smoke benchmark failed in {adapter.benchmark_mode} with degraded source oracle and missing diagnostics; "
+                f"source_rows_total={comparison.source_row_count}, captured_rows_total={comparison.sink_row_count}, "
+                f"sink_lines_total={result.sink_lines_total}."
+            )
+        return 1
+
+    strict_oracle_clean = (
+        comparison.missing_source_count == 0
         and comparison.missing_event_count == 0
         and comparison.unexpected_event_count == 0
         and comparison.duplicate_event_count == 0
         and comparison.gap_count == 0
-    ):
+    )
+    if strict_oracle_clean and observed_any_sink_output:
         result.status = "pass"
         result.notes = (
             f"smoke benchmark succeeded in {adapter.benchmark_mode}; source_rows_total={comparison.source_row_count}, "
@@ -667,10 +888,21 @@ def run_smoke_phase(
 
 def main() -> int:
     args = parse_args()
-    profile = PROFILES[args.profile]
+    profile = resolve_profile(
+        profile_name=args.profile,
+        pods_override=args.pods,
+        eps_per_pod_override=args.eps_per_pod,
+    )
     adapter = get_collector_adapter(args.collector)
+    if not adapter.supports_ingest_mode(args.ingest_mode):
+        raise NotImplementedError(f"collector '{args.collector}' does not support ingest mode '{args.ingest_mode}'")
     cpu_profile = CPU_PROFILES[args.cpu_profile]
-    resource_plan = build_resource_plan(cpu_profile=cpu_profile, emitter_pods=profile.pods)
+    resource_plan = build_resource_plan(
+        cpu_profile=cpu_profile,
+        emitter_pods=profile.pods,
+        eps_per_pod=profile.eps_per_pod,
+        unbounded_generator=profile.eps_per_pod == 0,
+    )
     results_dir = resolve_results_dir(args.results_dir)
     rendered_dir = results_dir / "rendered-manifests"
     rendered_dir.mkdir(parents=True, exist_ok=True)
@@ -687,6 +919,7 @@ def main() -> int:
         namespace=args.namespace,
         collector=args.collector,
         protocol=adapter.sink_transport if args.protocol == "otlp_http" else args.protocol,
+        ingest_mode=args.ingest_mode,
         cpu_profile=args.cpu_profile,
         cluster_cpu_limit_cores=cpu_profile.cluster_cpu_cores,
         pods=profile.pods,

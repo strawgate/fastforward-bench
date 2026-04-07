@@ -44,5 +44,5 @@ data:
         service
       FROM logs
     output:
-      type: stdout
-      format: json
+      type: otlp
+      endpoint: http://bench-collector.${NAMESPACE}.svc.cluster.local:4318/v1/logs

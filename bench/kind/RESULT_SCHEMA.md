@@ -19,6 +19,7 @@ land. Fields that are not collected in a phase are emitted as `null`.
 | `namespace` | string | Kubernetes namespace used by the run |
 | `collector` | string | Target collector name for the cell |
 | `protocol` | string | Sink protocol, currently `otlp_http` by default |
+| `ingest_mode` | string | Collector input mode: `file` or `otlp` |
 | `cpu_profile` | string | CPU shaping profile, currently `single` or `multi` |
 | `cluster_cpu_limit_cores` | number | CPU cap applied to the KIND control-plane container |
 | `pods` | integer | Target emitter pod count for the profile |
@@ -74,6 +75,11 @@ This is intended to be a useful and honest baseline:
 - it does verify exact event preservation for the benchmark envelope
 - it does not claim parse-and-enrich coverage or score those costs yet
 
+For `ingest_mode=otlp`, the smoke run intentionally skips strict source-vs-sink
+comparison because the emitter is not writing source logs to stdout in that
+mode. In OTLP ingest mode, pass/fail is based on positive sink observation and
+diagnostic counters.
+
 ## Artifact Expectations
 
 Alongside the JSON row, each run should preserve:
@@ -101,7 +107,7 @@ Current projection rules:
   - `benchkit.source_format=otlp`
   - `service.name`
 - datapoint identity:
-  - `benchkit.scenario=kind/{phase}/{benchmark_mode}`
+  - `benchkit.scenario=kind/{phase}/{benchmark_mode}/{ingest_mode}`
   - `benchkit.series={collector}`
 - datapoint tags:
   - implementation, protocol, profile, cpu profile, cluster CPU cap, cluster, namespace, and profile knobs

@@ -28,6 +28,9 @@ The harness currently supports two phases:
 The current smoke implementation is intentionally narrow:
 
 - collector support: `logfwd`, `otelcol`, `vector`
+- ingest modes:
+  - `file` (collector tails emitter pod/container logs from node filesystem)
+  - `otlp` (emitters send OTLP directly to the collector service)
 - benchmark mode: `baseline-pass-through`
 - sink transport:
   - `logfwd`/`otelcol`: OTLP/HTTP into a `logfwd` capture sink
@@ -132,10 +135,17 @@ Useful flags:
   Leaves the KIND cluster running for inspection.
 - `--namespace`
   Overrides the benchmark namespace.
+- `--pods`
+  Overrides emitter pod count from the selected profile.
+- `--eps-per-pod`
+  Overrides generator `events_per_sec` per emitter pod.
+  Use `0` for unbounded generation ("as fast as possible").
 - `--collector-image`
   Overrides the collector image for adapters that do not use `--memagent-image`.
 - `--protocol`
   Records the target sink protocol in metadata. Defaults to `otlp_http`.
+- `--ingest-mode`
+  Selects the collector input path: `file` (default) or `otlp`.
 
 ## Outputs
 
@@ -149,6 +159,8 @@ Each run writes a directory under `bench/kind/results/` containing:
 - `artifacts/`
 - `emitter-stats.json`
 - `sink-stats.json`
+- `sink-samples.json` for `smoke`
+- `collector-samples.json` for `smoke`
 - `stream-summary.json` for `smoke`
 - `actual_rows.json` for `smoke`
 - `source_rows.json` for `smoke`
@@ -158,8 +170,10 @@ Each run writes a directory under `bench/kind/results/` containing:
 Current smoke runs should be interpreted as:
 
 - benchmark mode: `baseline-pass-through`
-- pass means the sink observed the same benchmark-tagged events the emitters
-  produced, with no duplicates or unexpected rows
+- `ingest_mode=file`: pass means the sink observed the same benchmark-tagged
+  events the emitters produced, with no duplicates or unexpected rows
+- `ingest_mode=otlp`: pass means direct-OTLP ingest observed positive sink
+  output; strict source-vs-sink oracle is intentionally skipped
 - the result row also records producer-reported totals from the emitter
   and sink `logfwd` diagnostics as extra diagnostics
 - scores do not yet include parse-and-enrich overhead
@@ -187,6 +201,20 @@ Pull requests still use the same smoke harness, but only scheduled or manual
 runs persist benchmark history to `bench-data`.
 
 Nightly scheduled runs publish a benchmark suite summary (`bench-summary.md`)
-with EPS-oriented tables. The nightly workflow upserts that summary into the
-`Bench Nightly EPS Report` issue so trend checks stay visible without opening
-run artifacts.
+with EPS-oriented tables. Reporting now uses rotating live issues with status in
+the title and suite labels:
+
+- schedule runs: `Bench Nightly EPS Report` (`report:bench-nightly-eps`)
+- manual workflow runs: `Bench Competitive Benchmarks Report`
+  (`report:bench-competitive`)
+
+Each new report issue auto-links and closes the prior live issue for that suite.
+
+The benchmark workflow also supports target EPS sweeps:
+
+- `ladder`: `1, 10, 100, 500, 1k, 10k, 100k, 1m`
+- `max`: unbounded generator mode (`eps_per_pod=0`) for
+  "fast as the current resource allocation allows"
+- high tiers (`10k+`) are treated as capacity probes in CI:
+  results are still collected and summarized, but they are non-gating
+  because emitter/source capture can saturate before the collector does

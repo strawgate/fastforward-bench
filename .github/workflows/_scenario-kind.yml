@@ -34,11 +34,42 @@ jobs:
       MEMAGENT_REPO_ROOT: ${{ github.workspace }}/memagent
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/checkout@v6
+      - id: checkout_memagent
+        continue-on-error: true
+        uses: actions/checkout@v6
         with:
           repository: strawgate/memagent
           ref: ${{ env.MEMAGENT_REF }}
           path: memagent
+          persist-credentials: false
+      - if: steps.checkout_memagent.outcome == 'failure'
+        name: Fallback clone memagent checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          repo_url="https://github.com/strawgate/memagent.git"
+          ref="${MEMAGENT_REF}"
+          rm -rf memagent
+          for attempt in 1 2 3; do
+            echo "Fallback clone attempt ${attempt}/3 for ref ${ref}"
+            if [[ "$ref" =~ ^[0-9a-f]{40}$ ]]; then
+              if git clone --no-tags --depth 1 "$repo_url" memagent \
+                && git -C memagent fetch --no-tags --depth 1 origin "$ref" \
+                && git -C memagent checkout --detach FETCH_HEAD; then
+                break
+              fi
+            else
+              if git clone --no-tags --depth 1 --branch "$ref" "$repo_url" memagent; then
+                break
+              fi
+            fi
+            rm -rf memagent
+            if [[ "$attempt" -eq 3 ]]; then
+              echo "Failed to clone memagent ref ${ref} after retries" >&2
+              exit 1
+            fi
+            sleep $((attempt * 5))
+          done
       - name: Validate scenario contract
         run: python3 tests/e2e/lib/check_scenarios.py --repo-root . --scenario-id "${{ inputs.scenario_id }}"
       - uses: ./.github/actions/setup-memagent-build

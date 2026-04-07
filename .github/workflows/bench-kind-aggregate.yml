@@ -1,12 +1,11 @@
 name: Bench / kind aggregate
 
 on:
-  push:
-    branches:
-      - bench-data
-    paths:
-      - 'data/runs/**'
   workflow_dispatch:
+
+concurrency:
+  group: bench-kind-aggregate
+  cancel-in-progress: false
 
 permissions:
   contents: write

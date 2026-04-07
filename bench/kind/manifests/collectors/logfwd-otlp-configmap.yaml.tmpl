@@ -13,9 +13,8 @@ data:
       data_dir: /var/lib/logfwd
 
     input:
-      type: file
-      path: /var/log/pods/${NAMESPACE}_log-emitter-*/*/*.log
-      format: cri
+      type: otlp
+      listen: 0.0.0.0:4318
 
     transform: |
       SELECT

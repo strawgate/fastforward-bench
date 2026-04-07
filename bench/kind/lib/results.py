@@ -17,6 +17,7 @@ class BenchmarkResult:
     namespace: str
     collector: str
     protocol: str
+    ingest_mode: str
     cpu_profile: str
     cluster_cpu_limit_cores: float
     pods: int
@@ -158,10 +159,11 @@ def build_otlp_result_payload(
         if value:
             resource_attrs.append(_otlp_attr(key, value))
 
-    scenario = f"kind/{result.phase}/{result.benchmark_mode}"
+    scenario = f"kind/{result.phase}/{result.benchmark_mode}/{result.ingest_mode}"
     tags = {
         "benchkit.impl": result.collector,
         "benchkit.protocol": result.protocol,
+        "benchkit.ingest_mode": result.ingest_mode,
         "benchkit.profile": profile,
         "benchkit.cpu_profile": result.cpu_profile,
         "benchkit.cluster_cpu_limit_cores": str(result.cluster_cpu_limit_cores),
@@ -247,10 +249,11 @@ def build_otlp_phase_signal_payload(
         if value:
             resource_attrs.append(_otlp_attr(key, value))
 
-    scenario = f"kind/{result.phase}/{result.benchmark_mode}"
+    scenario = f"kind/{result.phase}/{result.benchmark_mode}/{result.ingest_mode}"
     tags = {
         "benchkit.impl": result.collector,
         "benchkit.protocol": result.protocol,
+        "benchkit.ingest_mode": result.ingest_mode,
         "benchkit.profile": profile,
         "benchkit.cpu_profile": result.cpu_profile,
         "benchkit.cluster_cpu_limit_cores": str(result.cluster_cpu_limit_cores),
@@ -384,6 +387,7 @@ def render_summary(result: BenchmarkResult) -> str:
         f"- Benchmark mode: `{result.benchmark_mode}`",
         f"- Collector: `{result.collector}`",
         f"- Protocol: `{result.protocol}`",
+        f"- Ingest mode: `{result.ingest_mode}`",
         f"- CPU profile: `{result.cpu_profile}` ({result.cluster_cpu_limit_cores} cores cluster cap)",
         f"- Cluster: `{result.cluster_name}`",
         f"- Namespace: `{result.namespace}`",

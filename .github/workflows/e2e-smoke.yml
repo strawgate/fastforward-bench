@@ -102,6 +102,9 @@ jobs:
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
         env:
           GH_TOKEN: ${{ github.token }}
-          ISSUE_TITLE: E2E Smoke Suite Report
+          ISSUE_TITLE_BASE: E2E Smoke Suite Report
           ISSUE_BODY_FILE: ${{ github.workspace }}/suite-summary.md
+          ISSUE_SUMMARY_JSON_FILE: ${{ github.workspace }}/suite-summary.json
+          ISSUE_SUITE_KEY: e2e-smoke
+          ISSUE_LABELS: live-suite-report,report:e2e,report:e2e-smoke
         run: tests/e2e/lib/upsert_issue.sh
