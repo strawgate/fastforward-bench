@@ -195,13 +195,20 @@ def format_cpu_quantity(mcpu: int) -> str:
     return f"{mcpu}m"
 
 
-def build_resource_plan(*, cpu_profile: CpuProfile, emitter_pods: int) -> ResourcePlan:
+def build_resource_plan(
+    *,
+    cpu_profile: CpuProfile,
+    emitter_pods: int,
+    unbounded_generator: bool = False,
+) -> ResourcePlan:
     if emitter_pods <= 0:
         raise ValueError("emitter pod count must be > 0")
 
     node_budget_mcpu = int(cpu_profile.cluster_cpu_cores * 1000)
     reserved_mcpu = cpu_profile.sink_cpu_mcpu + cpu_profile.capture_reader_cpu_mcpu
     emitter_mcpu = cpu_profile.emitter_cpu_mcpu_per_pod
+    if unbounded_generator:
+        emitter_mcpu = max(emitter_mcpu, 200)
     collector_mcpu = node_budget_mcpu - reserved_mcpu - (emitter_mcpu * emitter_pods)
 
     if collector_mcpu < cpu_profile.collector_cpu_mcpu_min:
@@ -215,6 +222,10 @@ def build_resource_plan(*, cpu_profile: CpuProfile, emitter_pods: int) -> Resour
             f"cpu profile '{cpu_profile.name}' leaves only {collector_mcpu}m for collector with {emitter_pods} emitter pods"
         )
 
+    emitter_memory_limit = cpu_profile.emitter_memory_limit
+    if unbounded_generator:
+        emitter_memory_limit = "512Mi"
+
     return ResourcePlan(
         cpu_profile=cpu_profile,
         collector_cpu=format_cpu_quantity(collector_mcpu),
@@ -222,7 +233,7 @@ def build_resource_plan(*, cpu_profile: CpuProfile, emitter_pods: int) -> Resour
         sink_cpu=format_cpu_quantity(cpu_profile.sink_cpu_mcpu),
         capture_reader_cpu=format_cpu_quantity(cpu_profile.capture_reader_cpu_mcpu),
         collector_memory=cpu_profile.collector_memory_limit,
-        emitter_memory=cpu_profile.emitter_memory_limit,
+        emitter_memory=emitter_memory_limit,
         sink_memory=cpu_profile.sink_memory_limit,
         capture_reader_memory=cpu_profile.capture_reader_memory_limit,
     )
@@ -694,7 +705,11 @@ def main() -> int:
     )
     adapter = get_collector_adapter(args.collector)
     cpu_profile = CPU_PROFILES[args.cpu_profile]
-    resource_plan = build_resource_plan(cpu_profile=cpu_profile, emitter_pods=profile.pods)
+    resource_plan = build_resource_plan(
+        cpu_profile=cpu_profile,
+        emitter_pods=profile.pods,
+        unbounded_generator=profile.eps_per_pod == 0,
+    )
     results_dir = resolve_results_dir(args.results_dir)
     rendered_dir = results_dir / "rendered-manifests"
     rendered_dir.mkdir(parents=True, exist_ok=True)
