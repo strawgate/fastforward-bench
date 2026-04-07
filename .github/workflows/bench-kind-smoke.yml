@@ -277,7 +277,6 @@ jobs:
           name: kind-bench-${{ needs.plan.outputs.bench_profile }}-${{ matrix.ingest_mode }}-${{ matrix.workload.label }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}
           path: ${{ env.BENCH_RESULTS_DIR }}
           retention-days: 7
-          compression-level: 0
 
   summarize:
     if: always() && github.event_name != 'pull_request'
@@ -312,7 +311,6 @@ jobs:
             bench-summary.md
             bench-summary.json
           retention-days: 7
-          compression-level: 0
       - if: env.PERSIST_BENCH_DATA == 'true'
         name: Trigger aggregate
         continue-on-error: true

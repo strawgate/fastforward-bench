@@ -116,7 +116,6 @@ jobs:
             suite-summary.md
             suite-summary.json
           retention-days: 7
-          compression-level: 0
       - name: Upsert suite issue
         env:
           GH_TOKEN: ${{ github.token }}
