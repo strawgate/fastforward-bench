@@ -125,7 +125,7 @@ jobs:
             echo 'collectors=["logfwd","otelcol","vector"]' >>"$GITHUB_OUTPUT"
           fi
           if [[ "${{ github.event_name }}" == "schedule" ]]; then
-            echo 'cpu_profiles=["single"]' >>"$GITHUB_OUTPUT"
+            echo 'cpu_profiles=["single","multi"]' >>"$GITHUB_OUTPUT"
           elif [[ "${{ github.event_name }}" == "workflow_dispatch" && "${INPUT_CPU_PROFILE}" != "all" ]]; then
             echo "cpu_profiles=[\"${INPUT_CPU_PROFILE}\"]" >>"$GITHUB_OUTPUT"
           else
