@@ -1,9 +1,9 @@
 [
   {
     "ref": "refs/heads/codex/eps-target-sweep",
-    "latestRunId": "24097782241-1--kind-bench-smoke-otlp-t1m-single-otelcol",
-    "latestTimestamp": "2026-04-07T21:43:25.410Z",
-    "latestCommit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
+    "latestRunId": "24106177640-1--kind-bench-smoke-file-profile-smoke-single-vector",
+    "latestTimestamp": "2026-04-07T21:55:37.141Z",
+    "latestCommit": "2575fa3bf51b3715d692423bd71961f1494504a3",
     "runCount": 43
   },
   {

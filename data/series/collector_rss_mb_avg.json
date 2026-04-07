@@ -19,12 +19,6 @@
       },
       "points": [
         {
-          "timestamp": "2026-04-07T19:44:15.000Z",
-          "value": 114.04,
-          "commit": "4752cdbf3312b9281b7d2b5c36724a1c138942d3",
-          "run_id": "24100966803-1--kind-bench-smoke-file-profile-smoke-single-logfwd"
-        },
-        {
           "timestamp": "2026-04-07T19:53:17.000Z",
           "value": 116.29,
           "commit": "518c80150d70a94c75ad7566341ee771b7a6e6c8",
