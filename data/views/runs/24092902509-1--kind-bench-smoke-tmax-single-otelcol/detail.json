@@ -1,0 +1,11 @@
+{
+  "run": {
+    "id": "24092902509-1--kind-bench-smoke-tmax-single-otelcol",
+    "timestamp": "2026-04-07T16:41:37.907Z",
+    "commit": "8728b2520567fe55f8544ee9827159c2bc067f26",
+    "ref": "refs/heads/codex/eps-target-sweep",
+    "benchmarks": 0,
+    "metrics": []
+  },
+  "metricSnapshots": []
+}

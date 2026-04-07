@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
   "label": "sink lines total",
-  "message": "7.2k events",
-  "color": "red"
+  "message": "150.9k events",
+  "color": "brightgreen"
 }

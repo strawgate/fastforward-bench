@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
   "label": "collector cpu cores p95",
-  "message": "0.06 cores",
-  "color": "red"
+  "message": "0.25 cores",
+  "color": "brightgreen"
 }

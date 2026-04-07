@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
   "label": "collector cpu cores avg",
-  "message": "0.05 cores",
+  "message": "0.16 cores",
   "color": "red"
 }
