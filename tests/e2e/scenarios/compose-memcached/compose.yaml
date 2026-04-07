@@ -13,6 +13,7 @@ services:
 
   memcached:
     image: memcached:1.6-alpine
+    user: "0:0"
     command:
       - sh
       - -lc
