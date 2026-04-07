@@ -250,6 +250,17 @@ def build_resource_plan(
     if unbounded_generator:
         emitter_memory_limit = "512Mi"
 
+    # The sink writes every received event to disk. At high ingest rates this
+    # can temporarily buffer enough data to exceed the default 256Mi limit,
+    # causing OOM restarts and artificial throughput collapse.
+    sink_memory_limit = cpu_profile.sink_memory_limit
+    if eps_per_pod >= 10_000:
+        sink_memory_limit = "512Mi"
+    if eps_per_pod >= 100_000:
+        sink_memory_limit = "1Gi"
+    if unbounded_generator:
+        sink_memory_limit = "1Gi"
+
     return ResourcePlan(
         cpu_profile=cpu_profile,
         collector_cpu=format_cpu_quantity(collector_mcpu),
@@ -258,7 +269,7 @@ def build_resource_plan(
         capture_reader_cpu=format_cpu_quantity(cpu_profile.capture_reader_cpu_mcpu),
         collector_memory=cpu_profile.collector_memory_limit,
         emitter_memory=emitter_memory_limit,
-        sink_memory=cpu_profile.sink_memory_limit,
+        sink_memory=sink_memory_limit,
         capture_reader_memory=cpu_profile.capture_reader_memory_limit,
     )
 
