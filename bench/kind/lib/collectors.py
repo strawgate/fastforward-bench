@@ -44,10 +44,27 @@ OTELCOL_COLLECTOR = CollectorAdapter(
     collector_stats_port=8888,
 )
 
+VECTOR_COLLECTOR = CollectorAdapter(
+    name="vector",
+    benchmark_mode="baseline-pass-through",
+    config_template="collectors/vector-configmap.yaml.tmpl",
+    workload_template="collectors/vector-daemonset.yaml.tmpl",
+    rollout_kind="daemonset",
+    rollout_name="vector-bench-collector",
+    pod_selector="app.kubernetes.io/name=vector-bench-collector",
+    diagnostics_target_format="pod/{pod_name}",
+    collector_image="timberio/vector:0.54.0-debian",
+    collector_stats_kind="vector_prometheus",
+    collector_stats_port=9090,
+    sink_transport="http_ndjson",
+)
+
 
 def get_collector_adapter(name: str) -> CollectorAdapter:
     if name == LOGFWD_COLLECTOR.name:
         return LOGFWD_COLLECTOR
     if name == OTELCOL_COLLECTOR.name:
         return OTELCOL_COLLECTOR
+    if name == VECTOR_COLLECTOR.name:
+        return VECTOR_COLLECTOR
     raise NotImplementedError(f"collector not implemented yet in benchmark harness: {name}")

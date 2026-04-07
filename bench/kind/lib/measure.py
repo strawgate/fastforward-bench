@@ -20,7 +20,9 @@ class StatsSample:
     cpu_total_ms: int
 
 
-PROM_SAMPLE_RE = re.compile(r"^(?P<name>[A-Za-z_:][A-Za-z0-9_:]*)(?:\{[^}]*\})?\s+(?P<value>[-+0-9.eE]+)$")
+PROM_SAMPLE_RE = re.compile(
+    r"^(?P<name>[A-Za-z_:][A-Za-z0-9_:]*)(?:\{(?P<labels>[^}]*)\})?\s+(?P<value>[-+0-9.eE]+)$"
+)
 
 
 def reserve_local_port() -> int:
@@ -84,6 +86,11 @@ def fetch_stats(local_port: int) -> dict[str, object]:
         return json.loads(response.read().decode("utf-8"))
 
 
+def fetch_capture_stats(local_port: int) -> dict[str, object]:
+    with urllib.request.urlopen(f"http://127.0.0.1:{local_port}/stats", timeout=5) as response:
+        return json.loads(response.read().decode("utf-8"))
+
+
 def fetch_text(local_port: int, path: str) -> str:
     with urllib.request.urlopen(f"http://127.0.0.1:{local_port}{path}", timeout=5) as response:
         return response.read().decode("utf-8")
@@ -100,7 +107,30 @@ def _sample_from_payload(payload: dict[str, object]) -> StatsSample:
     )
 
 
-def _prometheus_metric_total(body: str, metric_name: str) -> float:
+def _sample_from_capture_payload(payload: dict[str, object]) -> StatsSample:
+    return StatsSample(
+        timestamp=time.time(),
+        output_lines=int(payload.get("benchmark_rows_total", 0) or 0),
+        rss_bytes=0,
+        cpu_total_ms=0,
+    )
+
+
+def _parse_prom_labels(raw: str | None) -> dict[str, str]:
+    if not raw:
+        return {}
+    labels: dict[str, str] = {}
+    for match in re.finditer(r'([A-Za-z_][A-Za-z0-9_]*)="((?:[^"\\\\]|\\\\.)*)"', raw):
+        labels[match.group(1)] = bytes(match.group(2), "utf-8").decode("unicode_escape")
+    return labels
+
+
+def _prometheus_metric_total(
+    body: str,
+    metric_name: str,
+    *,
+    labels: dict[str, str] | None = None,
+) -> float:
     total = 0.0
     for line in body.splitlines():
         if not line or line.startswith("#"):
@@ -110,8 +140,19 @@ def _prometheus_metric_total(body: str, metric_name: str) -> float:
             continue
         if match.group("name") != metric_name:
             continue
+        sample_labels = _parse_prom_labels(match.group("labels"))
+        if labels and any(sample_labels.get(key) != value for key, value in labels.items()):
+            continue
         total += float(match.group("value"))
     return total
+
+
+def _prometheus_metric_first(body: str, metric_names: list[str], *, labels: dict[str, str] | None = None) -> float:
+    for metric_name in metric_names:
+        total = _prometheus_metric_total(body, metric_name, labels=labels)
+        if total:
+            return total
+    return 0.0
 
 
 def _sample_from_otelcol_prometheus(body: str) -> StatsSample:
@@ -131,11 +172,45 @@ def fetch_otelcol_prometheus_sample(local_port: int) -> StatsSample:
     return _sample_from_otelcol_prometheus(fetch_text(local_port, "/metrics"))
 
 
+def _sample_from_vector_prometheus(body: str) -> StatsSample:
+    process_cpu_seconds = _prometheus_metric_first(
+        body,
+        ["process_cpu_seconds_total", "vector_process_cpu_seconds_total"],
+    )
+    sent_logs = 0.0
+    for component_id in ["bench_out", "otel_sink"]:
+        sent_logs = _prometheus_metric_first(
+            body,
+            ["component_sent_events_total", "vector_component_sent_events_total"],
+            labels={"component_id": component_id},
+        )
+        if sent_logs:
+            break
+    rss_bytes = int(
+        _prometheus_metric_first(
+            body,
+            ["process_resident_memory_bytes", "vector_process_resident_memory_bytes"],
+        )
+    )
+    return StatsSample(
+        timestamp=time.time(),
+        output_lines=int(sent_logs),
+        rss_bytes=rss_bytes,
+        cpu_total_ms=int(process_cpu_seconds * 1000.0),
+    )
+
+
+def fetch_vector_prometheus_sample(local_port: int) -> StatsSample:
+    return _sample_from_vector_prometheus(fetch_text(local_port, "/metrics"))
+
+
 def collect_bench_samples(
     namespace: str,
     sink_target: str,
     collector_target: str,
     *,
+    sink_stats_kind: str = "logfwd",
+    sink_stats_port: int = 9090,
     collector_stats_kind: str,
     collector_stats_port: int,
     warmup_sec: int,
@@ -143,17 +218,37 @@ def collect_bench_samples(
     on_measure_start: Callable[[], None] | None = None,
     on_measure_complete: Callable[[], None] | None = None,
 ) -> tuple[list[StatsSample], list[StatsSample]]:
+    if sink_stats_kind == "logfwd":
+        sink_ready_check = fetch_stats
+        sink_fetch_sample = lambda port: _sample_from_payload(fetch_stats(port))
+    elif sink_stats_kind == "capture_reader":
+        sink_ready_check = fetch_capture_stats
+        sink_fetch_sample = lambda port: _sample_from_capture_payload(fetch_capture_stats(port))
+    else:
+        raise ValueError(f"unknown sink_stats_kind: {sink_stats_kind}")
+
     if collector_stats_kind == "logfwd":
         collector_ready_check = fetch_stats
         collector_fetch_sample = lambda port: _sample_from_payload(fetch_stats(port))
     elif collector_stats_kind == "otelcol_prometheus":
         collector_ready_check = lambda port: fetch_text(port, "/metrics")
         collector_fetch_sample = fetch_otelcol_prometheus_sample
+    elif collector_stats_kind == "vector_prometheus":
+        collector_ready_check = lambda port: fetch_text(port, "/metrics")
+        collector_fetch_sample = fetch_vector_prometheus_sample
     else:
         raise ValueError(f"unknown collector_stats_kind: {collector_stats_kind}")
 
     with ExitStack() as stack:
-        stack.enter_context(PortForward(namespace, sink_target, 19090, 9090))
+        stack.enter_context(
+            PortForward(
+                namespace,
+                sink_target,
+                19090,
+                sink_stats_port,
+                ready_check=sink_ready_check,
+            )
+        )
         stack.enter_context(
             PortForward(
                 namespace,
@@ -174,7 +269,7 @@ def collect_bench_samples(
         deadline = time.time() + measure_sec
 
         while True:
-            sink_samples.append(_sample_from_payload(fetch_stats(19090)))
+            sink_samples.append(sink_fetch_sample(19090))
             collector_samples.append(collector_fetch_sample(19091))
             if time.time() >= deadline:
                 break
@@ -255,7 +350,24 @@ def collect_emitter_reported_total(namespace: str, pod_names: list[str]) -> tupl
     return (total if per_pod else None, per_pod)
 
 
-def collect_sink_reported_stats(namespace: str, sink_pod: str) -> dict[str, object]:
+def collect_sink_reported_stats(
+    namespace: str,
+    sink_pod: str,
+    *,
+    sink_stats_kind: str = "logfwd",
+    sink_stats_port: int = 9090,
+) -> dict[str, object]:
     local_port = reserve_local_port()
-    with PortForward(namespace, f"pod/{sink_pod}", local_port, 9090):
-        return fetch_stats(local_port)
+    if sink_stats_kind == "logfwd":
+        with PortForward(namespace, f"pod/{sink_pod}", local_port, sink_stats_port):
+            return fetch_stats(local_port)
+    if sink_stats_kind == "capture_reader":
+        with PortForward(
+            namespace,
+            f"pod/{sink_pod}",
+            local_port,
+            sink_stats_port,
+            ready_check=fetch_capture_stats,
+        ):
+            return fetch_capture_stats(local_port)
+    raise ValueError(f"unknown sink_stats_kind: {sink_stats_kind}")

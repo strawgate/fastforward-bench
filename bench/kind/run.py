@@ -313,6 +313,8 @@ def run_smoke_phase(
         args.namespace,
         "deployment/logfwd-capture",
         adapter.diagnostics_target_format.format(pod_name=collector_pod),
+        sink_stats_kind="capture_reader" if adapter.sink_transport == "http_ndjson" else "logfwd",
+        sink_stats_port=8081 if adapter.sink_transport == "http_ndjson" else 9090,
         collector_stats_kind=adapter.collector_stats_kind,
         collector_stats_port=adapter.collector_stats_port,
         warmup_sec=profile.warmup_sec,
@@ -382,8 +384,18 @@ def run_smoke_phase(
     sink_pod = get_first_pod_name(args.namespace, "app.kubernetes.io/name=logfwd-capture")
     if not sink_pod:
         raise CommandError("sink pod not found after rollout")
-    sink_reported_stats = collect_sink_reported_stats(args.namespace, sink_pod)
-    result.sink_reported_events_total = int(sink_reported_stats.get("output_lines", 0) or 0)
+    sink_reported_stats = collect_sink_reported_stats(
+        args.namespace,
+        sink_pod,
+        sink_stats_kind="capture_reader" if adapter.sink_transport == "http_ndjson" else "logfwd",
+        sink_stats_port=8081 if adapter.sink_transport == "http_ndjson" else 9090,
+    )
+    if adapter.sink_transport == "http_ndjson":
+        result.sink_reported_events_total = int(
+            sink_reported_stats.get("benchmark_rows_total", 0) or 0
+        )
+    else:
+        result.sink_reported_events_total = int(sink_reported_stats.get("output_lines", 0) or 0)
     collect_pod_logs(
         namespace=args.namespace,
         pod_names=[sink_pod],
@@ -499,7 +511,7 @@ def main() -> int:
         cluster_name=args.cluster_name,
         namespace=args.namespace,
         collector=args.collector,
-        protocol=args.protocol,
+        protocol=adapter.sink_transport if args.protocol == "otlp_http" else args.protocol,
         pods=profile.pods,
         target_eps_per_pod=profile.eps_per_pod,
         total_target_eps=profile.total_target_eps,
