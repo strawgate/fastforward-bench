@@ -31,12 +31,18 @@ spec:
       terminationGracePeriodSeconds: 5
       containers:
         - name: emitter
-          image: python:3.12-alpine
+          image: ${MEMAGENT_IMAGE}
           imagePullPolicy: IfNotPresent
-          command: ["python", "/opt/emitter/emit.py"]
+          args: ["--config", "/etc/logfwd/config.yaml"]
           ports:
-            - name: stats
-              containerPort: 8081
+            - name: diagnostics
+              containerPort: 9090
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: diagnostics
+            initialDelaySeconds: 3
+            periodSeconds: 3
           env:
             - name: POD_NAME
               valueFrom:
@@ -48,7 +54,7 @@ spec:
               value: "${EPS_PER_POD}"
           volumeMounts:
             - name: config
-              mountPath: /opt/emitter
+              mountPath: /etc/logfwd
               readOnly: true
       volumes:
         - name: config

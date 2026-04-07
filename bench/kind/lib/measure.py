@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import socket
 import statistics
 import subprocess
 import time
@@ -18,39 +19,10 @@ class StatsSample:
     cpu_total_ms: int
 
 
-def fetch_pod_local_http_json(
-    namespace: str,
-    pod_name: str,
-    *,
-    container: str,
-    port: int,
-    path: str = "/stats",
-) -> dict[str, object]:
-    script = (
-        "import json, urllib.request; "
-        f"print(json.dumps(json.load(urllib.request.urlopen('http://127.0.0.1:{port}{path}', timeout=5))))"
-    )
-    completed = subprocess.run(
-        [
-            "kubectl",
-            "-n",
-            namespace,
-            "exec",
-            pod_name,
-            "-c",
-            container,
-            "--",
-            "python",
-            "-c",
-            script,
-        ],
-        text=True,
-        capture_output=True,
-        check=False,
-    )
-    if completed.returncode != 0:
-        raise RuntimeError(completed.stderr.strip() or completed.stdout.strip() or f"failed to fetch stats for {pod_name}")
-    return json.loads(completed.stdout)
+def reserve_local_port() -> int:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.bind(("127.0.0.1", 0))
+        return int(sock.getsockname()[1])
 
 
 class PortForward:
@@ -198,21 +170,24 @@ def collect_emitter_reported_total(namespace: str, pod_names: list[str]) -> tupl
     per_pod: list[dict[str, object]] = []
     total = 0
     for pod_name in pod_names:
-        stats = fetch_pod_local_http_json(
-            namespace,
-            pod_name,
-            container="emitter",
-            port=8081,
+        local_port = reserve_local_port()
+        with PortForward(namespace, f"pod/{pod_name}", local_port, 9090):
+            stats = fetch_stats(local_port)
+        per_pod.append(
+            {
+                "pod_name": pod_name,
+                "output_lines": int(stats.get("output_lines", 0) or 0),
+                "input_lines": int(stats.get("input_lines", 0) or 0),
+                "rss_bytes": int(stats.get("rss_bytes", 0) or 0),
+                "cpu_total_ms": int(stats.get("cpu_user_ms", 0) or 0)
+                + int(stats.get("cpu_sys_ms", 0) or 0),
+            }
         )
-        per_pod.append(stats)
-        total += int(stats.get("emitted_events_total", 0) or 0)
+        total += int(stats.get("output_lines", 0) or 0)
     return (total if per_pod else None, per_pod)
 
 
 def collect_sink_reported_stats(namespace: str, sink_pod: str) -> dict[str, object]:
-    return fetch_pod_local_http_json(
-        namespace,
-        sink_pod,
-        container="capture-reader",
-        port=8081,
-    )
+    local_port = reserve_local_port()
+    with PortForward(namespace, f"pod/{sink_pod}", local_port, 9090):
+        return fetch_stats(local_port)

@@ -348,7 +348,7 @@ def run_smoke_phase(
     if not sink_pod:
         raise CommandError("sink pod not found after rollout")
     sink_reported_stats = collect_sink_reported_stats(args.namespace, sink_pod)
-    result.sink_reported_events_total = int(sink_reported_stats.get("benchmark_rows_total", 0) or 0)
+    result.sink_reported_events_total = int(sink_reported_stats.get("output_lines", 0) or 0)
     collect_pod_logs(
         namespace=args.namespace,
         pod_names=[sink_pod],

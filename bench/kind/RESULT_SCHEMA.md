@@ -26,8 +26,8 @@ land. Fields that are not collected in a phase are emitted as `null`.
 | `measure_sec` | integer | Profile knob |
 | `cooldown_sec` | integer | Profile knob |
 | `sink_lines_total` | integer or null | Steady-state delta from sink diagnostics during the measured window |
-| `emitter_reported_events_total` | integer or null | Sum of emitter-side reported totals collected from per-pod `/stats` endpoints |
-| `sink_reported_events_total` | integer or null | Sink-side reported benchmark row total collected from the capture-reader `/stats` endpoint |
+| `emitter_reported_events_total` | integer or null | Sum of emitter-side reported totals collected from each emitter pod's `logfwd` `/api/stats` diagnostics |
+| `sink_reported_events_total` | integer or null | Sink-side reported total collected from the sink `logfwd` `/api/stats` diagnostics |
 | `captured_rows_total` | integer or null | Full count of captured benchmark rows observed in sink artifacts |
 | `source_rows_total` | integer or null | Full count of benchmark rows observed in emitter artifacts |
 | `missing_source_count` | integer or null | Expected emitter pods absent from sink artifacts |
