@@ -159,6 +159,8 @@ Each run writes a directory under `bench/kind/results/` containing:
 - `artifacts/`
 - `emitter-stats.json`
 - `sink-stats.json`
+- `sink-samples.json` for `smoke`
+- `collector-samples.json` for `smoke`
 - `stream-summary.json` for `smoke`
 - `actual_rows.json` for `smoke`
 - `source_rows.json` for `smoke`

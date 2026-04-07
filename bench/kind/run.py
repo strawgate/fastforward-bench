@@ -40,6 +40,7 @@ from lib.kube import (
     wait_for_namespace,
 )
 from lib.measure import (
+    StatsSample,
     avg,
     collect_bench_samples,
     collect_emitter_reported_total,
@@ -177,6 +178,21 @@ def ensure_tools() -> None:
 
 def write_json(path: Path, payload: object) -> None:
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def write_samples(path: Path, samples: list[StatsSample]) -> None:
+    write_json(
+        path,
+        [
+            {
+                "timestamp": sample.timestamp,
+                "output_lines": sample.output_lines,
+                "rss_bytes": sample.rss_bytes,
+                "cpu_total_ms": sample.cpu_total_ms,
+            }
+            for sample in samples
+        ],
+    )
 
 
 def normalize_otlp_metrics_url(endpoint: str) -> str:
@@ -556,6 +572,8 @@ def run_smoke_phase(
             event="complete",
         ),
     )
+    write_samples(results_dir / "sink-samples.json", sink_samples)
+    write_samples(results_dir / "collector-samples.json", collector_samples)
 
     if profile.cooldown_sec > 0:
         emit_phase_signal(
