@@ -25,6 +25,16 @@ on:
         options:
           - smoke
           - default
+      target_set:
+        description: target EPS set
+        required: false
+        type: choice
+        default: profile
+        options:
+          - profile
+          - ladder
+          - ladder_and_max
+          - max
       collector:
         description: collector adapter to benchmark
         required: false
@@ -60,22 +70,63 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       bench_profile: ${{ steps.plan.outputs.bench_profile }}
+      target_set: ${{ steps.plan.outputs.target_set }}
       collectors: ${{ steps.plan.outputs.collectors }}
       cpu_profiles: ${{ steps.plan.outputs.cpu_profiles }}
+      workloads: ${{ steps.plan.outputs.workloads }}
+      aggregate_trigger_label: ${{ steps.plan.outputs.aggregate_trigger_label }}
     steps:
       - id: plan
         env:
           INPUT_PROFILE: ${{ inputs.profile || 'smoke' }}
+          INPUT_TARGET_SET: ${{ inputs.target_set || 'profile' }}
           INPUT_COLLECTOR: ${{ inputs.collector || 'all' }}
           INPUT_CPU_PROFILE: ${{ inputs.cpu_profile || 'all' }}
         run: |
           echo "bench_profile=${INPUT_PROFILE}" >>"$GITHUB_OUTPUT"
+          if [[ "${{ github.event_name }}" == "schedule" ]]; then
+            TARGET_SET="ladder_and_max"
+          else
+            TARGET_SET="${INPUT_TARGET_SET}"
+          fi
+          echo "target_set=${TARGET_SET}" >>"$GITHUB_OUTPUT"
+
+          case "${TARGET_SET}" in
+            profile)
+              if [[ "${INPUT_PROFILE}" == "default" ]]; then
+                echo 'workloads=[{"label":"profile-default","pods":30,"eps_per_pod":300}]' >>"$GITHUB_OUTPUT"
+                echo 'aggregate_trigger_label=profile-default' >>"$GITHUB_OUTPUT"
+              else
+                echo 'workloads=[{"label":"profile-smoke","pods":5,"eps_per_pod":100}]' >>"$GITHUB_OUTPUT"
+                echo 'aggregate_trigger_label=profile-smoke' >>"$GITHUB_OUTPUT"
+              fi
+              ;;
+            ladder)
+              echo 'workloads=[{"label":"target-1","pods":1,"eps_per_pod":1},{"label":"target-10","pods":1,"eps_per_pod":10},{"label":"target-100","pods":1,"eps_per_pod":100},{"label":"target-1000","pods":1,"eps_per_pod":1000},{"label":"target-10000","pods":1,"eps_per_pod":10000},{"label":"target-100000","pods":1,"eps_per_pod":100000},{"label":"target-1000000","pods":1,"eps_per_pod":1000000}]' >>"$GITHUB_OUTPUT"
+              echo 'aggregate_trigger_label=target-1' >>"$GITHUB_OUTPUT"
+              ;;
+            ladder_and_max)
+              echo 'workloads=[{"label":"target-1","pods":1,"eps_per_pod":1},{"label":"target-10","pods":1,"eps_per_pod":10},{"label":"target-100","pods":1,"eps_per_pod":100},{"label":"target-1000","pods":1,"eps_per_pod":1000},{"label":"target-10000","pods":1,"eps_per_pod":10000},{"label":"target-100000","pods":1,"eps_per_pod":100000},{"label":"target-1000000","pods":1,"eps_per_pod":1000000},{"label":"target-max","pods":1,"eps_per_pod":0}]' >>"$GITHUB_OUTPUT"
+              echo 'aggregate_trigger_label=target-max' >>"$GITHUB_OUTPUT"
+              ;;
+            max)
+              echo 'workloads=[{"label":"target-max","pods":1,"eps_per_pod":0}]' >>"$GITHUB_OUTPUT"
+              echo 'aggregate_trigger_label=target-max' >>"$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "unsupported target_set: ${TARGET_SET}" >&2
+              exit 2
+              ;;
+          esac
+
           if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${INPUT_COLLECTOR}" != "all" ]]; then
             echo "collectors=[\"${INPUT_COLLECTOR}\"]" >>"$GITHUB_OUTPUT"
           else
             echo 'collectors=["logfwd","otelcol","vector"]' >>"$GITHUB_OUTPUT"
           fi
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${INPUT_CPU_PROFILE}" != "all" ]]; then
+          if [[ "${{ github.event_name }}" == "schedule" ]]; then
+            echo 'cpu_profiles=["single"]' >>"$GITHUB_OUTPUT"
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" && "${INPUT_CPU_PROFILE}" != "all" ]]; then
             echo "cpu_profiles=[\"${INPUT_CPU_PROFILE}\"]" >>"$GITHUB_OUTPUT"
           else
             echo 'cpu_profiles=["single","multi"]' >>"$GITHUB_OUTPUT"
@@ -90,14 +141,18 @@ jobs:
       matrix:
         collector: ${{ fromJSON(needs.plan.outputs.collectors) }}
         cpu_profile: ${{ fromJSON(needs.plan.outputs.cpu_profiles) }}
+        workload: ${{ fromJSON(needs.plan.outputs.workloads) }}
     env:
       MEMAGENT_REPO_ROOT: ${{ github.workspace }}/memagent
       BENCH_PROFILE: ${{ needs.plan.outputs.bench_profile }}
-      BENCH_RESULTS_DIR: ${{ github.workspace }}/bench/kind/results/${{ needs.plan.outputs.bench_profile }}/${{ matrix.cpu_profile }}/${{ matrix.collector }}
-      CLUSTER_NAME: bench-${{ needs.plan.outputs.bench_profile }}-${{ github.run_id }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}
+      BENCH_RESULTS_DIR: ${{ github.workspace }}/bench/kind/results/${{ needs.plan.outputs.bench_profile }}/${{ matrix.workload.label }}/${{ matrix.cpu_profile }}/${{ matrix.collector }}
+      CLUSTER_NAME: bench-${{ needs.plan.outputs.bench_profile }}-${{ matrix.workload.label }}-${{ github.run_id }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}
       BENCH_COLLECTOR: ${{ matrix.collector }}
       BENCH_CPU_PROFILE: ${{ matrix.cpu_profile }}
-      BENCHKIT_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}--kind-bench-${{ needs.plan.outputs.bench_profile }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}
+      BENCH_WORKLOAD_LABEL: ${{ matrix.workload.label }}
+      BENCH_PODS: ${{ matrix.workload.pods }}
+      BENCH_EPS_PER_POD: ${{ matrix.workload.eps_per_pod }}
+      BENCHKIT_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}--kind-bench-${{ needs.plan.outputs.bench_profile }}-${{ matrix.workload.label }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -129,11 +184,13 @@ jobs:
             sudo mv ./kind /usr/local/bin/kind
           fi
       - name: Run benchmark harness
-        continue-on-error: ${{ matrix.collector == 'vector' }}
+        continue-on-error: ${{ github.event_name == 'schedule' || matrix.collector == 'vector' || matrix.workload.eps_per_pod == 0 }}
         run: |
           python3 bench/kind/run.py \
             --phase smoke \
             --profile "${BENCH_PROFILE}" \
+            --pods "${BENCH_PODS}" \
+            --eps-per-pod "${BENCH_EPS_PER_POD}" \
             --collector "${BENCH_COLLECTOR}" \
             --cpu-profile "${BENCH_CPU_PROFILE}" \
             --protocol otlp_http \
@@ -156,7 +213,7 @@ jobs:
           format: otlp
           run-id: ${{ env.BENCHKIT_RUN_ID }}
           summary: true
-      - if: env.PERSIST_BENCH_DATA == 'true' && matrix.collector == 'logfwd' && matrix.cpu_profile == 'single'
+      - if: env.PERSIST_BENCH_DATA == 'true' && matrix.collector == 'logfwd' && matrix.cpu_profile == 'single' && matrix.workload.label == needs.plan.outputs.aggregate_trigger_label
         name: Trigger aggregate
         continue-on-error: true
         env:
@@ -171,7 +228,7 @@ jobs:
       - if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: kind-bench-${{ needs.plan.outputs.bench_profile }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}
+          name: kind-bench-${{ needs.plan.outputs.bench_profile }}-${{ matrix.workload.label }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}
           path: ${{ env.BENCH_RESULTS_DIR }}
           retention-days: 7
 
@@ -191,7 +248,7 @@ jobs:
           python3 bench/kind/render_issue_summary.py \
             --artifacts-root artifacts \
             --suite-name "Bench Nightly EPS" \
-            --suite-key kind-bench-${{ needs.plan.outputs.bench_profile }} \
+            --suite-key kind-bench-${{ needs.plan.outputs.bench_profile }}-${{ needs.plan.outputs.target_set }} \
             --memagent-ref "${MEMAGENT_REF}" \
             --bench-profile "${{ needs.plan.outputs.bench_profile }}" \
             --run-url "https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \

@@ -132,6 +132,11 @@ Useful flags:
   Leaves the KIND cluster running for inspection.
 - `--namespace`
   Overrides the benchmark namespace.
+- `--pods`
+  Overrides emitter pod count from the selected profile.
+- `--eps-per-pod`
+  Overrides generator `events_per_sec` per emitter pod.
+  Use `0` for unbounded generation ("as fast as possible").
 - `--collector-image`
   Overrides the collector image for adapters that do not use `--memagent-image`.
 - `--protocol`
@@ -190,3 +195,9 @@ Nightly scheduled runs publish a benchmark suite summary (`bench-summary.md`)
 with EPS-oriented tables. The nightly workflow upserts that summary into the
 `Bench Nightly EPS Report` issue so trend checks stay visible without opening
 run artifacts.
+
+The benchmark workflow also supports target EPS sweeps:
+
+- `ladder`: `1, 10, 100, 1k, 10k, 100k, 1m`
+- `max`: unbounded generator (`events_per_sec=0`) for
+  "fast as the current resource allocation allows"

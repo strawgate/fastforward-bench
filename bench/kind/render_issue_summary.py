@@ -14,6 +14,8 @@ class BenchResult:
     artifact_name: str
     collector: str
     cpu_profile: str
+    pods: int
+    target_eps_per_pod: int
     phase: str
     status: str
     total_target_eps: int
@@ -77,6 +79,8 @@ def load_result(path: Path, artifact_name: str) -> BenchResult:
         artifact_name=artifact_name,
         collector=str(payload.get("collector") or "unknown"),
         cpu_profile=str(payload.get("cpu_profile") or "unknown"),
+        pods=as_int(payload.get("pods")) or 0,
+        target_eps_per_pod=as_int(payload.get("target_eps_per_pod")) or 0,
         phase=str(payload.get("phase") or "unknown"),
         status=str(payload.get("status") or "fail"),
         total_target_eps=as_int(payload.get("total_target_eps")) or 0,
@@ -133,6 +137,12 @@ def cpu_rank(name: str) -> tuple[int, str]:
     return (order.get(name, 99), name)
 
 
+def target_rank(total_target_eps: int) -> tuple[int, int]:
+    if total_target_eps == 0:
+        return (1, 0)
+    return (0, total_target_eps)
+
+
 def render_markdown(
     *,
     suite_name: str,
@@ -153,6 +163,7 @@ def render_markdown(
         key=lambda result: (
             collector_rank(result.collector),
             cpu_rank(result.cpu_profile),
+            target_rank(result.total_target_eps),
             status_rank(result.status),
         ),
     )
@@ -168,12 +179,12 @@ def render_markdown(
         f"- Workflow run: [view run]({run_url})",
         f"- Benchmarks: `{total}` total, `{passed}` passed, `{failed}` failed",
         "",
-        "| Collector | CPU Profile | Status | EPS Avg | Target EPS | EPS/Target | Missing | Unexpected | Duplicates | Drop Estimate | Collector CPU Avg |",
-        "| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+        "| Collector | CPU Profile | Pods | Target EPS/Pod | Target EPS | Status | EPS Avg | EPS/Target | Missing | Unexpected | Duplicates | Drop Estimate | Collector CPU Avg |",
+        "| --- | --- | ---: | ---: | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
 
     if not sorted_results:
-        lines.append("| _none_ | n/a | FAIL | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a |")
+        lines.append("| _none_ | n/a | n/a | n/a | n/a | FAIL | n/a | n/a | n/a | n/a | n/a | n/a | n/a |")
     else:
         for result in sorted_results:
             eps_ratio = None
@@ -181,12 +192,14 @@ def render_markdown(
                 eps_ratio = result.sink_lines_per_sec_avg / result.total_target_eps
 
             lines.append(
-                "| {collector} | `{cpu}` | {status} | {eps_avg} | {target_eps} | {ratio} | {missing} | {unexpected} | {dup} | {drop} | {cpu_avg} |".format(
+                "| {collector} | `{cpu}` | {pods} | {target_eps_per_pod} | {target_eps} | {status} | {eps_avg} | {ratio} | {missing} | {unexpected} | {dup} | {drop} | {cpu_avg} |".format(
                     collector=result.collector,
                     cpu=result.cpu_profile,
+                    pods=fmt_int(result.pods),
+                    target_eps_per_pod=fmt_int(result.target_eps_per_pod),
+                    target_eps="max" if result.total_target_eps == 0 else fmt_int(result.total_target_eps),
                     status=result.status.upper(),
                     eps_avg=fmt_float(result.sink_lines_per_sec_avg),
-                    target_eps=fmt_int(result.total_target_eps),
                     ratio=fmt_float(eps_ratio, digits=3),
                     missing=fmt_int(result.missing_event_count),
                     unexpected=fmt_int(result.unexpected_event_count),
@@ -237,6 +250,8 @@ def main() -> None:
                 "artifact_name": result.artifact_name,
                 "collector": result.collector,
                 "cpu_profile": result.cpu_profile,
+                "pods": result.pods,
+                "target_eps_per_pod": result.target_eps_per_pod,
                 "phase": result.phase,
                 "status": result.status,
                 "total_target_eps": result.total_target_eps,

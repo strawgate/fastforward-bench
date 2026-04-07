@@ -11,7 +11,7 @@ import time
 import traceback
 import uuid
 import urllib.request
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -139,6 +139,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--benchkit-service-name", default="memagent-e2e.kind-bench")
     parser.add_argument("--benchkit-otlp-http-endpoint", default=None)
     parser.add_argument("--cpu-profile", choices=sorted(CPU_PROFILES), default="single")
+    parser.add_argument("--pods", type=int, default=None)
+    parser.add_argument("--eps-per-pod", type=int, default=None)
     parser.add_argument("--keep-cluster", action="store_true")
     return parser.parse_args()
 
@@ -224,6 +226,22 @@ def build_resource_plan(*, cpu_profile: CpuProfile, emitter_pods: int) -> Resour
         sink_memory=cpu_profile.sink_memory_limit,
         capture_reader_memory=cpu_profile.capture_reader_memory_limit,
     )
+
+
+def resolve_profile(
+    *,
+    profile_name: str,
+    pods_override: int | None,
+    eps_per_pod_override: int | None,
+) -> Profile:
+    profile = PROFILES[profile_name]
+    pods = pods_override if pods_override is not None else profile.pods
+    eps_per_pod = eps_per_pod_override if eps_per_pod_override is not None else profile.eps_per_pod
+    if pods <= 0:
+        raise ValueError("pods must be > 0")
+    if eps_per_pod < 0:
+        raise ValueError("eps_per_pod must be >= 0")
+    return replace(profile, pods=pods, eps_per_pod=eps_per_pod)
 
 
 def emit_otlp_metrics(*, endpoint: str, payload: dict[str, object], timeout_sec: int = 10) -> None:
@@ -667,7 +685,11 @@ def run_smoke_phase(
 
 def main() -> int:
     args = parse_args()
-    profile = PROFILES[args.profile]
+    profile = resolve_profile(
+        profile_name=args.profile,
+        pods_override=args.pods,
+        eps_per_pod_override=args.eps_per_pod,
+    )
     adapter = get_collector_adapter(args.collector)
     cpu_profile = CPU_PROFILES[args.cpu_profile]
     resource_plan = build_resource_plan(cpu_profile=cpu_profile, emitter_pods=profile.pods)
