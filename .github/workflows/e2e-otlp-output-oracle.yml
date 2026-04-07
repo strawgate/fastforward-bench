@@ -7,14 +7,14 @@ on:
         description: memagent branch, tag, or SHA to test
         required: false
         type: string
-        default: master
+        default: main
   workflow_dispatch:
     inputs:
       memagent_ref:
         description: memagent branch, tag, or SHA to test
         required: false
         type: string
-        default: master
+        default: main
 
 permissions:
   contents: read
@@ -25,5 +25,5 @@ jobs:
     with:
       scenario_id: otlp-output-oracle
       timeout_minutes: 30
-      memagent_ref: ${{ inputs.memagent_ref || 'master' }}
+      memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit

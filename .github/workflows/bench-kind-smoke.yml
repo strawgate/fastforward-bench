@@ -21,10 +21,12 @@ on:
         description: collector adapter to benchmark
         required: false
         type: choice
-        default: logfwd
+        default: all
         options:
+          - all
           - logfwd
           - otelcol
+          - vector
 
 permissions:
   contents: write
@@ -33,18 +35,38 @@ permissions:
 
 env:
   MEMAGENT_REF: ${{ inputs.memagent_ref || 'main' }}
-  BENCH_COLLECTOR: ${{ inputs.collector || 'logfwd' }}
-  BENCHKIT_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}--kind-bench-smoke-${{ inputs.collector || 'logfwd' }}
   PERSIST_BENCH_DATA: ${{ github.event_name != 'pull_request' && 'true' || 'false' }}
 
 jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      collectors: ${{ steps.plan.outputs.collectors }}
+    steps:
+      - id: plan
+        env:
+          INPUT_COLLECTOR: ${{ inputs.collector || 'all' }}
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${INPUT_COLLECTOR}" != "all" ]]; then
+            echo "collectors=[\"${INPUT_COLLECTOR}\"]" >>"$GITHUB_OUTPUT"
+          else
+            echo 'collectors=["logfwd","otelcol","vector"]' >>"$GITHUB_OUTPUT"
+          fi
+
   kind-bench-smoke:
+    needs: plan
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        collector: ${{ fromJSON(needs.plan.outputs.collectors) }}
     env:
       MEMAGENT_REPO_ROOT: ${{ github.workspace }}/memagent
-      BENCH_RESULTS_DIR: ${{ github.workspace }}/bench/kind/results/smoke
-      CLUSTER_NAME: bench-smoke-${{ github.run_id }}
+      BENCH_RESULTS_DIR: ${{ github.workspace }}/bench/kind/results/smoke/${{ matrix.collector }}
+      CLUSTER_NAME: bench-smoke-${{ github.run_id }}-${{ matrix.collector }}
+      BENCH_COLLECTOR: ${{ matrix.collector }}
+      BENCHKIT_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}--kind-bench-smoke-${{ matrix.collector }}
     steps:
       - uses: actions/checkout@v6
       - uses: actions/checkout@v6
@@ -106,6 +128,6 @@ jobs:
       - if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: kind-bench-smoke-${{ env.BENCH_COLLECTOR }}
+          name: kind-bench-smoke-${{ matrix.collector }}
           path: ${{ env.BENCH_RESULTS_DIR }}
           retention-days: 7
