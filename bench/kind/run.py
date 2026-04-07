@@ -67,6 +67,7 @@ WORKLOAD_MANIFESTS_ROOT = BENCH_ROOT / "manifests" / "workload"
 SOURCE_ORACLE_MAX_TARGET_EPS_PER_POD = 100_000
 KIND_NODE_SYSTEM_HEADROOM_MCPU = 500
 HIGH_EPS_EMITTER_BURST_THRESHOLD = 100_000
+KIND_NODE_SINGLE_EMITTER_BURST_HEADROOM_MCPU = 300
 
 
 @dataclass(frozen=True)
@@ -254,8 +255,9 @@ def build_resource_plan(
         target_eps_per_pod == 0 or target_eps_per_pod >= HIGH_EPS_EMITTER_BURST_THRESHOLD
     ):
         spare_mcpu = node_budget_mcpu - reserved_mcpu - collector_mcpu - emitter_mcpu
-        if spare_mcpu > 0:
-            emitter_mcpu += spare_mcpu
+        burst_mcpu = spare_mcpu - KIND_NODE_SINGLE_EMITTER_BURST_HEADROOM_MCPU
+        if burst_mcpu > 0:
+            emitter_mcpu += burst_mcpu
 
     # Keep generator and sink memory fixed at 1Gi for benchmark stability.
     # This avoids memory-limit artifacts while we tune throughput behavior.
