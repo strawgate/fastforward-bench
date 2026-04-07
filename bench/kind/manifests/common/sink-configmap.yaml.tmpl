@@ -13,9 +13,7 @@ data:
           - type: otlp
             listen: 0.0.0.0:4318
         outputs:
-          - type: file
-            path: /var/lib/logfwd/capture.ndjson
-            format: json
+${SINK_OUTPUT_BLOCK}
   capture-stats.py: |
     import json
     import os

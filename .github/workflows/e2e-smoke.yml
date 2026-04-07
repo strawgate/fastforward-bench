@@ -98,6 +98,7 @@ jobs:
             suite-summary.md
             suite-summary.json
           retention-days: 7
+          compression-level: 0
       - name: Upsert suite issue
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
         env:

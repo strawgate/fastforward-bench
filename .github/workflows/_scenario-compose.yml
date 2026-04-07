@@ -92,3 +92,4 @@ jobs:
           name: ${{ inputs.scenario_id }}
           path: ${{ env.E2E_RESULTS_DIR }}
           retention-days: 7
+          compression-level: 0

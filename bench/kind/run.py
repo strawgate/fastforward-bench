@@ -452,6 +452,7 @@ def render_manifests(
     adapter: CollectorAdapter,
     resource_plan: ResourcePlan,
     benchmark_id: str,
+    sink_output_block: str,
     rendered_dir: Path,
 ) -> dict[str, Path]:
     generator_batch_size = 64 if profile.eps_per_pod == 0 else 1024
@@ -479,6 +480,7 @@ def render_manifests(
         "CAPTURE_READER_CPU_LIMIT": resource_plan.capture_reader_cpu,
         "CAPTURE_READER_MEMORY_REQUEST": resource_plan.capture_reader_memory,
         "CAPTURE_READER_MEMORY_LIMIT": resource_plan.capture_reader_memory,
+        "SINK_OUTPUT_BLOCK": sink_output_block,
     }
     manifests = {
         "namespace": rendered_dir / "namespace.yaml",
@@ -504,6 +506,21 @@ def render_manifests(
         render_template(emitter_config_template, manifests["emitter_configmap"], substitutions)
         render_template("workload/log-emitter-statefulset.yaml.tmpl", manifests["emitter_statefulset"], substitutions)
     return manifests
+
+
+def resolve_sink_output_block(*, profile: Profile, ingest_mode: str) -> str:
+    source_oracle_candidate = (
+        ingest_mode == "file"
+        and profile.eps_per_pod > 0
+        and profile.eps_per_pod < SOURCE_ORACLE_MAX_TARGET_EPS_PER_POD
+    )
+    if source_oracle_candidate:
+        return (
+            "          - type: file\n"
+            "            path: /var/lib/logfwd/capture.ndjson\n"
+            "            format: json"
+        )
+    return '          - type: "null"'
 
 
 def run_smoke_phase(
@@ -1050,6 +1067,10 @@ def main() -> int:
         adapter=adapter,
         resource_plan=resource_plan,
         benchmark_id=benchmark_id,
+        sink_output_block=resolve_sink_output_block(
+            profile=profile,
+            ingest_mode=args.ingest_mode,
+        ),
         rendered_dir=rendered_dir,
     )
 
