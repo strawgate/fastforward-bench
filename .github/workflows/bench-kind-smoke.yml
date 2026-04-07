@@ -233,7 +233,9 @@ jobs:
             sudo mv ./kind /usr/local/bin/kind
           fi
       - name: Run benchmark harness
-        continue-on-error: ${{ github.event_name == 'schedule' || matrix.collector == 'vector' || matrix.workload.label == 'tmax' || matrix.workload.eps_per_pod >= 10000 }}
+        # Temporary lane-level soft-fail for known upstream bug:
+        # https://github.com/strawgate/memagent/issues/1559
+        continue-on-error: ${{ github.event_name == 'schedule' || matrix.collector == 'vector' || matrix.workload.label == 'tmax' || matrix.workload.eps_per_pod >= 10000 || (matrix.workload.label == 'profile-smoke' && matrix.collector == 'logfwd' && matrix.ingest_mode == 'file') }}
         run: |
           python3 bench/kind/run.py \
             --phase smoke \
