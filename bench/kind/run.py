@@ -242,24 +242,10 @@ def build_resource_plan(
             f"cpu profile '{cpu_profile.name}' leaves only {collector_mcpu}m for collector with {emitter_pods} emitter pods"
         )
 
-    emitter_memory_limit = cpu_profile.emitter_memory_limit
-    if eps_per_pod >= 10_000:
-        emitter_memory_limit = "256Mi"
-    if eps_per_pod >= 100_000:
-        emitter_memory_limit = "512Mi"
-    if unbounded_generator:
-        emitter_memory_limit = "512Mi"
-
-    # The sink writes every received event to disk. At high ingest rates this
-    # can temporarily buffer enough data to exceed the default 256Mi limit,
-    # causing OOM restarts and artificial throughput collapse.
-    sink_memory_limit = cpu_profile.sink_memory_limit
-    if eps_per_pod >= 10_000:
-        sink_memory_limit = "512Mi"
-    if eps_per_pod >= 100_000:
-        sink_memory_limit = "1Gi"
-    if unbounded_generator:
-        sink_memory_limit = "1Gi"
+    # Keep generator and sink memory fixed at 1Gi for benchmark stability.
+    # This avoids memory-limit artifacts while we tune throughput behavior.
+    emitter_memory_limit = "1Gi"
+    sink_memory_limit = "1Gi"
 
     return ResourcePlan(
         cpu_profile=cpu_profile,
