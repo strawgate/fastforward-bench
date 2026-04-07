@@ -146,7 +146,7 @@ jobs:
       MEMAGENT_REPO_ROOT: ${{ github.workspace }}/memagent
       BENCH_PROFILE: ${{ needs.plan.outputs.bench_profile }}
       BENCH_RESULTS_DIR: ${{ github.workspace }}/bench/kind/results/${{ needs.plan.outputs.bench_profile }}/${{ matrix.workload.label }}/${{ matrix.cpu_profile }}/${{ matrix.collector }}
-      CLUSTER_NAME: bench-${{ needs.plan.outputs.bench_profile }}-${{ matrix.workload.label }}-${{ github.run_id }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}
+      CLUSTER_NAME: b-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}-${{ matrix.workload.label }}
       BENCH_COLLECTOR: ${{ matrix.collector }}
       BENCH_CPU_PROFILE: ${{ matrix.cpu_profile }}
       BENCH_WORKLOAD_LABEL: ${{ matrix.workload.label }}
