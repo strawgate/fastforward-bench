@@ -2,7 +2,7 @@
   {
     "ref": "refs/heads/codex/eps-target-sweep",
     "latestRunId": "24097782241-1--kind-bench-smoke-otlp-t1m-single-otelcol",
-    "latestTimestamp": "2026-04-07T19:46:55.744Z",
+    "latestTimestamp": "2026-04-07T19:47:28.537Z",
     "latestCommit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
     "runCount": 50
   }
