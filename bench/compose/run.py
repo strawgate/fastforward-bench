@@ -607,6 +607,23 @@ def write_samples(path: Path, samples: list[StatsSample]) -> None:
     write_json(path, serialized)
 
 
+def copy_with_cap(src: Path, dst: Path, *, max_bytes: int) -> None:
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    with src.open("rb") as src_handle, dst.open("wb") as dst_handle:
+        remaining = max_bytes
+        while remaining > 0:
+            chunk = src_handle.read(min(1024 * 1024, remaining))
+            if not chunk:
+                break
+            dst_handle.write(chunk)
+            remaining -= len(chunk)
+        truncated = src_handle.read(1)
+    if truncated:
+        with dst.open("ab") as dst_handle:
+            dst_handle.write(b"\n")
+            dst_handle.write(f'{{"_note":"truncated_at_bytes","max_bytes":{max_bytes}}}\n'.encode("utf-8"))
+
+
 def main() -> int:
     args = parse_args()
     adapter = COLLECTORS[args.collector]
@@ -814,11 +831,20 @@ def main() -> int:
                 )
 
         if (runtime_dir / "capture.ndjson").exists():
-            shutil.copy2(runtime_dir / "capture.ndjson", artifacts_dir / "sink-capture.ndjson")
+            copy_with_cap(
+                runtime_dir / "capture.ndjson",
+                artifacts_dir / "sink-capture.ndjson",
+                max_bytes=10 * 1024 * 1024,
+            )
         if (runtime_dir / "events.ndjson").exists():
-            shutil.copy2(runtime_dir / "events.ndjson", artifacts_dir / "generator-events.ndjson")
+            copy_with_cap(
+                runtime_dir / "events.ndjson",
+                artifacts_dir / "generator-events.ndjson",
+                max_bytes=10 * 1024 * 1024,
+            )
 
         subprocess.run(compose + ["down", "-v", "--remove-orphans"], env=env, check=False)
+        shutil.rmtree(runtime_dir, ignore_errors=True)
 
     write_result_files(
         results_dir,
