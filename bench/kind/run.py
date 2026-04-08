@@ -36,8 +36,10 @@ from lib.kube import (
     get_first_pod_name,
     get_pod_names,
     rollout_status,
+    scale_statefulset,
     wait_for_deployment,
     wait_for_namespace,
+    wait_for_statefulset_replicas,
 )
 from lib.measure import (
     StatsSample,
@@ -421,8 +423,6 @@ def sink_reported_events_total(
 ) -> int:
     if sink_stats_kind == "capture_reader":
         return int(sink_reported_stats.get("benchmark_rows_total", 0) or 0)
-    if sink_stats_kind == "capture_reader_all":
-        return int(sink_reported_stats.get("capture_rows_total", 0) or 0)
     return int(sink_reported_stats.get("output_lines", 0) or 0)
 
 
@@ -562,7 +562,7 @@ def run_smoke_phase(
 ) -> int:
     max_throughput_mode = profile.eps_per_pod == 0
     if adapter.sink_transport == "http_ndjson":
-        sink_stats_kind = "capture_reader_all" if not adapter.supports_strict_source_oracle else "capture_reader"
+        sink_stats_kind = "capture_reader"
         sink_stats_port = 8081
     else:
         sink_stats_kind = "logfwd"
@@ -720,6 +720,28 @@ def run_smoke_phase(
 
     emitter_reported_total, emitter_reported_stats = collect_emitter_reported_total(args.namespace, emitter_pods)
     result.emitter_reported_events_total = emitter_reported_total
+    source_oracle_enabled = (
+        args.ingest_mode == "file"
+        and not max_throughput_mode
+        and profile.eps_per_pod < SOURCE_ORACLE_MAX_TARGET_EPS_PER_POD
+        and adapter.supports_strict_source_oracle
+    )
+    if adapter.supports_strict_source_oracle:
+        source_oracle_skip_reason = f"target_eps_per_pod >= {SOURCE_ORACLE_MAX_TARGET_EPS_PER_POD}"
+    else:
+        source_oracle_skip_reason = f"collector '{adapter.name}' does not support strict source-oracle row comparison"
+    emitter_logs_path = artifacts_dir / "emitter-logs.txt"
+    if source_oracle_enabled:
+        collect_pod_logs(
+            namespace=args.namespace,
+            pod_names=emitter_pods,
+            destination=emitter_logs_path,
+            tail=-1,
+        )
+    # Freeze generator output at the post-measure snapshot so sink catch-up and
+    # oracle checks compare against a stable event set.
+    scale_statefulset(args.namespace, "log-emitter", replicas=0)
+    wait_for_statefulset_replicas(args.namespace, "log-emitter", replicas=0, timeout_sec=120)
 
     sink_pod = get_first_pod_name(args.namespace, "app.kubernetes.io/name=logfwd-capture")
     if not sink_pod:
@@ -752,16 +774,6 @@ def run_smoke_phase(
         destination=artifacts_dir / "sink-logs.txt",
         tail=-1,
     )
-    source_oracle_enabled = (
-        args.ingest_mode == "file"
-        and not max_throughput_mode
-        and profile.eps_per_pod < SOURCE_ORACLE_MAX_TARGET_EPS_PER_POD
-        and adapter.supports_strict_source_oracle
-    )
-    if adapter.supports_strict_source_oracle:
-        source_oracle_skip_reason = f"target_eps_per_pod >= {SOURCE_ORACLE_MAX_TARGET_EPS_PER_POD}"
-    else:
-        source_oracle_skip_reason = f"collector '{adapter.name}' does not support strict source-oracle row comparison"
 
     sink_rows: list[dict[str, object]] = []
     if source_oracle_enabled:
@@ -962,13 +974,6 @@ def run_smoke_phase(
         )
         return 1
 
-    collect_pod_logs(
-        namespace=args.namespace,
-        pod_names=emitter_pods,
-        destination=artifacts_dir / "emitter-logs.txt",
-        tail=-1,
-    )
-
     collector_pods = get_pod_names(args.namespace, adapter.pod_selector)
     if collector_pods:
         collect_pod_logs(
@@ -979,7 +984,7 @@ def run_smoke_phase(
         )
 
     source_rows = filter_rows_to_emitter_snapshot(
-        benchmark_rows(load_json_lines(artifacts_dir / "emitter-logs.txt"), result.benchmark_id),
+        benchmark_rows(load_json_lines(emitter_logs_path), result.benchmark_id),
         emitter_reported_stats,
     )
     expected_sources = expected_emitter_pods("log-emitter", profile.pods)

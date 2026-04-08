@@ -55,6 +55,46 @@ def rollout_status(namespace: str, kind: str, name: str, timeout_sec: int) -> No
     )
 
 
+def scale_statefulset(namespace: str, name: str, replicas: int) -> None:
+    if replicas < 0:
+        raise ValueError("replicas must be >= 0")
+    kubectl(
+        [
+            "-n",
+            namespace,
+            "scale",
+            "statefulset",
+            name,
+            f"--replicas={replicas}",
+        ]
+    )
+
+
+def wait_for_statefulset_replicas(namespace: str, name: str, replicas: int, timeout_sec: int) -> None:
+    if replicas < 0:
+        raise ValueError("replicas must be >= 0")
+    deadline = time.time() + timeout_sec
+    while time.time() < deadline:
+        completed = kubectl(
+            [
+                "-n",
+                namespace,
+                "get",
+                "statefulset",
+                name,
+                "-o",
+                "jsonpath={.status.readyReplicas}",
+            ],
+            capture=True,
+        )
+        ready_raw = completed.stdout.strip()
+        ready = int(ready_raw) if ready_raw else 0
+        if ready == replicas:
+            return
+        time.sleep(1)
+    raise CommandError(f"statefulset/{name} did not reach {replicas} ready replicas in {timeout_sec}s")
+
+
 def get_first_pod_name(namespace: str, selector: str) -> str | None:
     completed = kubectl(
         [

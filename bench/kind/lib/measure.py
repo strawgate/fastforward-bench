@@ -163,15 +163,6 @@ def _sample_from_capture_payload(payload: dict[str, object]) -> StatsSample:
     )
 
 
-def _sample_from_capture_payload_all(payload: dict[str, object]) -> StatsSample:
-    return StatsSample(
-        timestamp=time.time(),
-        output_lines=int(payload.get("capture_rows_total", 0) or 0),
-        rss_bytes=0,
-        cpu_total_ms=0,
-    )
-
-
 def _parse_prom_labels(raw: str | None) -> dict[str, str]:
     if not raw:
         return {}
@@ -350,9 +341,6 @@ def collect_bench_samples(
     elif sink_stats_kind == "capture_reader":
         sink_ready_check = fetch_capture_stats
         sink_fetch_sample = lambda port: _sample_from_capture_payload(fetch_capture_stats(port))
-    elif sink_stats_kind == "capture_reader_all":
-        sink_ready_check = fetch_capture_stats
-        sink_fetch_sample = lambda port: _sample_from_capture_payload_all(fetch_capture_stats(port))
     else:
         raise ValueError(f"unknown sink_stats_kind: {sink_stats_kind}")
 
@@ -528,7 +516,7 @@ def collect_sink_reported_stats(
     if sink_stats_kind == "logfwd":
         with PortForward(namespace, f"pod/{sink_pod}", local_port, sink_stats_port):
             return fetch_stats(local_port)
-    if sink_stats_kind == "capture_reader" or sink_stats_kind == "capture_reader_all":
+    if sink_stats_kind == "capture_reader":
         with PortForward(
             namespace,
             f"pod/{sink_pod}",

@@ -77,11 +77,13 @@ The harness ships with two named profiles:
 CPU behavior is controlled separately via `--cpu-profile`:
 
 - `single`
-  - caps the KIND control-plane container to `1` core
-  - computes stable per-pod resource requests/limits from that budget
+  - caps the KIND control-plane container to `3.5` cores
+  - uses the default benchmark resource plan (collector pinned to `1` CPU)
+  - collector memory limit: `512Mi`
 - `multi`
-  - caps the KIND control-plane container to `2` cores
-  - computes stable per-pod resource requests/limits from that budget
+  - caps the KIND control-plane container to `3.5` cores
+  - uses the same CPU plan today, but with a higher collector memory limit
+  - collector memory limit: `1Gi`
 
 Local runs default to `single`. CI runs can matrix both `single` and `multi`
 for apples-to-apples comparisons.
