@@ -758,6 +758,7 @@ def run_smoke_phase(
         target_events_total=emitter_reported_total,
         timeout_sec=drain_timeout_sec,
     )
+    raw_capture_rows_total = int(sink_reported_stats.get("capture_rows_total", 0) or 0)
     result.sink_reported_events_total = sink_reported_events_total(
         sink_reported_stats,
         sink_stats_kind=sink_stats_kind,
@@ -777,7 +778,12 @@ def run_smoke_phase(
             emitter_reported_stats,
         )
     else:
-        (artifacts_dir / "sink-capture.ndjson").write_text("", encoding="utf-8")
+        if adapter.sink_transport == "http_ndjson" and 0 < profile.eps_per_pod <= 1_000:
+            # Keep a raw low-rate capture artifact for diagnostics when strict
+            # source-oracle comparison is unavailable.
+            collect_sink_capture(args.namespace, sink_pod, artifacts_dir / "sink-capture.ndjson")
+        else:
+            (artifacts_dir / "sink-capture.ndjson").write_text("", encoding="utf-8")
 
     captured_rows_fallback = int(result.sink_reported_events_total or result.sink_lines_total or 0)
     captured_rows_total = len(sink_rows) if source_oracle_enabled else captured_rows_fallback
@@ -915,6 +921,7 @@ def run_smoke_phase(
                 "reason": source_oracle_skip_reason,
                 "emitter_reported_events_total": result.emitter_reported_events_total,
                 "sink_reported_events_total": result.sink_reported_events_total,
+                "sink_capture_rows_total": raw_capture_rows_total,
                 "sink_row_count": result.captured_rows_total,
                 "sink_lines_total": result.sink_lines_total,
                 "sink_lines_per_sec_avg": result.sink_lines_per_sec_avg,
@@ -950,6 +957,12 @@ def run_smoke_phase(
             return 0
 
         if diagnostics_available:
+            untagged_note = ""
+            if raw_capture_rows_total > 0 and (result.sink_reported_events_total or 0) == 0:
+                untagged_note = (
+                    f" raw capture observed {raw_capture_rows_total} rows, but none matched benchmark_id "
+                    "(benchmark_rows_total=0)."
+                )
             result.status = "fail"
             result.notes = (
                 f"smoke benchmark failed in {adapter.benchmark_mode} with source oracle skipped "
@@ -958,6 +971,7 @@ def run_smoke_phase(
                 f"emitter_reported_events_total={result.emitter_reported_events_total}, "
                 f"sink_reported_events_total={result.sink_reported_events_total}, "
                 f"missing_source_count={missing_source_count}, drop_estimate={result.drop_estimate}."
+                f"{untagged_note}"
             )
             return 1
 
