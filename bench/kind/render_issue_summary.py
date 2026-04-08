@@ -25,6 +25,7 @@ class BenchResult:
     unexpected_event_count: int | None
     dup_estimate: int | None
     drop_estimate: int | None
+    sink_cpu_cores_avg: float | None
     collector_cpu_cores_avg: float | None
     notes: str
 
@@ -91,6 +92,7 @@ def load_result(path: Path, artifact_name: str) -> BenchResult:
         unexpected_event_count=as_int(payload.get("unexpected_event_count")),
         dup_estimate=as_int(payload.get("dup_estimate")),
         drop_estimate=as_int(payload.get("drop_estimate")),
+        sink_cpu_cores_avg=as_float(payload.get("sink_cpu_cores_avg")),
         collector_cpu_cores_avg=as_float(payload.get("collector_cpu_cores_avg")),
         notes=str(payload.get("notes") or ""),
     )
@@ -264,8 +266,8 @@ def render_markdown(
                     [
                         f"### Ingest: `{ingest_mode}`",
                         "",
-                        "| Collector | Target EPS | Status | EPS Avg | Collector CPU Avg | % of Target | Missing | Unexpected | Duplicates | Dropped |",
-                        "| --- | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+                        "| Collector | Target EPS | Status | EPS Avg | Collector CPU Avg | Sink CPU Avg | % of Target | Missing | Unexpected | Duplicates | Dropped |",
+                        "| --- | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
                     ]
                 )
                 for result in sorted(
@@ -280,12 +282,13 @@ def render_markdown(
                     if result.sink_lines_per_sec_avg is not None and result.total_target_eps > 0:
                         eps_ratio = result.sink_lines_per_sec_avg / result.total_target_eps
                     lines.append(
-                        "| {collector} | {target_eps} | {status} | {eps_avg} | {cpu_avg} | {ratio} | {missing} | {unexpected} | {dup} | {drop} |".format(
+                        "| {collector} | {target_eps} | {status} | {eps_avg} | {collector_cpu_avg} | {sink_cpu_avg} | {ratio} | {missing} | {unexpected} | {dup} | {drop} |".format(
                             collector=result.collector,
                             target_eps="max" if result.total_target_eps == 0 else fmt_int(result.total_target_eps),
                             status=result.status.upper(),
                             eps_avg=fmt_float(result.sink_lines_per_sec_avg),
-                            cpu_avg=fmt_float(result.collector_cpu_cores_avg),
+                            collector_cpu_avg=fmt_float(result.collector_cpu_cores_avg),
+                            sink_cpu_avg=fmt_float(result.sink_cpu_cores_avg),
                             ratio=fmt_percent(eps_ratio),
                             missing=fmt_int(result.missing_event_count),
                             unexpected=fmt_int(result.unexpected_event_count),
@@ -348,6 +351,7 @@ def main() -> None:
                 "unexpected_event_count": result.unexpected_event_count,
                 "dup_estimate": result.dup_estimate,
                 "drop_estimate": result.drop_estimate,
+                "sink_cpu_cores_avg": result.sink_cpu_cores_avg,
                 "collector_cpu_cores_avg": result.collector_cpu_cores_avg,
                 "notes": result.notes,
             }

@@ -598,6 +598,13 @@ def run_smoke_phase(
     result.sink_lines_per_sec_p95 = percentile(sink_series, 0.95)
     result.sink_lines_per_sec_p99 = percentile(sink_series, 0.99)
 
+    sink_cpu_series = cpu_cores_series(sink_samples)
+    sink_rss_series = rss_mb_series(sink_samples)
+    result.sink_cpu_cores_avg = avg(sink_cpu_series)
+    result.sink_cpu_cores_p95 = percentile(sink_cpu_series, 0.95)
+    result.sink_rss_mb_avg = avg(sink_rss_series)
+    result.sink_rss_mb_p95 = percentile(sink_rss_series, 0.95)
+
     cpu_series = cpu_cores_series(collector_samples)
     rss_series = rss_mb_series(collector_samples)
     result.collector_cpu_cores_avg = avg(cpu_series)
@@ -945,6 +952,10 @@ def main() -> int:
         latency_ms_p50=None,
         latency_ms_p95=None,
         latency_ms_p99=None,
+        sink_cpu_cores_avg=None,
+        sink_cpu_cores_p95=None,
+        sink_rss_mb_avg=None,
+        sink_rss_mb_p95=None,
         collector_cpu_cores_avg=None,
         collector_cpu_cores_p95=None,
         collector_rss_mb_avg=None,

@@ -45,6 +45,10 @@ land. Fields that are not collected in a phase are emitted as `null`.
 | `latency_ms_p50` | number or null | Reserved for later latency capture |
 | `latency_ms_p95` | number or null | Reserved for later latency capture |
 | `latency_ms_p99` | number or null | Reserved for later latency capture |
+| `sink_cpu_cores_avg` | number or null | Average sink CPU usage during the measured window |
+| `sink_cpu_cores_p95` | number or null | P95 sink CPU usage during the measured window |
+| `sink_rss_mb_avg` | number or null | Average sink RSS during the measured window |
+| `sink_rss_mb_p95` | number or null | P95 sink RSS during the measured window |
 | `collector_cpu_cores_avg` | number or null | Average collector CPU usage during the measured window |
 | `collector_cpu_cores_p95` | number or null | P95 collector CPU usage during the measured window |
 | `collector_rss_mb_avg` | number or null | Average collector RSS during the measured window |
@@ -65,7 +69,7 @@ All source-vs-sink and steady-state throughput fields remain `null`.
 
 The smoke phase currently runs one narrow benchmark mode:
 
-- collectors: `logfwd`, `otelcol`
+- collectors: `logfwd`, `otelcol`, `vector`
 - mode: `baseline-pass-through`
 - oracle: compare benchmark-tagged sink rows against the emitter logs captured
   from the source pods
