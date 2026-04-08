@@ -1,7 +1,7 @@
 {
   "run": {
     "id": "24089087310-1--kind-bench-smoke-target-max-single-logfwd",
-    "timestamp": "2026-04-08T01:54:18.488Z",
+    "timestamp": "2026-04-08T02:06:19.869Z",
     "commit": "80c09d05001fb974dfbda389497988207179023e",
     "ref": "refs/heads/codex/eps-target-sweep",
     "benchmarks": 0,
