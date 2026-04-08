@@ -64,6 +64,14 @@ on:
           - all
           - file
           - otlp
+      persist_data:
+        description: persist benchkit data to bench-data branch
+        required: false
+        type: choice
+        default: 'false'
+        options:
+          - 'false'
+          - 'true'
 
 permissions:
   contents: write
@@ -73,7 +81,7 @@ permissions:
 
 env:
   MEMAGENT_REF: ${{ inputs.memagent_ref || 'main' }}
-  PERSIST_BENCH_DATA: ${{ github.event_name != 'pull_request' && 'true' || 'false' }}
+  PERSIST_BENCH_DATA: ${{ (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.persist_data == 'true')) && 'true' || 'false' }}
 
 jobs:
   plan:
@@ -279,7 +287,7 @@ jobs:
           monitor-results: ${{ env.BENCH_RESULTS_DIR }}/monitor.otlp.json
           format: otlp
           run-id: ${{ env.BENCHKIT_RUN_ID }}
-          summary: true
+          summary: false
       - if: always()
         uses: actions/upload-artifact@v4
         with:
