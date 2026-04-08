@@ -1,0 +1,11 @@
+{
+  "run": {
+    "id": "24122010683-1--kind-bench-smoke-otlp-tmax-single-logfwd",
+    "timestamp": "2026-04-08T06:53:42.032Z",
+    "commit": "211d46c749d1509d3937ad07d11c8b72fdb54107",
+    "ref": "refs/heads/master",
+    "benchmarks": 0,
+    "metrics": []
+  },
+  "metricSnapshots": []
+}

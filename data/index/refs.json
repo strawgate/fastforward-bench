@@ -1,9 +1,16 @@
 [
   {
+    "ref": "refs/heads/master",
+    "latestRunId": "24122010683-1--kind-bench-smoke-otlp-tmax-single-otelcol",
+    "latestTimestamp": "2026-04-08T06:53:42.032Z",
+    "latestCommit": "211d46c749d1509d3937ad07d11c8b72fdb54107",
+    "runCount": 8
+  },
+  {
     "ref": "refs/heads/codex/eps-target-sweep",
     "latestRunId": "24111535469-1--kind-bench-smoke-file-profile-smoke-single-fluent-bit",
-    "latestTimestamp": "2026-04-08T02:20:21.219Z",
+    "latestTimestamp": "2026-04-08T06:53:42.027Z",
     "latestCommit": "2b1fcaf8f24d906c29db6f300042811468451186",
-    "runCount": 50
+    "runCount": 42
   }
 ]
