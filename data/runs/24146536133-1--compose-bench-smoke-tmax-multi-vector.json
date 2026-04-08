@@ -1,0 +1,1532 @@
+{
+  "resourceMetrics": [
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "benchkit.run_id",
+            "value": {
+              "stringValue": "24146536133-1--compose-bench-smoke-tmax-multi-vector"
+            }
+          },
+          {
+            "key": "benchkit.kind",
+            "value": {
+              "stringValue": "hybrid"
+            }
+          },
+          {
+            "key": "benchkit.source_format",
+            "value": {
+              "stringValue": "otlp"
+            }
+          },
+          {
+            "key": "benchkit.ref",
+            "value": {
+              "stringValue": "refs/heads/codex/bench-compose-smoke"
+            }
+          },
+          {
+            "key": "benchkit.commit",
+            "value": {
+              "stringValue": "cd38a9d2f356fe0ba8e59b212a39095a56bf1538"
+            }
+          },
+          {
+            "key": "benchkit.workflow",
+            "value": {
+              "stringValue": "Bench / compose smoke"
+            }
+          },
+          {
+            "key": "benchkit.job",
+            "value": {
+              "stringValue": "compose-bench-smoke"
+            }
+          },
+          {
+            "key": "benchkit.run_attempt",
+            "value": {
+              "stringValue": "1"
+            }
+          },
+          {
+            "key": "benchkit.runner",
+            "value": {
+              "stringValue": "Linux/X64"
+            }
+          },
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "memagent-e2e.compose-bench"
+            }
+          }
+        ]
+      },
+      "scopeMetrics": [
+        {
+          "metrics": [
+            {
+              "name": "sink_lines_total",
+              "unit": "events",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1775665679000000000",
+                    "attributes": [
+                      {
+                        "key": "benchkit.scenario",
+                        "value": {
+                          "stringValue": "kind/smoke/baseline-pass-through/file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.series",
+                        "value": {
+                          "stringValue": "vector"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.role",
+                        "value": {
+                          "stringValue": "outcome"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.direction",
+                        "value": {
+                          "stringValue": "bigger_is_better"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster",
+                        "value": {
+                          "stringValue": "docker-compose"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster_cpu_limit_cores",
+                        "value": {
+                          "stringValue": "2.0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cpu_profile",
+                        "value": {
+                          "stringValue": "multi"
+                        }
+                      },
+                      {
+                        "key": "benchkit.impl",
+                        "value": {
+                          "stringValue": "vector"
+                        }
+                      },
+                      {
+                        "key": "benchkit.ingest_mode",
+                        "value": {
+                          "stringValue": "file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.namespace",
+                        "value": {
+                          "stringValue": "compose"
+                        }
+                      },
+                      {
+                        "key": "benchkit.pods",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.profile",
+                        "value": {
+                          "stringValue": "smoke"
+                        }
+                      },
+                      {
+                        "key": "benchkit.protocol",
+                        "value": {
+                          "stringValue": "http_ndjson"
+                        }
+                      },
+                      {
+                        "key": "benchkit.target_eps_per_pod",
+                        "value": {
+                          "stringValue": "0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.total_target_eps",
+                        "value": {
+                          "stringValue": "0"
+                        }
+                      }
+                    ],
+                    "asInt": "181174"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "emitter_reported_events_total",
+              "unit": "events",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1775665679000000000",
+                    "attributes": [
+                      {
+                        "key": "benchkit.scenario",
+                        "value": {
+                          "stringValue": "kind/smoke/baseline-pass-through/file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.series",
+                        "value": {
+                          "stringValue": "vector"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.role",
+                        "value": {
+                          "stringValue": "diagnostic"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.direction",
+                        "value": {
+                          "stringValue": "bigger_is_better"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster",
+                        "value": {
+                          "stringValue": "docker-compose"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster_cpu_limit_cores",
+                        "value": {
+                          "stringValue": "2.0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cpu_profile",
+                        "value": {
+                          "stringValue": "multi"
+                        }
+                      },
+                      {
+                        "key": "benchkit.impl",
+                        "value": {
+                          "stringValue": "vector"
+                        }
+                      },
+                      {
+                        "key": "benchkit.ingest_mode",
+                        "value": {
+                          "stringValue": "file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.namespace",
+                        "value": {
+                          "stringValue": "compose"
+                        }
+                      },
+                      {
+                        "key": "benchkit.pods",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.profile",
+                        "value": {
+                          "stringValue": "smoke"
+                        }
+                      },
+                      {
+                        "key": "benchkit.protocol",
+                        "value": {
+                          "stringValue": "http_ndjson"
+                        }
+                      },
+                      {
+                        "key": "benchkit.target_eps_per_pod",
+                        "value": {
+                          "stringValue": "0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.total_target_eps",
+                        "value": {
+                          "stringValue": "0"
+                        }
+                      }
+                    ],
+                    "asInt": "6109632"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "sink_reported_events_total",
+              "unit": "events",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1775665679000000000",
+                    "attributes": [
+                      {
+                        "key": "benchkit.scenario",
+                        "value": {
+                          "stringValue": "kind/smoke/baseline-pass-through/file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.series",
+                        "value": {
+                          "stringValue": "vector"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.role",
+                        "value": {
+                          "stringValue": "diagnostic"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.direction",
+                        "value": {
+                          "stringValue": "bigger_is_better"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster",
+                        "value": {
+                          "stringValue": "docker-compose"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster_cpu_limit_cores",
+                        "value": {
+                          "stringValue": "2.0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cpu_profile",
+                        "value": {
+                          "stringValue": "multi"
+                        }
+                      },
+                      {
+                        "key": "benchkit.impl",
+                        "value": {
+                          "stringValue": "vector"
+                        }
+                      },
+                      {
+                        "key": "benchkit.ingest_mode",
+                        "value": {
+                          "stringValue": "file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.namespace",
+                        "value": {
+                          "stringValue": "compose"
+                        }
+                      },
+                      {
+                        "key": "benchkit.pods",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.profile",
+                        "value": {
+                          "stringValue": "smoke"
+                        }
+                      },
+                      {
+                        "key": "benchkit.protocol",
+                        "value": {
+                          "stringValue": "http_ndjson"
+                        }
+                      },
+                      {
+                        "key": "benchkit.target_eps_per_pod",
+                        "value": {
+                          "stringValue": "0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.total_target_eps",
+                        "value": {
+                          "stringValue": "0"
+                        }
+                      }
+                    ],
+                    "asInt": "250390"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "captured_rows_total",
+              "unit": "events",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1775665679000000000",
+                    "attributes": [
+                      {
+                        "key": "benchkit.scenario",
+                        "value": {
+                          "stringValue": "kind/smoke/baseline-pass-through/file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.series",
+                        "value": {
+                          "stringValue": "vector"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.role",
+                        "value": {
+                          "stringValue": "outcome"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.direction",
+                        "value": {
+                          "stringValue": "bigger_is_better"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster",
+                        "value": {
+                          "stringValue": "docker-compose"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster_cpu_limit_cores",
+                        "value": {
+                          "stringValue": "2.0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cpu_profile",
+                        "value": {
+                          "stringValue": "multi"
+                        }
+                      },
+                      {
+                        "key": "benchkit.impl",
+                        "value": {
+                          "stringValue": "vector"
+                        }
+                      },
+                      {
+                        "key": "benchkit.ingest_mode",
+                        "value": {
+                          "stringValue": "file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.namespace",
+                        "value": {
+                          "stringValue": "compose"
+                        }
+                      },
+                      {
+                        "key": "benchkit.pods",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.profile",
+                        "value": {
+                          "stringValue": "smoke"
+                        }
+                      },
+                      {
+                        "key": "benchkit.protocol",
+                        "value": {
+                          "stringValue": "http_ndjson"
+                        }
+                      },
+                      {
+                        "key": "benchkit.target_eps_per_pod",
+                        "value": {
+                          "stringValue": "0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.total_target_eps",
+                        "value": {
+                          "stringValue": "0"
+                        }
+                      }
+                    ],
+                    "asInt": "250390"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "sink_lines_per_sec_avg",
+              "unit": "events/sec",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1775665679000000000",
+                    "attributes": [
+                      {
+                        "key": "benchkit.scenario",
+                        "value": {
+                          "stringValue": "kind/smoke/baseline-pass-through/file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.series",
+                        "value": {
+                          "stringValue": "vector"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.role",
+                        "value": {
+                          "stringValue": "outcome"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.direction",
+                        "value": {
+                          "stringValue": "bigger_is_better"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster",
+                        "value": {
+                          "stringValue": "docker-compose"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster_cpu_limit_cores",
+                        "value": {
+                          "stringValue": "2.0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cpu_profile",
+                        "value": {
+                          "stringValue": "multi"
+                        }
+                      },
+                      {
+                        "key": "benchkit.impl",
+                        "value": {
+                          "stringValue": "vector"
+                        }
+                      },
+                      {
+                        "key": "benchkit.ingest_mode",
+                        "value": {
+                          "stringValue": "file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.namespace",
+                        "value": {
+                          "stringValue": "compose"
+                        }
+                      },
+                      {
+                        "key": "benchkit.pods",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.profile",
+                        "value": {
+                          "stringValue": "smoke"
+                        }
+                      },
+                      {
+                        "key": "benchkit.protocol",
+                        "value": {
+                          "stringValue": "http_ndjson"
+                        }
+                      },
+                      {
+                        "key": "benchkit.target_eps_per_pod",
+                        "value": {
+                          "stringValue": "0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.total_target_eps",
+                        "value": {
+                          "stringValue": "0"
+                        }
+                      }
+                    ],
+                    "asDouble": 10870.793722346554
+                  }
+                ]
+              }
+            },
+            {
+              "name": "sink_lines_per_sec_p50",
+              "unit": "events/sec",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1775665679000000000",
+                    "attributes": [
+                      {
+                        "key": "benchkit.scenario",
+                        "value": {
+                          "stringValue": "kind/smoke/baseline-pass-through/file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.series",
+                        "value": {
+                          "stringValue": "vector"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.role",
+                        "value": {
+                          "stringValue": "outcome"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.direction",
+                        "value": {
+                          "stringValue": "bigger_is_better"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster",
+                        "value": {
+                          "stringValue": "docker-compose"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster_cpu_limit_cores",
+                        "value": {
+                          "stringValue": "2.0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cpu_profile",
+                        "value": {
+                          "stringValue": "multi"
+                        }
+                      },
+                      {
+                        "key": "benchkit.impl",
+                        "value": {
+                          "stringValue": "vector"
+                        }
+                      },
+                      {
+                        "key": "benchkit.ingest_mode",
+                        "value": {
+                          "stringValue": "file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.namespace",
+                        "value": {
+                          "stringValue": "compose"
+                        }
+                      },
+                      {
+                        "key": "benchkit.pods",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.profile",
+                        "value": {
+                          "stringValue": "smoke"
+                        }
+                      },
+                      {
+                        "key": "benchkit.protocol",
+                        "value": {
+                          "stringValue": "http_ndjson"
+                        }
+                      },
+                      {
+                        "key": "benchkit.target_eps_per_pod",
+                        "value": {
+                          "stringValue": "0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.total_target_eps",
+                        "value": {
+                          "stringValue": "0"
+                        }
+                      }
+                    ],
+                    "asDouble": 11045.000373085117
+                  }
+                ]
+              }
+            },
+            {
+              "name": "sink_lines_per_sec_p95",
+              "unit": "events/sec",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1775665679000000000",
+                    "attributes": [
+                      {
+                        "key": "benchkit.scenario",
+                        "value": {
+                          "stringValue": "kind/smoke/baseline-pass-through/file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.series",
+                        "value": {
+                          "stringValue": "vector"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.role",
+                        "value": {
+                          "stringValue": "outcome"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.direction",
+                        "value": {
+                          "stringValue": "bigger_is_better"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster",
+                        "value": {
+                          "stringValue": "docker-compose"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster_cpu_limit_cores",
+                        "value": {
+                          "stringValue": "2.0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cpu_profile",
+                        "value": {
+                          "stringValue": "multi"
+                        }
+                      },
+                      {
+                        "key": "benchkit.impl",
+                        "value": {
+                          "stringValue": "vector"
+                        }
+                      },
+                      {
+                        "key": "benchkit.ingest_mode",
+                        "value": {
+                          "stringValue": "file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.namespace",
+                        "value": {
+                          "stringValue": "compose"
+                        }
+                      },
+                      {
+                        "key": "benchkit.pods",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.profile",
+                        "value": {
+                          "stringValue": "smoke"
+                        }
+                      },
+                      {
+                        "key": "benchkit.protocol",
+                        "value": {
+                          "stringValue": "http_ndjson"
+                        }
+                      },
+                      {
+                        "key": "benchkit.target_eps_per_pod",
+                        "value": {
+                          "stringValue": "0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.total_target_eps",
+                        "value": {
+                          "stringValue": "0"
+                        }
+                      }
+                    ],
+                    "asDouble": 14447.529680055955
+                  }
+                ]
+              }
+            },
+            {
+              "name": "sink_lines_per_sec_p99",
+              "unit": "events/sec",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1775665679000000000",
+                    "attributes": [
+                      {
+                        "key": "benchkit.scenario",
+                        "value": {
+                          "stringValue": "kind/smoke/baseline-pass-through/file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.series",
+                        "value": {
+                          "stringValue": "vector"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.role",
+                        "value": {
+                          "stringValue": "outcome"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.direction",
+                        "value": {
+                          "stringValue": "bigger_is_better"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster",
+                        "value": {
+                          "stringValue": "docker-compose"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster_cpu_limit_cores",
+                        "value": {
+                          "stringValue": "2.0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cpu_profile",
+                        "value": {
+                          "stringValue": "multi"
+                        }
+                      },
+                      {
+                        "key": "benchkit.impl",
+                        "value": {
+                          "stringValue": "vector"
+                        }
+                      },
+                      {
+                        "key": "benchkit.ingest_mode",
+                        "value": {
+                          "stringValue": "file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.namespace",
+                        "value": {
+                          "stringValue": "compose"
+                        }
+                      },
+                      {
+                        "key": "benchkit.pods",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.profile",
+                        "value": {
+                          "stringValue": "smoke"
+                        }
+                      },
+                      {
+                        "key": "benchkit.protocol",
+                        "value": {
+                          "stringValue": "http_ndjson"
+                        }
+                      },
+                      {
+                        "key": "benchkit.target_eps_per_pod",
+                        "value": {
+                          "stringValue": "0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.total_target_eps",
+                        "value": {
+                          "stringValue": "0"
+                        }
+                      }
+                    ],
+                    "asDouble": 15017.893174973677
+                  }
+                ]
+              }
+            },
+            {
+              "name": "drop_estimate",
+              "unit": "events",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1775665679000000000",
+                    "attributes": [
+                      {
+                        "key": "benchkit.scenario",
+                        "value": {
+                          "stringValue": "kind/smoke/baseline-pass-through/file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.series",
+                        "value": {
+                          "stringValue": "vector"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.role",
+                        "value": {
+                          "stringValue": "outcome"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.direction",
+                        "value": {
+                          "stringValue": "smaller_is_better"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster",
+                        "value": {
+                          "stringValue": "docker-compose"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster_cpu_limit_cores",
+                        "value": {
+                          "stringValue": "2.0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cpu_profile",
+                        "value": {
+                          "stringValue": "multi"
+                        }
+                      },
+                      {
+                        "key": "benchkit.impl",
+                        "value": {
+                          "stringValue": "vector"
+                        }
+                      },
+                      {
+                        "key": "benchkit.ingest_mode",
+                        "value": {
+                          "stringValue": "file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.namespace",
+                        "value": {
+                          "stringValue": "compose"
+                        }
+                      },
+                      {
+                        "key": "benchkit.pods",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.profile",
+                        "value": {
+                          "stringValue": "smoke"
+                        }
+                      },
+                      {
+                        "key": "benchkit.protocol",
+                        "value": {
+                          "stringValue": "http_ndjson"
+                        }
+                      },
+                      {
+                        "key": "benchkit.target_eps_per_pod",
+                        "value": {
+                          "stringValue": "0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.total_target_eps",
+                        "value": {
+                          "stringValue": "0"
+                        }
+                      }
+                    ],
+                    "asInt": "5859242"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "dup_estimate",
+              "unit": "events",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1775665679000000000",
+                    "attributes": [
+                      {
+                        "key": "benchkit.scenario",
+                        "value": {
+                          "stringValue": "kind/smoke/baseline-pass-through/file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.series",
+                        "value": {
+                          "stringValue": "vector"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.role",
+                        "value": {
+                          "stringValue": "outcome"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.direction",
+                        "value": {
+                          "stringValue": "smaller_is_better"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster",
+                        "value": {
+                          "stringValue": "docker-compose"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster_cpu_limit_cores",
+                        "value": {
+                          "stringValue": "2.0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cpu_profile",
+                        "value": {
+                          "stringValue": "multi"
+                        }
+                      },
+                      {
+                        "key": "benchkit.impl",
+                        "value": {
+                          "stringValue": "vector"
+                        }
+                      },
+                      {
+                        "key": "benchkit.ingest_mode",
+                        "value": {
+                          "stringValue": "file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.namespace",
+                        "value": {
+                          "stringValue": "compose"
+                        }
+                      },
+                      {
+                        "key": "benchkit.pods",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.profile",
+                        "value": {
+                          "stringValue": "smoke"
+                        }
+                      },
+                      {
+                        "key": "benchkit.protocol",
+                        "value": {
+                          "stringValue": "http_ndjson"
+                        }
+                      },
+                      {
+                        "key": "benchkit.target_eps_per_pod",
+                        "value": {
+                          "stringValue": "0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.total_target_eps",
+                        "value": {
+                          "stringValue": "0"
+                        }
+                      }
+                    ],
+                    "asInt": "0"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "collector_cpu_cores_avg",
+              "unit": "cores",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1775665679000000000",
+                    "attributes": [
+                      {
+                        "key": "benchkit.scenario",
+                        "value": {
+                          "stringValue": "kind/smoke/baseline-pass-through/file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.series",
+                        "value": {
+                          "stringValue": "vector"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.role",
+                        "value": {
+                          "stringValue": "diagnostic"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.direction",
+                        "value": {
+                          "stringValue": "smaller_is_better"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster",
+                        "value": {
+                          "stringValue": "docker-compose"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster_cpu_limit_cores",
+                        "value": {
+                          "stringValue": "2.0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cpu_profile",
+                        "value": {
+                          "stringValue": "multi"
+                        }
+                      },
+                      {
+                        "key": "benchkit.impl",
+                        "value": {
+                          "stringValue": "vector"
+                        }
+                      },
+                      {
+                        "key": "benchkit.ingest_mode",
+                        "value": {
+                          "stringValue": "file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.namespace",
+                        "value": {
+                          "stringValue": "compose"
+                        }
+                      },
+                      {
+                        "key": "benchkit.pods",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.profile",
+                        "value": {
+                          "stringValue": "smoke"
+                        }
+                      },
+                      {
+                        "key": "benchkit.protocol",
+                        "value": {
+                          "stringValue": "http_ndjson"
+                        }
+                      },
+                      {
+                        "key": "benchkit.target_eps_per_pod",
+                        "value": {
+                          "stringValue": "0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.total_target_eps",
+                        "value": {
+                          "stringValue": "0"
+                        }
+                      }
+                    ],
+                    "asInt": "0"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "collector_cpu_cores_p95",
+              "unit": "cores",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1775665679000000000",
+                    "attributes": [
+                      {
+                        "key": "benchkit.scenario",
+                        "value": {
+                          "stringValue": "kind/smoke/baseline-pass-through/file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.series",
+                        "value": {
+                          "stringValue": "vector"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.role",
+                        "value": {
+                          "stringValue": "diagnostic"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.direction",
+                        "value": {
+                          "stringValue": "smaller_is_better"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster",
+                        "value": {
+                          "stringValue": "docker-compose"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster_cpu_limit_cores",
+                        "value": {
+                          "stringValue": "2.0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cpu_profile",
+                        "value": {
+                          "stringValue": "multi"
+                        }
+                      },
+                      {
+                        "key": "benchkit.impl",
+                        "value": {
+                          "stringValue": "vector"
+                        }
+                      },
+                      {
+                        "key": "benchkit.ingest_mode",
+                        "value": {
+                          "stringValue": "file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.namespace",
+                        "value": {
+                          "stringValue": "compose"
+                        }
+                      },
+                      {
+                        "key": "benchkit.pods",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.profile",
+                        "value": {
+                          "stringValue": "smoke"
+                        }
+                      },
+                      {
+                        "key": "benchkit.protocol",
+                        "value": {
+                          "stringValue": "http_ndjson"
+                        }
+                      },
+                      {
+                        "key": "benchkit.target_eps_per_pod",
+                        "value": {
+                          "stringValue": "0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.total_target_eps",
+                        "value": {
+                          "stringValue": "0"
+                        }
+                      }
+                    ],
+                    "asInt": "0"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "collector_rss_mb_avg",
+              "unit": "MB",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1775665679000000000",
+                    "attributes": [
+                      {
+                        "key": "benchkit.scenario",
+                        "value": {
+                          "stringValue": "kind/smoke/baseline-pass-through/file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.series",
+                        "value": {
+                          "stringValue": "vector"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.role",
+                        "value": {
+                          "stringValue": "diagnostic"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.direction",
+                        "value": {
+                          "stringValue": "smaller_is_better"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster",
+                        "value": {
+                          "stringValue": "docker-compose"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster_cpu_limit_cores",
+                        "value": {
+                          "stringValue": "2.0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cpu_profile",
+                        "value": {
+                          "stringValue": "multi"
+                        }
+                      },
+                      {
+                        "key": "benchkit.impl",
+                        "value": {
+                          "stringValue": "vector"
+                        }
+                      },
+                      {
+                        "key": "benchkit.ingest_mode",
+                        "value": {
+                          "stringValue": "file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.namespace",
+                        "value": {
+                          "stringValue": "compose"
+                        }
+                      },
+                      {
+                        "key": "benchkit.pods",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.profile",
+                        "value": {
+                          "stringValue": "smoke"
+                        }
+                      },
+                      {
+                        "key": "benchkit.protocol",
+                        "value": {
+                          "stringValue": "http_ndjson"
+                        }
+                      },
+                      {
+                        "key": "benchkit.target_eps_per_pod",
+                        "value": {
+                          "stringValue": "0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.total_target_eps",
+                        "value": {
+                          "stringValue": "0"
+                        }
+                      }
+                    ],
+                    "asInt": "0"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "collector_rss_mb_p95",
+              "unit": "MB",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1775665679000000000",
+                    "attributes": [
+                      {
+                        "key": "benchkit.scenario",
+                        "value": {
+                          "stringValue": "kind/smoke/baseline-pass-through/file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.series",
+                        "value": {
+                          "stringValue": "vector"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.role",
+                        "value": {
+                          "stringValue": "diagnostic"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.direction",
+                        "value": {
+                          "stringValue": "smaller_is_better"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster",
+                        "value": {
+                          "stringValue": "docker-compose"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster_cpu_limit_cores",
+                        "value": {
+                          "stringValue": "2.0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cpu_profile",
+                        "value": {
+                          "stringValue": "multi"
+                        }
+                      },
+                      {
+                        "key": "benchkit.impl",
+                        "value": {
+                          "stringValue": "vector"
+                        }
+                      },
+                      {
+                        "key": "benchkit.ingest_mode",
+                        "value": {
+                          "stringValue": "file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.namespace",
+                        "value": {
+                          "stringValue": "compose"
+                        }
+                      },
+                      {
+                        "key": "benchkit.pods",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.profile",
+                        "value": {
+                          "stringValue": "smoke"
+                        }
+                      },
+                      {
+                        "key": "benchkit.protocol",
+                        "value": {
+                          "stringValue": "http_ndjson"
+                        }
+                      },
+                      {
+                        "key": "benchkit.target_eps_per_pod",
+                        "value": {
+                          "stringValue": "0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.total_target_eps",
+                        "value": {
+                          "stringValue": "0"
+                        }
+                      }
+                    ],
+                    "asInt": "0"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
