@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
   "label": "collector rss mb avg",
-  "message": "351.02 MB",
-  "color": "red"
+  "message": "257.82 MB",
+  "color": "brightgreen"
 }

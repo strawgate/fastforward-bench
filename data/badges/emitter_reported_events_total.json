@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
   "label": "emitter reported events total",
-  "message": "5.1M events",
-  "color": "brightgreen"
+  "message": "2.9M events",
+  "color": "red"
 }
