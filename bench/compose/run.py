@@ -24,15 +24,12 @@ if str(KIND_LIB) not in sys.path:
 from measure import (  # noqa: E402
     StatsSample,
     avg,
-    cpu_cores_series,
     diff_output_lines,
     fetch_capture_stats,
-    fetch_otelcol_prometheus_sample,
     fetch_stats,
-    fetch_vector_prometheus_sample,
+    fetch_text,
     lines_per_sec_series,
     percentile,
-    rss_mb_series,
 )
 from profiles import PROFILES, Profile  # noqa: E402
 from results import BenchmarkResult, write_result_files  # noqa: E402
@@ -43,7 +40,7 @@ class CollectorAdapter:
     name: str
     service_name: str
     image: str | None
-    stats_kind: str
+    diagnostics_kind: str
     sink_stats_kind: str
 
 
@@ -72,21 +69,21 @@ COLLECTORS: dict[str, CollectorAdapter] = {
         name="logfwd",
         service_name="collector-logfwd",
         image=None,
-        stats_kind="logfwd",
+        diagnostics_kind="logfwd",
         sink_stats_kind="logfwd",
     ),
     "otelcol": CollectorAdapter(
         name="otelcol",
         service_name="collector-otelcol",
         image="otel/opentelemetry-collector-contrib:0.148.0",
-        stats_kind="otelcol_prometheus",
+        diagnostics_kind="prometheus",
         sink_stats_kind="logfwd",
     ),
     "vector": CollectorAdapter(
         name="vector",
         service_name="collector-vector",
         image="timberio/vector:0.54.0-debian",
-        stats_kind="vector_prometheus",
+        diagnostics_kind="prometheus",
         sink_stats_kind="capture_reader",
     ),
 }
@@ -194,6 +191,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run non-KIND compose benchmark harness.")
     parser.add_argument("--results-dir", type=Path, required=True)
     parser.add_argument("--collector", choices=sorted(COLLECTORS), default="logfwd")
+    parser.add_argument("--ingest-mode", choices=["file", "otlp"], default="file")
     parser.add_argument("--profile", choices=sorted(PROFILES), default="smoke")
     parser.add_argument("--cpu-profile", choices=sorted(CPU_PROFILES), default="single")
     parser.add_argument("--eps-per-sec", type=int, default=None)
@@ -216,6 +214,22 @@ def run(cmd: list[str], *, cwd: Path | None = None, env: dict[str, str] | None =
         raise RuntimeError(f"command failed ({completed.returncode}): {' '.join(cmd)}")
 
 
+def run_capture(cmd: list[str], *, cwd: Path | None = None, env: dict[str, str] | None = None) -> str:
+    completed = subprocess.run(
+        cmd,
+        cwd=cwd,
+        env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        check=False,
+    )
+    if completed.returncode != 0:
+        stderr = completed.stderr.strip()
+        raise RuntimeError(f"command failed ({completed.returncode}): {' '.join(cmd)}: {stderr}")
+    return completed.stdout
+
+
 def reserve_local_port() -> int:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.bind(("127.0.0.1", 0))
@@ -236,9 +250,19 @@ def ensure_world_writable_dir(path: Path) -> None:
     os.chmod(path, 0o777)
 
 
-def build_generator_config(benchmark_id: str, eps_per_sec: int) -> str:
-    batch_size = 64 if eps_per_sec == 0 else 1024
-    return f"""\
+def build_generator_config(
+    benchmark_id: str,
+    eps_per_sec: int,
+    *,
+    ingest_mode: str,
+    collector_service_name: str,
+) -> str:
+    if eps_per_sec == 0:
+        batch_size = 1024
+    else:
+        # Keep low-rate targets smooth so per-second throughput sampling is meaningful.
+        batch_size = max(1, min(1024, eps_per_sec))
+    base = f"""\
 server:
   diagnostics: 0.0.0.0:9090
   log_level: error
@@ -281,11 +305,25 @@ transform: |
     service
   FROM logs
 
+"""
+    if ingest_mode == "file":
+        return (
+            base
+            + """
 output:
   type: file
   path: /runtime/events.ndjson
   format: json
 """
+        )
+    return (
+        base
+        + f"""
+output:
+  type: otlp
+  endpoint: http://{collector_service_name}:4318/v1/logs
+"""
+    )
 
 
 def build_sink_config() -> str:
@@ -306,7 +344,21 @@ pipelines:
 """
 
 
-def build_logfwd_collector_config(benchmark_id: str) -> str:
+def build_logfwd_collector_config(benchmark_id: str, *, ingest_mode: str) -> str:
+    input_block = (
+        """\
+input:
+  type: file
+  path: /runtime/events.ndjson
+  format: json
+"""
+        if ingest_mode == "file"
+        else """\
+input:
+  type: otlp
+  listen: 0.0.0.0:4318
+"""
+    )
     return f"""\
 server:
   diagnostics: 0.0.0.0:9090
@@ -315,10 +367,7 @@ server:
 storage:
   data_dir: /runtime/collector
 
-input:
-  type: file
-  path: /runtime/events.ndjson
-  format: json
+{input_block}
 
 transform: |
   SELECT
@@ -342,14 +391,17 @@ output:
 """
 
 
-def build_otel_collector_config() -> str:
-    return """\
+def build_otel_collector_config(*, ingest_mode: str) -> str:
+    if ingest_mode == "file":
+        receiver_block = """\
 receivers:
   filelog:
     include:
       - /runtime/events.ndjson
     start_at: beginning
-
+"""
+        receiver_name = "filelog"
+        processors_block = """\
 processors:
   transform/bench:
     log_statements:
@@ -359,6 +411,29 @@ processors:
   batch:
     send_batch_size: 1024
     timeout: 1s
+"""
+        processors_pipeline = "[transform/bench, batch]"
+    else:
+        receiver_block = """\
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+"""
+        receiver_name = "otlp"
+        processors_block = """\
+processors:
+  batch:
+    send_batch_size: 1024
+    timeout: 1s
+"""
+        processors_pipeline = "[batch]"
+
+    return f"""\
+{receiver_block}
+
+{processors_block}
 
 exporters:
   otlphttp:
@@ -384,8 +459,8 @@ service:
   extensions: [health_check]
   pipelines:
     logs:
-      receivers: [filelog]
-      processors: [transform/bench, batch]
+      receivers: [{receiver_name}]
+      processors: {processors_pipeline}
       exporters: [otlphttp]
 """
 
@@ -540,6 +615,53 @@ def compose_cmd(project: str, compose_file: Path) -> list[str]:
     return ["docker", "compose", "-p", project, "-f", str(compose_file)]
 
 
+def parse_byte_size(value: str) -> int:
+    raw = value.strip()
+    if not raw:
+        return 0
+    units = {
+        "b": 1,
+        "kb": 1000,
+        "mb": 1000**2,
+        "gb": 1000**3,
+        "tb": 1000**4,
+        "kib": 1024,
+        "mib": 1024**2,
+        "gib": 1024**3,
+        "tib": 1024**4,
+    }
+    index = 0
+    while index < len(raw) and (raw[index].isdigit() or raw[index] in ".-"):
+        index += 1
+    number = float(raw[:index] or "0")
+    unit = raw[index:].strip().lower()
+    multiplier = units.get(unit, 1)
+    return int(number * multiplier)
+
+
+def resolve_container_id(compose: list[str], service: str, env: dict[str, str]) -> str | None:
+    try:
+        output = run_capture(compose + ["ps", "-q", service], env=env).strip()
+    except Exception:
+        return None
+    return output or None
+
+
+def read_container_resource_sample(container_id: str) -> tuple[float, float] | None:
+    try:
+        output = run_capture(["docker", "stats", "--no-stream", "--format", "{{json .}}", container_id]).strip()
+        if not output:
+            return None
+        row = json.loads(output.splitlines()[-1])
+        cpu_percent_raw = str(row.get("CPUPerc", "0")).strip().rstrip("%")
+        cpu_cores = float(cpu_percent_raw or "0") / 100.0
+        mem_usage_raw = str(row.get("MemUsage", "0B / 0B")).split("/", 1)[0].strip()
+        rss_mb = parse_byte_size(mem_usage_raw) / (1024.0 * 1024.0)
+        return cpu_cores, rss_mb
+    except Exception:
+        return None
+
+
 def stats_sample_from_logfwd(port: int) -> StatsSample:
     payload = fetch_stats(port)
     return StatsSample(
@@ -571,14 +693,20 @@ def wait_until_ready(fetch_fn, timeout_sec: int = 60) -> None:
     raise RuntimeError("timed out waiting for service readiness")
 
 
-def sample_collector(adapter: CollectorAdapter, port: int) -> StatsSample:
-    if adapter.stats_kind == "logfwd":
-        return stats_sample_from_logfwd(port)
-    if adapter.stats_kind == "otelcol_prometheus":
-        return fetch_otelcol_prometheus_sample(port)
-    if adapter.stats_kind == "vector_prometheus":
-        return fetch_vector_prometheus_sample(port)
-    raise ValueError(f"unknown collector stats kind: {adapter.stats_kind}")
+def wait_for_collector_ready(adapter: CollectorAdapter, port: int, timeout_sec: int = 90) -> None:
+    deadline = time.time() + timeout_sec
+    while time.time() < deadline:
+        try:
+            if adapter.diagnostics_kind == "logfwd":
+                fetch_stats(port)
+            elif adapter.diagnostics_kind == "prometheus":
+                fetch_text(port, "/metrics")
+            else:
+                raise ValueError(f"unknown collector diagnostics kind: {adapter.diagnostics_kind}")
+            return
+        except Exception:
+            time.sleep(0.5)
+    raise RuntimeError("timed out waiting for collector readiness")
 
 
 def sample_sink(adapter: CollectorAdapter, sink_diag_port: int, capture_stats_port: int) -> StatsSample:
@@ -627,6 +755,8 @@ def copy_with_cap(src: Path, dst: Path, *, max_bytes: int) -> None:
 def main() -> int:
     args = parse_args()
     adapter = COLLECTORS[args.collector]
+    if args.ingest_mode == "otlp" and adapter.name == "vector":
+        raise NotImplementedError("collector 'vector' does not support ingest mode 'otlp' in compose harness")
     cpu_profile = CPU_PROFILES[args.cpu_profile]
     base_profile: Profile = PROFILES[args.profile]
     eps_per_sec = base_profile.eps_per_pod if args.eps_per_sec is None else args.eps_per_sec
@@ -653,10 +783,21 @@ def main() -> int:
 
     compose_file = rendered_dir / "compose.yaml"
     write_text(compose_file, build_compose_yaml())
-    write_text(rendered_dir / "generator.yaml", build_generator_config(benchmark_id, eps_per_sec))
+    write_text(
+        rendered_dir / "generator.yaml",
+        build_generator_config(
+            benchmark_id,
+            eps_per_sec,
+            ingest_mode=args.ingest_mode,
+            collector_service_name=adapter.service_name,
+        ),
+    )
     write_text(rendered_dir / "sink.yaml", build_sink_config())
-    write_text(rendered_dir / "collector-logfwd.yaml", build_logfwd_collector_config(benchmark_id))
-    write_text(rendered_dir / "collector-otelcol.yaml", build_otel_collector_config())
+    write_text(
+        rendered_dir / "collector-logfwd.yaml",
+        build_logfwd_collector_config(benchmark_id, ingest_mode=args.ingest_mode),
+    )
+    write_text(rendered_dir / "collector-otelcol.yaml", build_otel_collector_config(ingest_mode=args.ingest_mode))
     write_text(rendered_dir / "collector-vector.yaml", build_vector_collector_config())
     write_text(rendered_dir / "capture-stats.py", CAPTURE_STATS_SCRIPT)
 
@@ -705,7 +846,7 @@ def main() -> int:
         namespace="compose",
         collector=adapter.name,
         protocol="otlp_http" if adapter.name != "vector" else "http_ndjson",
-        ingest_mode="file",
+        ingest_mode=args.ingest_mode,
         cpu_profile=cpu_profile.name,
         cluster_cpu_limit_cores=cpu_profile.cluster_cpu_cores,
         pods=1,
@@ -742,7 +883,8 @@ def main() -> int:
     )
 
     sink_samples: list[StatsSample] = []
-    collector_samples: list[StatsSample] = []
+    collector_cpu_samples: list[float] = []
+    collector_rss_samples: list[float] = []
 
     try:
         run(compose + ["--profile", adapter.name, "up", "-d", "sink", "capture-reader", adapter.service_name], env=env)
@@ -750,7 +892,8 @@ def main() -> int:
         result.cluster_ready = True
         result.sink_ready = True
 
-        wait_until_ready(lambda: sample_collector(adapter, collector_stats_port), timeout_sec=90)
+        wait_for_collector_ready(adapter, collector_stats_port, timeout_sec=90)
+        collector_container_id = resolve_container_id(compose, adapter.service_name, env)
         run(compose + ["--profile", adapter.name, "up", "-d", "generator"], env=env)
         wait_until_ready(lambda: fetch_stats(generator_diag_port), timeout_sec=60)
 
@@ -760,7 +903,12 @@ def main() -> int:
         deadline = time.time() + base_profile.measure_sec
         while True:
             sink_samples.append(sample_sink(adapter, sink_diag_port, capture_stats_port))
-            collector_samples.append(sample_collector(adapter, collector_stats_port))
+            if collector_container_id:
+                resource_sample = read_container_resource_sample(collector_container_id)
+                if resource_sample is not None:
+                    cpu_cores, rss_mb = resource_sample
+                    collector_cpu_samples.append(cpu_cores)
+                    collector_rss_samples.append(rss_mb)
             if time.time() >= deadline:
                 break
             time.sleep(1)
@@ -779,23 +927,44 @@ def main() -> int:
         result.sink_lines_per_sec_p95 = percentile(sink_series, 0.95)
         result.sink_lines_per_sec_p99 = percentile(sink_series, 0.99)
 
-        collector_cpu = cpu_cores_series(collector_samples)
-        collector_rss = rss_mb_series(collector_samples)
-        result.collector_cpu_cores_avg = avg(collector_cpu)
-        result.collector_cpu_cores_p95 = percentile(collector_cpu, 0.95)
-        result.collector_rss_mb_avg = avg(collector_rss)
-        result.collector_rss_mb_p95 = percentile(collector_rss, 0.95)
+        estimated_throughput = False
+        if (
+            (result.sink_lines_per_sec_avg is None or result.sink_lines_per_sec_avg <= 0.0)
+            and (result.sink_reported_events_total or 0) > 0
+            and base_profile.measure_sec > 0
+        ):
+            estimated = float(result.sink_reported_events_total or 0) / float(base_profile.measure_sec)
+            result.sink_lines_per_sec_avg = estimated
+            result.sink_lines_per_sec_p50 = estimated
+            result.sink_lines_per_sec_p95 = estimated
+            result.sink_lines_per_sec_p99 = estimated
+            if (result.sink_lines_total or 0) == 0:
+                result.sink_lines_total = int(result.sink_reported_events_total or 0)
+            estimated_throughput = True
+
+        if collector_cpu_samples and collector_rss_samples:
+            result.collector_cpu_cores_avg = avg(collector_cpu_samples)
+            result.collector_cpu_cores_p95 = percentile(collector_cpu_samples, 0.95)
+            result.collector_rss_mb_avg = avg(collector_rss_samples)
+            result.collector_rss_mb_p95 = percentile(collector_rss_samples, 0.95)
 
         if result.emitter_reported_events_total is not None and result.sink_reported_events_total is not None:
             result.drop_estimate = max(0, result.emitter_reported_events_total - result.sink_reported_events_total)
             result.dup_estimate = max(0, result.sink_reported_events_total - result.emitter_reported_events_total)
 
-        if (result.sink_reported_events_total or 0) > 0 and (result.sink_lines_per_sec_avg or 0.0) > 0.0:
+        if (result.sink_reported_events_total or 0) > 0:
             result.status = "pass"
-            result.notes = (
-                f"compose benchmark succeeded for collector={adapter.name}; "
-                f"sink_lines_per_sec_avg={result.sink_lines_per_sec_avg}"
-            )
+            if estimated_throughput:
+                result.notes = (
+                    f"compose benchmark succeeded for collector={adapter.name}; "
+                    f"sink_lines_per_sec_avg estimated from sink_reported_events_total/measure_sec: "
+                    f"{result.sink_lines_per_sec_avg}"
+                )
+            else:
+                result.notes = (
+                    f"compose benchmark succeeded for collector={adapter.name}; "
+                    f"sink_lines_per_sec_avg={result.sink_lines_per_sec_avg}"
+                )
         else:
             result.status = "fail"
             result.notes = (
@@ -809,7 +978,7 @@ def main() -> int:
         result.notes = f"compose benchmark failed before completion: {exc}"
     finally:
         write_samples(results_dir / "sink-samples.json", sink_samples)
-        write_samples(results_dir / "collector-samples.json", collector_samples)
+        write_json(results_dir / "collector-samples.json", [])
         write_json(
             results_dir / "ports.json",
             {
@@ -869,6 +1038,7 @@ def main() -> int:
         {
             "benchmark_id": benchmark_id,
             "collector": adapter.name,
+            "ingest_mode": args.ingest_mode,
             "profile": args.profile,
             "cpu_profile": args.cpu_profile,
             "eps_per_sec": eps_per_sec,

@@ -23,7 +23,9 @@ the same collector adapters and output contracts for throughput checks.
 ## Current Scope
 
 - phase: `smoke`
-- ingest mode: `file`
+- ingest modes:
+  - `file` for `logfwd`, `otelcol`, `vector`
+  - `otlp` for `logfwd`, `otelcol`
 - collectors: `logfwd`, `otelcol`, `vector`
 - profiles: `smoke`, `default`
 - CPU profiles: `single`, `multi`
@@ -33,6 +35,7 @@ the same collector adapters and output contracts for throughput checks.
 ```bash
 python3 bench/compose/run.py \
   --collector logfwd \
+  --ingest-mode file \
   --profile smoke \
   --cpu-profile single \
   --eps-per-sec 0 \
@@ -40,4 +43,5 @@ python3 bench/compose/run.py \
 ```
 
 - Set `--eps-per-sec 0` for max-throughput mode.
+- Set `--ingest-mode otlp` for OTLP ingest parity (`logfwd` and `otelcol`).
 - In CI, `benchkit-run.otlp.json` is stashed by Octo11y for aggregate reporting.

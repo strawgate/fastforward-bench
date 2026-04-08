@@ -55,6 +55,23 @@ on:
           - all
           - single
           - multi
+      ingest_mode:
+        description: collector ingest mode to benchmark
+        required: false
+        type: choice
+        default: all
+        options:
+          - all
+          - file
+          - otlp
+      persist_data:
+        description: persist benchkit data to bench-data branch
+        required: false
+        type: choice
+        default: 'false'
+        options:
+          - 'false'
+          - 'true'
 
 permissions:
   contents: write
@@ -64,7 +81,7 @@ permissions:
 
 env:
   MEMAGENT_REF: ${{ inputs.memagent_ref || 'main' }}
-  PERSIST_BENCH_DATA: ${{ github.event_name != 'pull_request' && 'true' || 'false' }}
+  PERSIST_BENCH_DATA: ${{ (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.persist_data == 'true')) && 'true' || 'false' }}
 
 jobs:
   plan:
@@ -74,6 +91,7 @@ jobs:
       target_set: ${{ steps.plan.outputs.target_set }}
       collectors: ${{ steps.plan.outputs.collectors }}
       cpu_profiles: ${{ steps.plan.outputs.cpu_profiles }}
+      ingest_modes: ${{ steps.plan.outputs.ingest_modes }}
       workloads: ${{ steps.plan.outputs.workloads }}
     steps:
       - id: plan
@@ -82,10 +100,11 @@ jobs:
           INPUT_TARGET_SET: ${{ inputs.target_set || 'profile' }}
           INPUT_COLLECTOR: ${{ inputs.collector || 'all' }}
           INPUT_CPU_PROFILE: ${{ inputs.cpu_profile || 'all' }}
+          INPUT_INGEST_MODE: ${{ inputs.ingest_mode || 'all' }}
         run: |
           echo "bench_profile=${INPUT_PROFILE}" >>"$GITHUB_OUTPUT"
           if [[ "${{ github.event_name }}" == "schedule" ]]; then
-            TARGET_SET="max"
+            TARGET_SET="ladder_and_max"
           else
             TARGET_SET="${INPUT_TARGET_SET}"
           fi
@@ -124,6 +143,11 @@ jobs:
           else
             echo 'cpu_profiles=["single","multi"]' >>"$GITHUB_OUTPUT"
           fi
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${INPUT_INGEST_MODE}" != "all" ]]; then
+            echo "ingest_modes=[\"${INPUT_INGEST_MODE}\"]" >>"$GITHUB_OUTPUT"
+          else
+            echo 'ingest_modes=["file","otlp"]' >>"$GITHUB_OUTPUT"
+          fi
 
   compose-bench-smoke:
     needs: plan
@@ -132,18 +156,23 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        ingest_mode: ${{ fromJSON(needs.plan.outputs.ingest_modes) }}
         collector: ${{ fromJSON(needs.plan.outputs.collectors) }}
         cpu_profile: ${{ fromJSON(needs.plan.outputs.cpu_profiles) }}
         workload: ${{ fromJSON(needs.plan.outputs.workloads) }}
+        exclude:
+          - ingest_mode: otlp
+            collector: vector
     env:
       MEMAGENT_REPO_ROOT: ${{ github.workspace }}/memagent
       BENCH_PROFILE: ${{ needs.plan.outputs.bench_profile }}
-      BENCH_RESULTS_DIR: ${{ github.workspace }}/bench/compose/results/${{ needs.plan.outputs.bench_profile }}/${{ matrix.workload.label }}/${{ matrix.cpu_profile }}/${{ matrix.collector }}
+      BENCH_RESULTS_DIR: ${{ github.workspace }}/bench/compose/results/${{ needs.plan.outputs.bench_profile }}/${{ matrix.ingest_mode }}/${{ matrix.workload.label }}/${{ matrix.cpu_profile }}/${{ matrix.collector }}
       BENCH_COLLECTOR: ${{ matrix.collector }}
+      BENCH_INGEST_MODE: ${{ matrix.ingest_mode }}
       BENCH_CPU_PROFILE: ${{ matrix.cpu_profile }}
       BENCH_WORKLOAD_LABEL: ${{ matrix.workload.label }}
       BENCH_EPS_PER_SEC: ${{ matrix.workload.eps_per_sec }}
-      BENCHKIT_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}--compose-bench-${{ needs.plan.outputs.bench_profile }}-${{ matrix.workload.label }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}
+      BENCHKIT_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}--compose-bench-${{ needs.plan.outputs.bench_profile }}-${{ matrix.ingest_mode }}-${{ matrix.workload.label }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -204,12 +233,38 @@ jobs:
         run: |
           python3 bench/compose/run.py \
             --collector "${BENCH_COLLECTOR}" \
+            --ingest-mode "${BENCH_INGEST_MODE}" \
             --profile "${BENCH_PROFILE}" \
             --cpu-profile "${BENCH_CPU_PROFILE}" \
             --eps-per-sec "${BENCH_EPS_PER_SEC}" \
             --benchkit-run-id "${BENCHKIT_RUN_ID}" \
             --benchkit-kind "hybrid" \
             --results-dir "${BENCH_RESULTS_DIR}"
+      - if: env.PERSIST_BENCH_DATA == 'true'
+        name: Materialize monitor OTLP document
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          monitor_jsonl = Path(os.environ["RUNNER_TEMP"]) / "benchkit-telemetry.otlp.jsonl"
+          out_path = Path(os.environ["BENCH_RESULTS_DIR"]) / "monitor.otlp.json"
+          resource_metrics = []
+          if monitor_jsonl.exists():
+            with monitor_jsonl.open("r", encoding="utf-8") as handle:
+              for raw in handle:
+                line = raw.strip()
+                if not line:
+                  continue
+                doc = json.loads(line)
+                values = doc.get("resourceMetrics")
+                if isinstance(values, list):
+                  resource_metrics.extend(values)
+          payload = {"resourceMetrics": resource_metrics}
+          out_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+          print(f"wrote {out_path} with {len(resource_metrics)} resourceMetrics entries")
+          PY
       - if: env.PERSIST_BENCH_DATA == 'true'
         name: Stash jitter
         shell: bash
@@ -229,18 +284,19 @@ jobs:
         uses: strawgate/octo11y/actions/stash@main-dist
         with:
           results: ${{ env.BENCH_RESULTS_DIR }}/benchkit-run.otlp.json
+          monitor-results: ${{ env.BENCH_RESULTS_DIR }}/monitor.otlp.json
           format: otlp
           run-id: ${{ env.BENCHKIT_RUN_ID }}
-          summary: true
+          summary: false
       - if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: compose-bench-${{ needs.plan.outputs.bench_profile }}-${{ matrix.workload.label }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}
+          name: compose-bench-${{ needs.plan.outputs.bench_profile }}-${{ matrix.ingest_mode }}-${{ matrix.workload.label }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}
           path: ${{ env.BENCH_RESULTS_DIR }}
           retention-days: 7
 
   summarize:
-    if: always() && github.event_name != 'pull_request'
+    if: always()
     needs:
       - plan
       - compose-bench-smoke
@@ -305,3 +361,48 @@ jobs:
           ISSUE_SUITE_KEY: ${{ steps.issue_meta.outputs.suite_key }}
           ISSUE_LABELS: ${{ steps.issue_meta.outputs.labels }}
         run: tests/e2e/lib/upsert_issue.sh
+      - if: always()
+        name: Enforce benchmark matrix truthfulness
+        env:
+          EXPECTED_COLLECTORS: ${{ needs.plan.outputs.collectors }}
+          EXPECTED_CPU_PROFILES: ${{ needs.plan.outputs.cpu_profiles }}
+          EXPECTED_INGEST_MODES: ${{ needs.plan.outputs.ingest_modes }}
+          EXPECTED_WORKLOADS: ${{ needs.plan.outputs.workloads }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import sys
+
+          with open("bench-summary.json", "r", encoding="utf-8") as handle:
+            summary = json.load(handle)
+
+          benchmark_count = int(summary.get("benchmark_count", 0))
+          failed_count = int(summary.get("failed_count", 0))
+
+          collectors = json.loads(os.environ["EXPECTED_COLLECTORS"])
+          cpu_profiles = json.loads(os.environ["EXPECTED_CPU_PROFILES"])
+          ingest_modes = json.loads(os.environ["EXPECTED_INGEST_MODES"])
+          workloads = json.loads(os.environ["EXPECTED_WORKLOADS"])
+
+          expected = len(collectors) * len(cpu_profiles) * len(ingest_modes) * len(workloads)
+          if "vector" in collectors and "otlp" in ingest_modes:
+            expected -= len(cpu_profiles) * len(workloads)
+
+          print(
+            f"expected={expected} benchmark_count={benchmark_count} failed_count={failed_count}"
+          )
+
+          if benchmark_count < expected:
+            print(
+              f"missing benchmark artifacts: expected {expected}, got {benchmark_count}",
+              file=sys.stderr,
+            )
+            sys.exit(1)
+          if failed_count > 0:
+            print(
+              f"benchmark failures detected in summary: failed_count={failed_count}",
+              file=sys.stderr,
+            )
+            sys.exit(1)
+          PY
