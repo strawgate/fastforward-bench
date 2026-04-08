@@ -1,128 +1,110 @@
 [
   {
     "metric": "captured_rows_total",
-    "latestSeriesCount": 14,
-    "latestRunId": "24122010683-1--kind-bench-smoke-file-tmax-single-logfwd",
-    "latestTimestamp": "2026-04-08T06:49:08.000Z"
+    "latestSeriesCount": 26,
+    "latestRunId": "24123498416-1--kind-bench-smoke-file-t100-multi-otelcol",
+    "latestTimestamp": "2026-04-08T07:36:28.000Z"
   },
   {
     "metric": "collector_cpu_cores_avg",
-    "latestSeriesCount": 14,
-    "latestRunId": "24122010683-1--kind-bench-smoke-file-tmax-single-logfwd",
-    "latestTimestamp": "2026-04-08T06:49:08.000Z"
+    "latestSeriesCount": 26,
+    "latestRunId": "24123498416-1--kind-bench-smoke-file-t100-multi-otelcol",
+    "latestTimestamp": "2026-04-08T07:36:28.000Z"
   },
   {
     "metric": "collector_cpu_cores_p95",
-    "latestSeriesCount": 14,
-    "latestRunId": "24122010683-1--kind-bench-smoke-file-tmax-single-logfwd",
-    "latestTimestamp": "2026-04-08T06:49:08.000Z"
+    "latestSeriesCount": 26,
+    "latestRunId": "24123498416-1--kind-bench-smoke-file-t100-multi-otelcol",
+    "latestTimestamp": "2026-04-08T07:36:28.000Z"
   },
   {
     "metric": "collector_rss_mb_avg",
-    "latestSeriesCount": 14,
-    "latestRunId": "24122010683-1--kind-bench-smoke-file-tmax-single-logfwd",
-    "latestTimestamp": "2026-04-08T06:49:08.000Z"
+    "latestSeriesCount": 26,
+    "latestRunId": "24123498416-1--kind-bench-smoke-file-t100-multi-otelcol",
+    "latestTimestamp": "2026-04-08T07:36:28.000Z"
   },
   {
     "metric": "collector_rss_mb_p95",
-    "latestSeriesCount": 14,
-    "latestRunId": "24122010683-1--kind-bench-smoke-file-tmax-single-logfwd",
-    "latestTimestamp": "2026-04-08T06:49:08.000Z"
+    "latestSeriesCount": 26,
+    "latestRunId": "24123498416-1--kind-bench-smoke-file-t100-multi-otelcol",
+    "latestTimestamp": "2026-04-08T07:36:28.000Z"
   },
   {
     "metric": "drop_estimate",
-    "latestSeriesCount": 14,
-    "latestRunId": "24122010683-1--kind-bench-smoke-file-tmax-single-logfwd",
-    "latestTimestamp": "2026-04-08T06:49:08.000Z"
+    "latestSeriesCount": 26,
+    "latestRunId": "24123498416-1--kind-bench-smoke-file-t100-multi-otelcol",
+    "latestTimestamp": "2026-04-08T07:36:28.000Z"
   },
   {
     "metric": "dup_estimate",
-    "latestSeriesCount": 6,
-    "latestRunId": "24113385808-1--kind-bench-smoke-file-profile-smoke-single-fluent-bit",
-    "latestTimestamp": "2026-04-08T01:50:58.000Z"
+    "latestSeriesCount": 11,
+    "latestRunId": "24123498416-1--kind-bench-smoke-file-t100-multi-otelcol",
+    "latestTimestamp": "2026-04-08T07:36:28.000Z"
   },
   {
     "metric": "emitter_reported_events_total",
-    "latestSeriesCount": 14,
-    "latestRunId": "24122010683-1--kind-bench-smoke-file-tmax-single-logfwd",
-    "latestTimestamp": "2026-04-08T06:49:08.000Z"
-  },
-  {
-    "metric": "generator_cpu_cores_avg",
-    "latestSeriesCount": 6,
-    "latestRunId": "24113385808-1--kind-bench-smoke-file-profile-smoke-single-fluent-bit",
-    "latestTimestamp": "2026-04-08T01:50:58.000Z"
+    "latestSeriesCount": 26,
+    "latestRunId": "24123498416-1--kind-bench-smoke-file-t100-multi-otelcol",
+    "latestTimestamp": "2026-04-08T07:36:28.000Z"
   },
   {
     "metric": "missing_event_count",
-    "latestSeriesCount": 6,
-    "latestRunId": "24113385808-1--kind-bench-smoke-file-profile-smoke-single-fluent-bit",
-    "latestTimestamp": "2026-04-08T01:50:58.000Z"
+    "latestSeriesCount": 11,
+    "latestRunId": "24123498416-1--kind-bench-smoke-file-t100-multi-otelcol",
+    "latestTimestamp": "2026-04-08T07:36:28.000Z"
   },
   {
     "metric": "missing_source_count",
-    "latestSeriesCount": 9,
-    "latestRunId": "24113385808-1--kind-bench-smoke-file-profile-smoke-single-fluent-bit",
-    "latestTimestamp": "2026-04-08T01:50:58.000Z"
-  },
-  {
-    "metric": "sink_cpu_cores_avg",
-    "latestSeriesCount": 3,
-    "latestRunId": "24113073905-1--kind-bench-smoke-file-profile-smoke-single-otelcol",
-    "latestTimestamp": "2026-04-08T01:39:52.000Z"
-  },
-  {
-    "metric": "sink_cpu_cores_p95",
-    "latestSeriesCount": 3,
-    "latestRunId": "24113073905-1--kind-bench-smoke-file-profile-smoke-single-otelcol",
-    "latestTimestamp": "2026-04-08T01:39:52.000Z"
+    "latestSeriesCount": 24,
+    "latestRunId": "24123498416-1--kind-bench-smoke-file-t100-multi-otelcol",
+    "latestTimestamp": "2026-04-08T07:36:28.000Z"
   },
   {
     "metric": "sink_lines_per_sec_avg",
-    "latestSeriesCount": 14,
-    "latestRunId": "24122010683-1--kind-bench-smoke-file-tmax-single-logfwd",
-    "latestTimestamp": "2026-04-08T06:49:08.000Z"
+    "latestSeriesCount": 26,
+    "latestRunId": "24123498416-1--kind-bench-smoke-file-t100-multi-otelcol",
+    "latestTimestamp": "2026-04-08T07:36:28.000Z"
   },
   {
     "metric": "sink_lines_per_sec_p50",
-    "latestSeriesCount": 14,
-    "latestRunId": "24122010683-1--kind-bench-smoke-file-tmax-single-logfwd",
-    "latestTimestamp": "2026-04-08T06:49:08.000Z"
+    "latestSeriesCount": 26,
+    "latestRunId": "24123498416-1--kind-bench-smoke-file-t100-multi-otelcol",
+    "latestTimestamp": "2026-04-08T07:36:28.000Z"
   },
   {
     "metric": "sink_lines_per_sec_p95",
-    "latestSeriesCount": 14,
-    "latestRunId": "24122010683-1--kind-bench-smoke-file-tmax-single-logfwd",
-    "latestTimestamp": "2026-04-08T06:49:08.000Z"
+    "latestSeriesCount": 26,
+    "latestRunId": "24123498416-1--kind-bench-smoke-file-t100-multi-otelcol",
+    "latestTimestamp": "2026-04-08T07:36:28.000Z"
   },
   {
     "metric": "sink_lines_per_sec_p99",
-    "latestSeriesCount": 14,
-    "latestRunId": "24122010683-1--kind-bench-smoke-file-tmax-single-logfwd",
-    "latestTimestamp": "2026-04-08T06:49:08.000Z"
+    "latestSeriesCount": 26,
+    "latestRunId": "24123498416-1--kind-bench-smoke-file-t100-multi-otelcol",
+    "latestTimestamp": "2026-04-08T07:36:28.000Z"
   },
   {
     "metric": "sink_lines_total",
-    "latestSeriesCount": 14,
-    "latestRunId": "24122010683-1--kind-bench-smoke-file-tmax-single-logfwd",
-    "latestTimestamp": "2026-04-08T06:49:08.000Z"
+    "latestSeriesCount": 26,
+    "latestRunId": "24123498416-1--kind-bench-smoke-file-t100-multi-otelcol",
+    "latestTimestamp": "2026-04-08T07:36:28.000Z"
   },
   {
     "metric": "sink_reported_events_total",
-    "latestSeriesCount": 14,
-    "latestRunId": "24122010683-1--kind-bench-smoke-file-tmax-single-logfwd",
-    "latestTimestamp": "2026-04-08T06:49:08.000Z"
+    "latestSeriesCount": 26,
+    "latestRunId": "24123498416-1--kind-bench-smoke-file-t100-multi-otelcol",
+    "latestTimestamp": "2026-04-08T07:36:28.000Z"
   },
   {
     "metric": "source_rows_total",
-    "latestSeriesCount": 6,
-    "latestRunId": "24113385808-1--kind-bench-smoke-file-profile-smoke-single-fluent-bit",
-    "latestTimestamp": "2026-04-08T01:50:58.000Z"
+    "latestSeriesCount": 24,
+    "latestRunId": "24123498416-1--kind-bench-smoke-file-t100-multi-otelcol",
+    "latestTimestamp": "2026-04-08T07:36:28.000Z"
   },
   {
     "metric": "unexpected_event_count",
-    "latestSeriesCount": 6,
-    "latestRunId": "24113385808-1--kind-bench-smoke-file-profile-smoke-single-fluent-bit",
-    "latestTimestamp": "2026-04-08T01:50:58.000Z"
+    "latestSeriesCount": 11,
+    "latestRunId": "24123498416-1--kind-bench-smoke-file-t100-multi-otelcol",
+    "latestTimestamp": "2026-04-08T07:36:28.000Z"
   }
 ]

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
   "label": "captured rows total",
-  "message": "497.6k events",
-  "color": "brightgreen"
+  "message": "3.1k events",
+  "color": "red"
 }
