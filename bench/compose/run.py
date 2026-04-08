@@ -355,7 +355,7 @@ processors:
     log_statements:
       - context: log
         statements:
-          - merge_maps(attributes, ParseJSON(body), "upsert") where IsMatch(body, "^\\{")
+          - merge_maps(attributes, ParseJSON(body), "upsert")
   batch:
     send_batch_size: 1024
     timeout: 1s
@@ -642,6 +642,8 @@ def main() -> int:
     artifacts_dir = results_dir / "artifacts"
     rendered_dir.mkdir(parents=True, exist_ok=True)
     ensure_world_writable_dir(runtime_dir)
+    ensure_world_writable_dir(runtime_dir / "vector")
+    ensure_world_writable_dir(runtime_dir / "collector")
     artifacts_dir.mkdir(parents=True, exist_ok=True)
 
     # Remove stale runtime files from prior local reruns.
