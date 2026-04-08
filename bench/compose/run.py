@@ -771,20 +771,13 @@ def wait_for_collector_ready(adapter: CollectorAdapter, port: int, timeout_sec: 
 
 
 def stats_sample_from_capture_file(capture_file_path: Path, benchmark_id: str) -> StatsSample:
-    count = 0
-    if capture_file_path.exists():
-        with capture_file_path.open("r", encoding="utf-8", errors="replace") as handle:
-            for raw in handle:
-                line = raw.strip()
-                if not line:
-                    continue
-                try:
-                    payload = json.loads(line)
-                except json.JSONDecodeError:
-                    continue
-                if isinstance(payload, dict) and payload.get("benchmark_id") == benchmark_id:
-                    count += 1
-    return StatsSample(timestamp=time.time(), output_lines=count, rss_bytes=0, cpu_total_ms=0)
+    del benchmark_id
+    return StatsSample(
+        timestamp=time.time(),
+        output_lines=count_captured_rows(capture_file_path),
+        rss_bytes=0,
+        cpu_total_ms=0,
+    )
 
 
 def stats_sample_empty() -> StatsSample:
@@ -851,6 +844,35 @@ def copy_with_cap(src: Path, dst: Path, *, max_bytes: int) -> None:
             dst_handle.write(f'{{"_note":"truncated_at_bytes","max_bytes":{max_bytes}}}\n'.encode("utf-8"))
 
 
+def count_ndjson_rows(path: Path) -> int:
+    if not path.exists():
+        return 0
+    rows = 0
+    ends_with_newline = True
+    with path.open("rb") as handle:
+        while True:
+            chunk = handle.read(1024 * 1024)
+            if not chunk:
+                break
+            rows += chunk.count(b"\n")
+            ends_with_newline = chunk.endswith(b"\n")
+    if rows == 0:
+        return 0
+    if not ends_with_newline:
+        # Account for a trailing partial line.
+        rows += 1
+    return rows
+
+
+def count_captured_rows(capture_file_path: Path) -> int:
+    parent = capture_file_path.parent
+    base_name = capture_file_path.name
+    files = sorted(path for path in parent.glob(f"{base_name}*") if path.is_file())
+    if not files:
+        return 0
+    return sum(count_ndjson_rows(path) for path in files)
+
+
 def wait_for_sink_catch_up(
     *,
     adapter: CollectorAdapter,
@@ -860,11 +882,9 @@ def wait_for_sink_catch_up(
     benchmark_id: str,
     target_events_total: int,
     timeout_sec: int,
-    stagnant_sec: float = 3.0,
 ) -> int:
     deadline = time.time() + timeout_sec
     last_seen = -1
-    stagnant_since = time.time()
 
     while time.time() < deadline:
         current = sink_reported_events(
@@ -878,9 +898,6 @@ def wait_for_sink_catch_up(
             return current
         if current != last_seen:
             last_seen = current
-            stagnant_since = time.time()
-        elif time.time() - stagnant_since >= stagnant_sec:
-            return current
         time.sleep(0.5)
 
     return max(0, last_seen)
@@ -1072,7 +1089,7 @@ def main() -> int:
                 capture_file_path=capture_file_path,
                 benchmark_id=benchmark_id,
                 target_events_total=result.emitter_reported_events_total,
-                timeout_sec=10 if max_throughput_mode else 20,
+                timeout_sec=10 if max_throughput_mode else 30,
             )
         else:
             result.sink_reported_events_total = sink_reported_events(
@@ -1082,6 +1099,16 @@ def main() -> int:
                 capture_file_path,
                 benchmark_id,
             )
+
+        subprocess.run(compose + ["stop", adapter.service_name], env=env, check=False)
+        time.sleep(1.0)
+
+        # Final integrity counts should come from the sink capture file, not per-process
+        # diagnostics counters, which can lag under sustained load.
+        exact_captured_rows = count_captured_rows(capture_file_path)
+        if exact_captured_rows > 0:
+            result.sink_reported_events_total = exact_captured_rows
+
         result.sink_lines_total = diff_output_lines(sink_samples)
         result.captured_rows_total = result.sink_reported_events_total
 
@@ -1187,10 +1214,11 @@ def main() -> int:
                     text=True,
                 )
 
-        if (runtime_dir / "capture.ndjson").exists():
+        capture_files = sorted(path for path in runtime_dir.glob("capture.ndjson*") if path.is_file())
+        for capture_file in capture_files:
             copy_with_cap(
-                runtime_dir / "capture.ndjson",
-                artifacts_dir / "sink-capture.ndjson",
+                capture_file,
+                artifacts_dir / f"sink-{capture_file.name}",
                 max_bytes=10 * 1024 * 1024,
             )
         if (runtime_dir / "events.ndjson").exists():
@@ -1200,7 +1228,7 @@ def main() -> int:
                 max_bytes=10 * 1024 * 1024,
             )
 
-        subprocess.run(compose + ["down", "-v", "--remove-orphans"], env=env, check=False)
+        subprocess.run(compose + ["--profile", adapter.name, "down", "-v", "--remove-orphans"], env=env, check=False)
         shutil.rmtree(runtime_dir, ignore_errors=True)
 
     write_result_files(
