@@ -746,7 +746,12 @@ def run_smoke_phase(
         args.ingest_mode == "file"
         and not max_throughput_mode
         and profile.eps_per_pod < SOURCE_ORACLE_MAX_TARGET_EPS_PER_POD
+        and adapter.supports_strict_source_oracle
     )
+    if adapter.supports_strict_source_oracle:
+        source_oracle_skip_reason = f"target_eps_per_pod >= {SOURCE_ORACLE_MAX_TARGET_EPS_PER_POD}"
+    else:
+        source_oracle_skip_reason = f"collector '{adapter.name}' does not support strict source-oracle row comparison"
 
     sink_rows: list[dict[str, object]] = []
     if source_oracle_enabled:
@@ -889,9 +894,9 @@ def run_smoke_phase(
         write_json(
             results_dir / "stream-summary.json",
             {
-                "mode": "source-oracle-skipped-high-rate",
+                "mode": "source-oracle-skipped",
                 "source_oracle": "skipped",
-                "reason": f"target_eps_per_pod >= {SOURCE_ORACLE_MAX_TARGET_EPS_PER_POD}",
+                "reason": source_oracle_skip_reason,
                 "emitter_reported_events_total": result.emitter_reported_events_total,
                 "sink_reported_events_total": result.sink_reported_events_total,
                 "sink_row_count": result.captured_rows_total,
@@ -919,8 +924,8 @@ def run_smoke_phase(
         if diagnostics_oracle_clean and observed_sink_output:
             result.status = "pass"
             result.notes = (
-                f"smoke benchmark passed in {adapter.benchmark_mode} with source oracle skipped for high-rate file input "
-                f"(target_eps_per_pod={profile.eps_per_pod}); diagnostics totals remained clean. "
+                f"smoke benchmark passed in {adapter.benchmark_mode} with source oracle skipped "
+                f"({source_oracle_skip_reason}). diagnostics totals remained clean. "
                 f"sink_lines_total={result.sink_lines_total}, sink_lines_per_sec_avg={result.sink_lines_per_sec_avg}, "
                 f"emitter_reported_events_total={result.emitter_reported_events_total}, "
                 f"sink_reported_events_total={result.sink_reported_events_total}, "
@@ -931,8 +936,8 @@ def run_smoke_phase(
         if diagnostics_available:
             result.status = "fail"
             result.notes = (
-                f"smoke benchmark failed in {adapter.benchmark_mode} with source oracle skipped for high-rate file input "
-                f"(target_eps_per_pod={profile.eps_per_pod}); diagnostics reported sink behind emitter. "
+                f"smoke benchmark failed in {adapter.benchmark_mode} with source oracle skipped "
+                f"({source_oracle_skip_reason}); diagnostics reported sink behind emitter. "
                 f"sink_lines_total={result.sink_lines_total}, sink_lines_per_sec_avg={result.sink_lines_per_sec_avg}, "
                 f"emitter_reported_events_total={result.emitter_reported_events_total}, "
                 f"sink_reported_events_total={result.sink_reported_events_total}, "
@@ -942,8 +947,8 @@ def run_smoke_phase(
 
         result.status = "fail"
         result.notes = (
-            f"smoke benchmark failed in {adapter.benchmark_mode} with source oracle skipped for high-rate file input "
-            f"(target_eps_per_pod={profile.eps_per_pod}) due to missing diagnostics totals."
+            f"smoke benchmark failed in {adapter.benchmark_mode} with source oracle skipped "
+            f"({source_oracle_skip_reason}) due to missing diagnostics totals."
         )
         return 1
 

@@ -251,6 +251,76 @@ def fetch_vector_prometheus_sample(local_port: int) -> StatsSample:
     return _sample_from_vector_prometheus(fetch_text(local_port, "/metrics"))
 
 
+def fetch_prometheus_text_with_fallback(local_port: int, paths: list[str]) -> str:
+    last_exc: Exception | None = None
+    for path in paths:
+        try:
+            return fetch_text(local_port, path)
+        except Exception as exc:  # noqa: BLE001
+            last_exc = exc
+    if last_exc is None:
+        raise RuntimeError("no prometheus endpoints configured")
+    raise last_exc
+
+
+def _sample_from_fluentbit_prometheus(body: str) -> StatsSample:
+    process_cpu_seconds = _prometheus_metric_first(
+        body,
+        ["process_cpu_seconds_total", "fluentbit_process_cpu_seconds_total"],
+    )
+    rss_bytes = int(
+        _prometheus_metric_first(
+            body,
+            ["process_resident_memory_bytes", "fluentbit_process_resident_memory_bytes"],
+        )
+    )
+    output_lines = _prometheus_metric_first(
+        body,
+        ["fluentbit_output_proc_records_total", "output_proc_records_total"],
+    )
+    return StatsSample(
+        timestamp=time.time(),
+        output_lines=int(output_lines),
+        rss_bytes=rss_bytes,
+        cpu_total_ms=int(process_cpu_seconds * 1000.0),
+    )
+
+
+def fetch_fluentbit_prometheus_sample(local_port: int) -> StatsSample:
+    body = fetch_prometheus_text_with_fallback(
+        local_port,
+        ["/api/v2/metrics/prometheus", "/api/v1/metrics/prometheus", "/metrics"],
+    )
+    return _sample_from_fluentbit_prometheus(body)
+
+
+def _sample_from_vlagent_prometheus(body: str) -> StatsSample:
+    process_cpu_seconds = _prometheus_metric_first(
+        body,
+        ["process_cpu_seconds_total", "vm_process_cpu_seconds_total"],
+    )
+    rss_bytes = int(
+        _prometheus_metric_first(
+            body,
+            ["process_resident_memory_bytes", "vm_process_resident_memory_bytes"],
+        )
+    )
+    output_lines = _prometheus_metric_first(
+        body,
+        ["vl_rows_read_total", "vm_rows_read_total", "vl_ingest_rows_total"],
+    )
+    return StatsSample(
+        timestamp=time.time(),
+        output_lines=int(output_lines),
+        rss_bytes=rss_bytes,
+        cpu_total_ms=int(process_cpu_seconds * 1000.0),
+    )
+
+
+def fetch_vlagent_prometheus_sample(local_port: int) -> StatsSample:
+    return _sample_from_vlagent_prometheus(fetch_text(local_port, "/metrics"))
+
+
 def collect_bench_samples(
     namespace: str,
     sink_target: str,
@@ -283,6 +353,15 @@ def collect_bench_samples(
     elif collector_stats_kind == "vector_prometheus":
         collector_ready_check = lambda port: fetch_text(port, "/metrics")
         collector_fetch_sample = fetch_vector_prometheus_sample
+    elif collector_stats_kind == "fluentbit_prometheus":
+        collector_ready_check = lambda port: fetch_prometheus_text_with_fallback(
+            port,
+            ["/api/v2/metrics/prometheus", "/api/v1/metrics/prometheus", "/metrics"],
+        )
+        collector_fetch_sample = fetch_fluentbit_prometheus_sample
+    elif collector_stats_kind == "vlagent_prometheus":
+        collector_ready_check = lambda port: fetch_text(port, "/metrics")
+        collector_fetch_sample = fetch_vlagent_prometheus_sample
     else:
         raise ValueError(f"unknown collector_stats_kind: {collector_stats_kind}")
 

@@ -68,7 +68,7 @@ All source-vs-sink and steady-state throughput fields remain `null`.
 
 The smoke phase currently runs one narrow benchmark mode:
 
-- collectors: `logfwd`, `otelcol`
+- collectors: `logfwd`, `otelcol`, `vector`, `fluent-bit`, `vlagent`
 - mode: `baseline-pass-through`
 - oracle: compare benchmark-tagged sink rows against the emitter logs captured
   from the source pods
@@ -82,6 +82,10 @@ For `ingest_mode=otlp`, the smoke run intentionally skips strict source-vs-sink
 comparison because the emitter is not writing source logs to stdout in that
 mode. In OTLP ingest mode, pass/fail is based on positive sink observation and
 diagnostic counters.
+
+Some file-ingest collectors can also run in diagnostics-only oracle mode when
+their output schema is not source-row comparable yet. In that mode, pass/fail
+is based on emitter/sink diagnostics totals plus positive sink observation.
 
 ## Artifact Expectations
 

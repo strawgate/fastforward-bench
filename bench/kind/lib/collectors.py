@@ -19,6 +19,7 @@ class CollectorAdapter:
     collector_stats_kind: str = "logfwd"
     collector_stats_port: int = 9090
     sink_transport: str = "otlp_http"
+    supports_strict_source_oracle: bool = True
 
     def supports_ingest_mode(self, ingest_mode: str) -> bool:
         if ingest_mode == "file":
@@ -81,6 +82,37 @@ VECTOR_COLLECTOR = CollectorAdapter(
     sink_transport="http_ndjson",
 )
 
+FLUENT_BIT_COLLECTOR = CollectorAdapter(
+    name="fluent-bit",
+    benchmark_mode="baseline-pass-through",
+    file_config_template="collectors/fluent-bit-configmap.yaml.tmpl",
+    file_workload_template="collectors/fluent-bit-daemonset.yaml.tmpl",
+    rollout_kind="daemonset",
+    rollout_name="fluent-bit-bench-collector",
+    pod_selector="app.kubernetes.io/name=fluent-bit-bench-collector",
+    diagnostics_target_format="pod/{pod_name}",
+    collector_image="fluent/fluent-bit:4.2.3",
+    collector_stats_kind="fluentbit_prometheus",
+    collector_stats_port=2020,
+    sink_transport="http_ndjson",
+)
+
+VLAGENT_COLLECTOR = CollectorAdapter(
+    name="vlagent",
+    benchmark_mode="baseline-pass-through",
+    file_config_template="collectors/vlagent-configmap.yaml.tmpl",
+    file_workload_template="collectors/vlagent-daemonset.yaml.tmpl",
+    rollout_kind="daemonset",
+    rollout_name="vlagent-bench-collector",
+    pod_selector="app.kubernetes.io/name=vlagent-bench-collector",
+    diagnostics_target_format="pod/{pod_name}",
+    collector_image="victoriametrics/vlagent:v1.48.0",
+    collector_stats_kind="vlagent_prometheus",
+    collector_stats_port=9429,
+    sink_transport="http_ndjson",
+    supports_strict_source_oracle=False,
+)
+
 
 def get_collector_adapter(name: str) -> CollectorAdapter:
     if name == LOGFWD_COLLECTOR.name:
@@ -89,4 +121,8 @@ def get_collector_adapter(name: str) -> CollectorAdapter:
         return OTELCOL_COLLECTOR
     if name == VECTOR_COLLECTOR.name:
         return VECTOR_COLLECTOR
+    if name == FLUENT_BIT_COLLECTOR.name:
+        return FLUENT_BIT_COLLECTOR
+    if name == VLAGENT_COLLECTOR.name:
+        return VLAGENT_COLLECTOR
     raise NotImplementedError(f"collector not implemented yet in benchmark harness: {name}")

@@ -27,10 +27,10 @@ The harness currently supports two phases:
 
 The current smoke implementation is intentionally narrow:
 
-- collector support: `logfwd`, `otelcol`, `vector`
+- collector support: `logfwd`, `otelcol`, `vector`, `fluent-bit`, `vlagent`
 - ingest modes:
   - `file` (collector tails emitter pod/container logs from node filesystem)
-  - `otlp` (emitters send OTLP directly to the collector service)
+  - `otlp` (emitters send OTLP directly to the collector service; currently `logfwd` and `otelcol`)
 - benchmark mode: `baseline-pass-through`
 - sink transport:
   - `logfwd`/`otelcol`: OTLP/HTTP into a `logfwd` capture sink
@@ -179,8 +179,11 @@ Each run writes a directory under `bench/kind/results/` containing:
 Current smoke runs should be interpreted as:
 
 - benchmark mode: `baseline-pass-through`
-- `ingest_mode=file`: pass means the sink observed the same benchmark-tagged
-  events the emitters produced, with no duplicates or unexpected rows
+- `ingest_mode=file`: for collectors with strict source-oracle compatibility,
+  pass means the sink observed the same benchmark-tagged events the emitters
+  produced, with no duplicates or unexpected rows
+- some file-ingest collectors run in diagnostics-only oracle mode, where pass is
+  based on emitter/sink totals and positive sink output
 - `ingest_mode=otlp`: pass means direct-OTLP ingest observed positive sink
   output; strict source-vs-sink oracle is intentionally skipped
 - the result row also records producer-reported totals from the emitter

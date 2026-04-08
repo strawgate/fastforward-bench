@@ -47,6 +47,8 @@ on:
           - logfwd
           - otelcol
           - vector
+          - fluent-bit
+          - vlagent
       cpu_profile:
         description: CPU profile to benchmark
         required: false
@@ -135,7 +137,7 @@ jobs:
           if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${INPUT_COLLECTOR}" != "all" ]]; then
             echo "collectors=[\"${INPUT_COLLECTOR}\"]" >>"$GITHUB_OUTPUT"
           else
-            echo 'collectors=["logfwd","otelcol","vector"]' >>"$GITHUB_OUTPUT"
+            echo 'collectors=["logfwd","otelcol","vector","fluent-bit","vlagent"]' >>"$GITHUB_OUTPUT"
           fi
           if [[ "${{ github.event_name }}" == "schedule" ]]; then
             echo 'cpu_profiles=["single","multi"]' >>"$GITHUB_OUTPUT"
@@ -168,6 +170,10 @@ jobs:
         exclude:
           - ingest_mode: otlp
             collector: vector
+          - ingest_mode: otlp
+            collector: fluent-bit
+          - ingest_mode: otlp
+            collector: vlagent
     env:
       MEMAGENT_REPO_ROOT: ${{ github.workspace }}/memagent
       BENCH_PROFILE: ${{ needs.plan.outputs.bench_profile }}
@@ -243,7 +249,7 @@ jobs:
       - name: Run benchmark harness
         # Temporary lane-level soft-fail for known upstream bug:
         # https://github.com/strawgate/memagent/issues/1559
-        continue-on-error: ${{ github.event_name == 'schedule' || matrix.collector == 'vector' || matrix.workload.label == 'tmax' || matrix.workload.eps_per_pod >= 10000 || (matrix.workload.label == 'profile-smoke' && matrix.collector == 'logfwd' && matrix.ingest_mode == 'file') }}
+        continue-on-error: ${{ github.event_name == 'schedule' || matrix.collector == 'vector' || matrix.collector == 'fluent-bit' || matrix.collector == 'vlagent' || matrix.workload.label == 'tmax' || matrix.workload.eps_per_pod >= 10000 || (matrix.workload.label == 'profile-smoke' && matrix.collector == 'logfwd' && matrix.ingest_mode == 'file') }}
         run: |
           python3 bench/kind/run.py \
             --phase smoke \

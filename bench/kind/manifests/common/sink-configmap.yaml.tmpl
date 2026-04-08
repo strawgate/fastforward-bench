@@ -31,6 +31,25 @@ ${SINK_OUTPUT_BLOCK}
       "benchmark_id": benchmark_id,
     }
 
+    def row_matches_benchmark(row):
+      if not isinstance(row, dict):
+        return False
+      if row.get("benchmark_id") == benchmark_id:
+        return True
+      for key in ("_msg", "log", "message"):
+        value = row.get(key)
+        if not isinstance(value, str):
+          continue
+        if not value.startswith("{"):
+          continue
+        try:
+          nested = json.loads(value)
+        except Exception:
+          continue
+        if isinstance(nested, dict) and nested.get("benchmark_id") == benchmark_id:
+          return True
+      return False
+
     class Handler(BaseHTTPRequestHandler):
       def do_POST(self):
         if self.path != "/ingest":
@@ -52,7 +71,7 @@ ${SINK_OUTPUT_BLOCK}
                 row = json.loads(line.decode("utf-8"))
               except Exception:
                 continue
-              if isinstance(row, dict) and row.get("benchmark_id") == benchmark_id:
+              if row_matches_benchmark(row):
                 benchmark_rows += 1
           with capture_lock:
             with capture_path.open("ab") as handle:
