@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
   "label": "missing event count",
-  "message": "1 events",
-  "color": "red"
+  "message": "0 events",
+  "color": "brightgreen"
 }

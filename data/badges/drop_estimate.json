@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
   "label": "drop estimate",
-  "message": "23.6k events",
-  "color": "red"
+  "message": "0 events",
+  "color": "brightgreen"
 }
