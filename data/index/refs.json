@@ -2,14 +2,14 @@
   {
     "ref": "refs/heads/master",
     "latestRunId": "24144401243-1--kind-bench-default-otlp-tmax-single-otelcol",
-    "latestTimestamp": "2026-04-08T15:51:24.647Z",
+    "latestTimestamp": "2026-04-08T15:51:48.880Z",
     "latestCommit": "211d46c749d1509d3937ad07d11c8b72fdb54107",
     "runCount": 30
   },
   {
     "ref": "refs/heads/codex/eps-target-sweep",
     "latestRunId": "24111535469-1--kind-bench-smoke-file-profile-smoke-single-fluent-bit",
-    "latestTimestamp": "2026-04-08T15:51:24.636Z",
+    "latestTimestamp": "2026-04-08T15:51:48.872Z",
     "latestCommit": "2b1fcaf8f24d906c29db6f300042811468451186",
     "runCount": 20
   }
