@@ -1084,6 +1084,12 @@ def main() -> int:
         if base_profile.cooldown_sec > 0:
             time.sleep(base_profile.cooldown_sec)
 
+        emitter_before_stop: int | None = None
+        try:
+            emitter_before_stop = emitter_reported_events(generator_diag_port)
+        except Exception:
+            emitter_before_stop = None
+
         subprocess.run(compose + ["stop", "generator"], env=env, check=False)
         if args.ingest_mode == "file":
             source_rows_total = count_rows_with_rollovers(events_file_path)
@@ -1091,9 +1097,9 @@ def main() -> int:
                 result.source_rows_total = source_rows_total
                 result.emitter_reported_events_total = source_rows_total
             else:
-                result.emitter_reported_events_total = emitter_reported_events(generator_diag_port)
+                result.emitter_reported_events_total = emitter_before_stop
         else:
-            result.emitter_reported_events_total = emitter_reported_events(generator_diag_port)
+            result.emitter_reported_events_total = emitter_before_stop
         if result.emitter_reported_events_total is not None and result.emitter_reported_events_total > 0:
             result.sink_reported_events_total = wait_for_sink_catch_up(
                 adapter=adapter,
