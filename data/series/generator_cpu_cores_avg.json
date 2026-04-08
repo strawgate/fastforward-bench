@@ -52,6 +52,12 @@
           "value": 0.02,
           "commit": "2b1fcaf8f24d906c29db6f300042811468451186",
           "run_id": "24111535456-1--kind-bench-smoke-file-profile-smoke-single-vlagent"
+        },
+        {
+          "timestamp": "2026-04-08T00:49:04.000Z",
+          "value": 0.02,
+          "commit": "ae68c0a50d9594625e0b84fe82c4e6b2e37b9e0d",
+          "run_id": "24111691147-1--kind-bench-smoke-file-profile-smoke-single-vlagent"
         }
       ]
     },
@@ -121,6 +127,12 @@
           "value": 0.02,
           "commit": "20706c1a9fd6711d3d81b69888063506e08581cd",
           "run_id": "24111651512-1--kind-bench-smoke-file-profile-smoke-single-fluent-bit"
+        },
+        {
+          "timestamp": "2026-04-08T00:49:02.000Z",
+          "value": 0.02,
+          "commit": "ae68c0a50d9594625e0b84fe82c4e6b2e37b9e0d",
+          "run_id": "24111691164-1--kind-bench-smoke-file-profile-smoke-single-fluent-bit"
         }
       ]
     }
