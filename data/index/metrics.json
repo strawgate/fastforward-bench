@@ -1,109 +1,109 @@
 [
   {
     "metric": "captured_rows_total",
-    "latestSeriesCount": 18,
+    "latestSeriesCount": 12,
     "latestRunId": "24144401243-1--kind-bench-default-otlp-tmax-multi-otelcol",
     "latestTimestamp": "2026-04-08T15:44:12.000Z"
   },
   {
     "metric": "collector_cpu_cores_avg",
-    "latestSeriesCount": 18,
+    "latestSeriesCount": 12,
     "latestRunId": "24144401243-1--kind-bench-default-otlp-tmax-multi-otelcol",
     "latestTimestamp": "2026-04-08T15:44:12.000Z"
   },
   {
     "metric": "collector_cpu_cores_p95",
-    "latestSeriesCount": 18,
+    "latestSeriesCount": 12,
     "latestRunId": "24144401243-1--kind-bench-default-otlp-tmax-multi-otelcol",
     "latestTimestamp": "2026-04-08T15:44:12.000Z"
   },
   {
     "metric": "collector_rss_mb_avg",
-    "latestSeriesCount": 18,
+    "latestSeriesCount": 12,
     "latestRunId": "24144401243-1--kind-bench-default-otlp-tmax-multi-otelcol",
     "latestTimestamp": "2026-04-08T15:44:12.000Z"
   },
   {
     "metric": "collector_rss_mb_p95",
-    "latestSeriesCount": 18,
+    "latestSeriesCount": 12,
     "latestRunId": "24144401243-1--kind-bench-default-otlp-tmax-multi-otelcol",
     "latestTimestamp": "2026-04-08T15:44:12.000Z"
   },
   {
     "metric": "drop_estimate",
-    "latestSeriesCount": 18,
+    "latestSeriesCount": 12,
     "latestRunId": "24144401243-1--kind-bench-default-otlp-tmax-multi-otelcol",
     "latestTimestamp": "2026-04-08T15:44:12.000Z"
   },
   {
     "metric": "dup_estimate",
-    "latestSeriesCount": 6,
+    "latestSeriesCount": 3,
     "latestRunId": "24123498416-1--kind-bench-smoke-file-t100-multi-otelcol",
     "latestTimestamp": "2026-04-08T07:36:28.000Z"
   },
   {
     "metric": "emitter_reported_events_total",
-    "latestSeriesCount": 18,
+    "latestSeriesCount": 12,
     "latestRunId": "24144401243-1--kind-bench-default-otlp-tmax-multi-otelcol",
     "latestTimestamp": "2026-04-08T15:44:12.000Z"
   },
   {
     "metric": "missing_event_count",
-    "latestSeriesCount": 6,
+    "latestSeriesCount": 3,
     "latestRunId": "24123498416-1--kind-bench-smoke-file-t100-multi-otelcol",
     "latestTimestamp": "2026-04-08T07:36:28.000Z"
   },
   {
     "metric": "missing_source_count",
-    "latestSeriesCount": 10,
+    "latestSeriesCount": 5,
     "latestRunId": "24123498416-1--kind-bench-smoke-file-t100-multi-otelcol",
     "latestTimestamp": "2026-04-08T07:36:28.000Z"
   },
   {
     "metric": "sink_lines_per_sec_avg",
-    "latestSeriesCount": 18,
+    "latestSeriesCount": 12,
     "latestRunId": "24144401243-1--kind-bench-default-otlp-tmax-multi-otelcol",
     "latestTimestamp": "2026-04-08T15:44:12.000Z"
   },
   {
     "metric": "sink_lines_per_sec_p50",
-    "latestSeriesCount": 18,
+    "latestSeriesCount": 12,
     "latestRunId": "24144401243-1--kind-bench-default-otlp-tmax-multi-otelcol",
     "latestTimestamp": "2026-04-08T15:44:12.000Z"
   },
   {
     "metric": "sink_lines_per_sec_p95",
-    "latestSeriesCount": 18,
+    "latestSeriesCount": 12,
     "latestRunId": "24144401243-1--kind-bench-default-otlp-tmax-multi-otelcol",
     "latestTimestamp": "2026-04-08T15:44:12.000Z"
   },
   {
     "metric": "sink_lines_per_sec_p99",
-    "latestSeriesCount": 18,
+    "latestSeriesCount": 12,
     "latestRunId": "24144401243-1--kind-bench-default-otlp-tmax-multi-otelcol",
     "latestTimestamp": "2026-04-08T15:44:12.000Z"
   },
   {
     "metric": "sink_lines_total",
-    "latestSeriesCount": 18,
+    "latestSeriesCount": 12,
     "latestRunId": "24144401243-1--kind-bench-default-otlp-tmax-multi-otelcol",
     "latestTimestamp": "2026-04-08T15:44:12.000Z"
   },
   {
     "metric": "sink_reported_events_total",
-    "latestSeriesCount": 18,
+    "latestSeriesCount": 12,
     "latestRunId": "24144401243-1--kind-bench-default-otlp-tmax-multi-otelcol",
     "latestTimestamp": "2026-04-08T15:44:12.000Z"
   },
   {
     "metric": "source_rows_total",
-    "latestSeriesCount": 10,
+    "latestSeriesCount": 5,
     "latestRunId": "24123498416-1--kind-bench-smoke-file-t100-multi-otelcol",
     "latestTimestamp": "2026-04-08T07:36:28.000Z"
   },
   {
     "metric": "unexpected_event_count",
-    "latestSeriesCount": 6,
+    "latestSeriesCount": 3,
     "latestRunId": "24123498416-1--kind-bench-smoke-file-t100-multi-otelcol",
     "latestTimestamp": "2026-04-08T07:36:28.000Z"
   }
