@@ -1,0 +1,391 @@
+{
+  "run": {
+    "id": "24146309842-1--compose-bench-smoke-tmax-single-logfwd",
+    "timestamp": "2026-04-08T16:22:54.000Z",
+    "commit": "ab9a65b8cef21a8ec61f4d0df6249b21d46c629c",
+    "ref": "refs/heads/codex/bench-compose-smoke",
+    "benchmarks": 1,
+    "metrics": [
+      "captured_rows_total",
+      "collector_cpu_cores_avg",
+      "collector_cpu_cores_p95",
+      "collector_rss_mb_avg",
+      "collector_rss_mb_p95",
+      "drop_estimate",
+      "dup_estimate",
+      "emitter_reported_events_total",
+      "sink_lines_per_sec_avg",
+      "sink_lines_per_sec_p50",
+      "sink_lines_per_sec_p95",
+      "sink_lines_per_sec_p99",
+      "sink_lines_total",
+      "sink_reported_events_total"
+    ]
+  },
+  "metricSnapshots": [
+    {
+      "metric": "captured_rows_total",
+      "unit": "events",
+      "direction": "bigger_is_better",
+      "values": [
+        {
+          "name": "logfwd [benchkit.cluster=docker-compose,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=logfwd,benchkit.ingest_mode=file,benchkit.namespace=compose,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
+          "value": 2316216,
+          "unit": "events",
+          "direction": "bigger_is_better",
+          "tags": {
+            "benchkit.cluster": "docker-compose",
+            "benchkit.cluster_cpu_limit_cores": "1.0",
+            "benchkit.cpu_profile": "single",
+            "benchkit.impl": "logfwd",
+            "benchkit.ingest_mode": "file",
+            "benchkit.namespace": "compose",
+            "benchkit.pods": "1",
+            "benchkit.profile": "smoke",
+            "benchkit.protocol": "otlp_http",
+            "benchkit.target_eps_per_pod": "0",
+            "benchkit.total_target_eps": "0"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "collector_cpu_cores_avg",
+      "unit": "cores",
+      "direction": "smaller_is_better",
+      "values": [
+        {
+          "name": "logfwd [benchkit.cluster=docker-compose,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=logfwd,benchkit.ingest_mode=file,benchkit.namespace=compose,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
+          "value": 0.37366894410048823,
+          "unit": "cores",
+          "direction": "smaller_is_better",
+          "tags": {
+            "benchkit.cluster": "docker-compose",
+            "benchkit.cluster_cpu_limit_cores": "1.0",
+            "benchkit.cpu_profile": "single",
+            "benchkit.impl": "logfwd",
+            "benchkit.ingest_mode": "file",
+            "benchkit.namespace": "compose",
+            "benchkit.pods": "1",
+            "benchkit.profile": "smoke",
+            "benchkit.protocol": "otlp_http",
+            "benchkit.target_eps_per_pod": "0",
+            "benchkit.total_target_eps": "0"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "collector_cpu_cores_p95",
+      "unit": "cores",
+      "direction": "smaller_is_better",
+      "values": [
+        {
+          "name": "logfwd [benchkit.cluster=docker-compose,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=logfwd,benchkit.ingest_mode=file,benchkit.namespace=compose,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
+          "value": 0.6281932314521578,
+          "unit": "cores",
+          "direction": "smaller_is_better",
+          "tags": {
+            "benchkit.cluster": "docker-compose",
+            "benchkit.cluster_cpu_limit_cores": "1.0",
+            "benchkit.cpu_profile": "single",
+            "benchkit.impl": "logfwd",
+            "benchkit.ingest_mode": "file",
+            "benchkit.namespace": "compose",
+            "benchkit.pods": "1",
+            "benchkit.profile": "smoke",
+            "benchkit.protocol": "otlp_http",
+            "benchkit.target_eps_per_pod": "0",
+            "benchkit.total_target_eps": "0"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "collector_rss_mb_avg",
+      "unit": "MB",
+      "direction": "smaller_is_better",
+      "values": [
+        {
+          "name": "logfwd [benchkit.cluster=docker-compose,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=logfwd,benchkit.ingest_mode=file,benchkit.namespace=compose,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
+          "value": 386.929931640625,
+          "unit": "MB",
+          "direction": "smaller_is_better",
+          "tags": {
+            "benchkit.cluster": "docker-compose",
+            "benchkit.cluster_cpu_limit_cores": "1.0",
+            "benchkit.cpu_profile": "single",
+            "benchkit.impl": "logfwd",
+            "benchkit.ingest_mode": "file",
+            "benchkit.namespace": "compose",
+            "benchkit.pods": "1",
+            "benchkit.profile": "smoke",
+            "benchkit.protocol": "otlp_http",
+            "benchkit.target_eps_per_pod": "0",
+            "benchkit.total_target_eps": "0"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "collector_rss_mb_p95",
+      "unit": "MB",
+      "direction": "smaller_is_better",
+      "values": [
+        {
+          "name": "logfwd [benchkit.cluster=docker-compose,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=logfwd,benchkit.ingest_mode=file,benchkit.namespace=compose,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
+          "value": 410.8984375,
+          "unit": "MB",
+          "direction": "smaller_is_better",
+          "tags": {
+            "benchkit.cluster": "docker-compose",
+            "benchkit.cluster_cpu_limit_cores": "1.0",
+            "benchkit.cpu_profile": "single",
+            "benchkit.impl": "logfwd",
+            "benchkit.ingest_mode": "file",
+            "benchkit.namespace": "compose",
+            "benchkit.pods": "1",
+            "benchkit.profile": "smoke",
+            "benchkit.protocol": "otlp_http",
+            "benchkit.target_eps_per_pod": "0",
+            "benchkit.total_target_eps": "0"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "drop_estimate",
+      "unit": "events",
+      "direction": "smaller_is_better",
+      "values": [
+        {
+          "name": "logfwd [benchkit.cluster=docker-compose,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=logfwd,benchkit.ingest_mode=file,benchkit.namespace=compose,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
+          "value": 2667016,
+          "unit": "events",
+          "direction": "smaller_is_better",
+          "tags": {
+            "benchkit.cluster": "docker-compose",
+            "benchkit.cluster_cpu_limit_cores": "1.0",
+            "benchkit.cpu_profile": "single",
+            "benchkit.impl": "logfwd",
+            "benchkit.ingest_mode": "file",
+            "benchkit.namespace": "compose",
+            "benchkit.pods": "1",
+            "benchkit.profile": "smoke",
+            "benchkit.protocol": "otlp_http",
+            "benchkit.target_eps_per_pod": "0",
+            "benchkit.total_target_eps": "0"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "dup_estimate",
+      "unit": "events",
+      "direction": "smaller_is_better",
+      "values": [
+        {
+          "name": "logfwd [benchkit.cluster=docker-compose,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=logfwd,benchkit.ingest_mode=file,benchkit.namespace=compose,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
+          "value": 0,
+          "unit": "events",
+          "direction": "smaller_is_better",
+          "tags": {
+            "benchkit.cluster": "docker-compose",
+            "benchkit.cluster_cpu_limit_cores": "1.0",
+            "benchkit.cpu_profile": "single",
+            "benchkit.impl": "logfwd",
+            "benchkit.ingest_mode": "file",
+            "benchkit.namespace": "compose",
+            "benchkit.pods": "1",
+            "benchkit.profile": "smoke",
+            "benchkit.protocol": "otlp_http",
+            "benchkit.target_eps_per_pod": "0",
+            "benchkit.total_target_eps": "0"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "emitter_reported_events_total",
+      "unit": "events",
+      "direction": "bigger_is_better",
+      "values": [
+        {
+          "name": "logfwd [benchkit.cluster=docker-compose,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=logfwd,benchkit.ingest_mode=file,benchkit.namespace=compose,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
+          "value": 4983232,
+          "unit": "events",
+          "direction": "bigger_is_better",
+          "tags": {
+            "benchkit.cluster": "docker-compose",
+            "benchkit.cluster_cpu_limit_cores": "1.0",
+            "benchkit.cpu_profile": "single",
+            "benchkit.impl": "logfwd",
+            "benchkit.ingest_mode": "file",
+            "benchkit.namespace": "compose",
+            "benchkit.pods": "1",
+            "benchkit.profile": "smoke",
+            "benchkit.protocol": "otlp_http",
+            "benchkit.target_eps_per_pod": "0",
+            "benchkit.total_target_eps": "0"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "sink_lines_per_sec_avg",
+      "unit": "events/sec",
+      "direction": "bigger_is_better",
+      "values": [
+        {
+          "name": "logfwd [benchkit.cluster=docker-compose,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=logfwd,benchkit.ingest_mode=file,benchkit.namespace=compose,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
+          "value": 97231.74655665093,
+          "unit": "events/sec",
+          "direction": "bigger_is_better",
+          "tags": {
+            "benchkit.cluster": "docker-compose",
+            "benchkit.cluster_cpu_limit_cores": "1.0",
+            "benchkit.cpu_profile": "single",
+            "benchkit.impl": "logfwd",
+            "benchkit.ingest_mode": "file",
+            "benchkit.namespace": "compose",
+            "benchkit.pods": "1",
+            "benchkit.profile": "smoke",
+            "benchkit.protocol": "otlp_http",
+            "benchkit.target_eps_per_pod": "0",
+            "benchkit.total_target_eps": "0"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "sink_lines_per_sec_p50",
+      "unit": "events/sec",
+      "direction": "bigger_is_better",
+      "values": [
+        {
+          "name": "logfwd [benchkit.cluster=docker-compose,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=logfwd,benchkit.ingest_mode=file,benchkit.namespace=compose,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
+          "value": 102678.93613123902,
+          "unit": "events/sec",
+          "direction": "bigger_is_better",
+          "tags": {
+            "benchkit.cluster": "docker-compose",
+            "benchkit.cluster_cpu_limit_cores": "1.0",
+            "benchkit.cpu_profile": "single",
+            "benchkit.impl": "logfwd",
+            "benchkit.ingest_mode": "file",
+            "benchkit.namespace": "compose",
+            "benchkit.pods": "1",
+            "benchkit.profile": "smoke",
+            "benchkit.protocol": "otlp_http",
+            "benchkit.target_eps_per_pod": "0",
+            "benchkit.total_target_eps": "0"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "sink_lines_per_sec_p95",
+      "unit": "events/sec",
+      "direction": "bigger_is_better",
+      "values": [
+        {
+          "name": "logfwd [benchkit.cluster=docker-compose,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=logfwd,benchkit.ingest_mode=file,benchkit.namespace=compose,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
+          "value": 133249.31002735544,
+          "unit": "events/sec",
+          "direction": "bigger_is_better",
+          "tags": {
+            "benchkit.cluster": "docker-compose",
+            "benchkit.cluster_cpu_limit_cores": "1.0",
+            "benchkit.cpu_profile": "single",
+            "benchkit.impl": "logfwd",
+            "benchkit.ingest_mode": "file",
+            "benchkit.namespace": "compose",
+            "benchkit.pods": "1",
+            "benchkit.profile": "smoke",
+            "benchkit.protocol": "otlp_http",
+            "benchkit.target_eps_per_pod": "0",
+            "benchkit.total_target_eps": "0"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "sink_lines_per_sec_p99",
+      "unit": "events/sec",
+      "direction": "bigger_is_better",
+      "values": [
+        {
+          "name": "logfwd [benchkit.cluster=docker-compose,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=logfwd,benchkit.ingest_mode=file,benchkit.namespace=compose,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
+          "value": 136417.23895327022,
+          "unit": "events/sec",
+          "direction": "bigger_is_better",
+          "tags": {
+            "benchkit.cluster": "docker-compose",
+            "benchkit.cluster_cpu_limit_cores": "1.0",
+            "benchkit.cpu_profile": "single",
+            "benchkit.impl": "logfwd",
+            "benchkit.ingest_mode": "file",
+            "benchkit.namespace": "compose",
+            "benchkit.pods": "1",
+            "benchkit.profile": "smoke",
+            "benchkit.protocol": "otlp_http",
+            "benchkit.target_eps_per_pod": "0",
+            "benchkit.total_target_eps": "0"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "sink_lines_total",
+      "unit": "events",
+      "direction": "bigger_is_better",
+      "values": [
+        {
+          "name": "logfwd [benchkit.cluster=docker-compose,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=logfwd,benchkit.ingest_mode=file,benchkit.namespace=compose,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
+          "value": 1478058,
+          "unit": "events",
+          "direction": "bigger_is_better",
+          "tags": {
+            "benchkit.cluster": "docker-compose",
+            "benchkit.cluster_cpu_limit_cores": "1.0",
+            "benchkit.cpu_profile": "single",
+            "benchkit.impl": "logfwd",
+            "benchkit.ingest_mode": "file",
+            "benchkit.namespace": "compose",
+            "benchkit.pods": "1",
+            "benchkit.profile": "smoke",
+            "benchkit.protocol": "otlp_http",
+            "benchkit.target_eps_per_pod": "0",
+            "benchkit.total_target_eps": "0"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "sink_reported_events_total",
+      "unit": "events",
+      "direction": "bigger_is_better",
+      "values": [
+        {
+          "name": "logfwd [benchkit.cluster=docker-compose,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=logfwd,benchkit.ingest_mode=file,benchkit.namespace=compose,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
+          "value": 2316216,
+          "unit": "events",
+          "direction": "bigger_is_better",
+          "tags": {
+            "benchkit.cluster": "docker-compose",
+            "benchkit.cluster_cpu_limit_cores": "1.0",
+            "benchkit.cpu_profile": "single",
+            "benchkit.impl": "logfwd",
+            "benchkit.ingest_mode": "file",
+            "benchkit.namespace": "compose",
+            "benchkit.pods": "1",
+            "benchkit.profile": "smoke",
+            "benchkit.protocol": "otlp_http",
+            "benchkit.target_eps_per_pod": "0",
+            "benchkit.total_target_eps": "0"
+          }
+        }
+      ]
+    }
+  ]
+}
