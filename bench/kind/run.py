@@ -370,14 +370,11 @@ def collect_sink_capture(namespace: str, sink_pod: str, destination: Path) -> No
             "cat",
             "/var/lib/logfwd/capture.ndjson",
         ],
-        text=True,
         capture_output=True,
         check=False,
     )
-    destination.write_text(
-        sink_capture.stdout if sink_capture.stdout else sink_capture.stderr,
-        encoding="utf-8",
-    )
+    output = sink_capture.stdout if sink_capture.stdout else sink_capture.stderr
+    destination.write_bytes(output)
 
 
 def filter_rows_to_emitter_snapshot(
@@ -781,7 +778,11 @@ def run_smoke_phase(
         if adapter.sink_transport == "http_ndjson" and 0 < profile.eps_per_pod <= 1_000:
             # Keep a raw low-rate capture artifact for diagnostics when strict
             # source-oracle comparison is unavailable.
-            collect_sink_capture(args.namespace, sink_pod, artifacts_dir / "sink-capture.ndjson")
+            try:
+                collect_sink_capture(args.namespace, sink_pod, artifacts_dir / "sink-capture.ndjson")
+            except Exception as exc:  # noqa: BLE001
+                (artifacts_dir / "sink-capture-error.txt").write_text(str(exc), encoding="utf-8")
+                (artifacts_dir / "sink-capture.ndjson").write_text("", encoding="utf-8")
         else:
             (artifacts_dir / "sink-capture.ndjson").write_text("", encoding="utf-8")
 
