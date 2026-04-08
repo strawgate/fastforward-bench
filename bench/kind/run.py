@@ -403,6 +403,17 @@ def filter_rows_to_emitter_snapshot(
     return filtered
 
 
+def emitter_cpu_total_ms(emitter_reported_stats: list[dict[str, object]]) -> int | None:
+    total = 0
+    observed = False
+    for stat in emitter_reported_stats:
+        cpu_total_ms = stat.get("cpu_total_ms")
+        if isinstance(cpu_total_ms, int):
+            total += max(0, cpu_total_ms)
+            observed = True
+    return total if observed else None
+
+
 def sink_reported_events_total(
     sink_reported_stats: dict[str, object],
     *,
@@ -548,6 +559,8 @@ def run_smoke_phase(
     result: BenchmarkResult,
 ) -> int:
     max_throughput_mode = profile.eps_per_pod == 0
+    sink_stats_kind = "capture_reader" if adapter.sink_transport == "http_ndjson" else "logfwd"
+    sink_stats_port = 8081 if adapter.sink_transport == "http_ndjson" else 9090
 
     apply_manifest(manifests["collector_configmap"])
     apply_manifest(manifests["collector_workload"])
@@ -561,6 +574,14 @@ def run_smoke_phase(
     apply_manifest(manifests["emitter_statefulset"])
     emitter_rollout_timeout = max(120, profile.pods * 12)
     rollout_status(args.namespace, "statefulset", "log-emitter", timeout_sec=emitter_rollout_timeout)
+    emitter_pods = get_pod_names(args.namespace, "app.kubernetes.io/name=log-emitter")
+    if not emitter_pods:
+        raise CommandError("emitter pods not found after rollout")
+
+    generator_measure_start_cpu_total_ms: int | None = None
+    generator_measure_end_cpu_total_ms: int | None = None
+    generator_measure_start_ts: float | None = None
+    generator_measure_end_ts: float | None = None
 
     emit_phase_signal(
         args=args,
@@ -570,32 +591,65 @@ def run_smoke_phase(
         phase_name="warmup",
         event="start",
     )
-    sink_samples, collector_samples = collect_bench_samples(
-        args.namespace,
-        "deployment/logfwd-capture",
-        adapter.diagnostics_target_format.format(pod_name=collector_pod),
-        sink_stats_kind="capture_reader" if adapter.sink_transport == "http_ndjson" else "logfwd",
-        sink_stats_port=8081 if adapter.sink_transport == "http_ndjson" else 9090,
-        collector_stats_kind=adapter.collector_stats_kind,
-        collector_stats_port=adapter.collector_stats_port,
-        warmup_sec=profile.warmup_sec,
-        measure_sec=profile.measure_sec,
-        on_measure_start=lambda: emit_phase_signal(
+
+    def on_measure_start() -> None:
+        nonlocal generator_measure_start_cpu_total_ms
+        nonlocal generator_measure_start_ts
+        try:
+            _, emitter_start_stats = collect_emitter_reported_total(args.namespace, emitter_pods)
+            generator_measure_start_cpu_total_ms = emitter_cpu_total_ms(emitter_start_stats)
+        except Exception as exc:  # noqa: BLE001
+            generator_measure_start_cpu_total_ms = None
+            append_artifact_note(
+                results_dir,
+                "generator-cpu-sampling.txt",
+                f"measure/start sampling failed: {exc}",
+            )
+        generator_measure_start_ts = time.time()
+        emit_phase_signal(
             args=args,
             results_dir=results_dir,
             result=result,
             profile_name=args.profile,
             phase_name="measure",
             event="start",
-        ),
-        on_measure_complete=lambda: emit_phase_signal(
+        )
+
+    def on_measure_complete() -> None:
+        nonlocal generator_measure_end_cpu_total_ms
+        nonlocal generator_measure_end_ts
+        try:
+            _, emitter_end_stats = collect_emitter_reported_total(args.namespace, emitter_pods)
+            generator_measure_end_cpu_total_ms = emitter_cpu_total_ms(emitter_end_stats)
+        except Exception as exc:  # noqa: BLE001
+            generator_measure_end_cpu_total_ms = None
+            append_artifact_note(
+                results_dir,
+                "generator-cpu-sampling.txt",
+                f"measure/complete sampling failed: {exc}",
+            )
+        generator_measure_end_ts = time.time()
+        emit_phase_signal(
             args=args,
             results_dir=results_dir,
             result=result,
             profile_name=args.profile,
             phase_name="measure",
             event="complete",
-        ),
+        )
+
+    sink_samples, collector_samples = collect_bench_samples(
+        args.namespace,
+        "deployment/logfwd-capture",
+        adapter.diagnostics_target_format.format(pod_name=collector_pod),
+        sink_stats_kind=sink_stats_kind,
+        sink_stats_port=sink_stats_port,
+        collector_stats_kind=adapter.collector_stats_kind,
+        collector_stats_port=adapter.collector_stats_port,
+        warmup_sec=profile.warmup_sec,
+        measure_sec=profile.measure_sec,
+        on_measure_start=on_measure_start,
+        on_measure_complete=on_measure_complete,
     )
     write_samples(results_dir / "sink-samples.json", sink_samples)
     write_samples(results_dir / "collector-samples.json", collector_samples)
@@ -626,6 +680,28 @@ def run_smoke_phase(
     result.sink_lines_per_sec_p95 = percentile(sink_series, 0.95)
     result.sink_lines_per_sec_p99 = percentile(sink_series, 0.99)
 
+    sink_cpu_series = cpu_cores_series(sink_samples)
+    if sink_stats_kind == "logfwd":
+        result.sink_cpu_cores_avg = avg(sink_cpu_series)
+        result.sink_cpu_cores_p95 = percentile(sink_cpu_series, 0.95)
+    else:
+        result.sink_cpu_cores_avg = None
+        result.sink_cpu_cores_p95 = None
+
+    if (
+        generator_measure_start_cpu_total_ms is not None
+        and generator_measure_end_cpu_total_ms is not None
+        and generator_measure_start_ts is not None
+        and generator_measure_end_ts is not None
+        and generator_measure_end_cpu_total_ms >= generator_measure_start_cpu_total_ms
+        and generator_measure_end_ts > generator_measure_start_ts
+    ):
+        elapsed_sec = max(generator_measure_end_ts - generator_measure_start_ts, 1e-6)
+        generator_delta_ms = generator_measure_end_cpu_total_ms - generator_measure_start_cpu_total_ms
+        result.generator_cpu_cores_avg = (generator_delta_ms / 1000.0) / elapsed_sec
+    else:
+        result.generator_cpu_cores_avg = None
+
     cpu_series = cpu_cores_series(collector_samples)
     rss_series = rss_mb_series(collector_samples)
     result.collector_cpu_cores_avg = avg(cpu_series)
@@ -636,7 +712,6 @@ def run_smoke_phase(
     artifacts_dir = results_dir / "artifacts"
     artifacts_dir.mkdir(parents=True, exist_ok=True)
 
-    emitter_pods = get_pod_names(args.namespace, "app.kubernetes.io/name=log-emitter")
     emitter_reported_total, emitter_reported_stats = collect_emitter_reported_total(args.namespace, emitter_pods)
     result.emitter_reported_events_total = emitter_reported_total
 
@@ -644,8 +719,6 @@ def run_smoke_phase(
     if not sink_pod:
         raise CommandError("sink pod not found after rollout")
 
-    sink_stats_kind = "capture_reader" if adapter.sink_transport == "http_ndjson" else "logfwd"
-    sink_stats_port = 8081 if adapter.sink_transport == "http_ndjson" else 9090
     drain_timeout_sec = 45 if adapter.sink_transport == "http_ndjson" else 10
     if profile.eps_per_pod >= SOURCE_ORACLE_MAX_TARGET_EPS_PER_POD:
         # High-rate runs can end with a larger in-flight queue; allow extra drain time
@@ -1065,6 +1138,9 @@ def main() -> int:
         latency_ms_p50=None,
         latency_ms_p95=None,
         latency_ms_p99=None,
+        sink_cpu_cores_avg=None,
+        sink_cpu_cores_p95=None,
+        generator_cpu_cores_avg=None,
         collector_cpu_cores_avg=None,
         collector_cpu_cores_p95=None,
         collector_rss_mb_avg=None,

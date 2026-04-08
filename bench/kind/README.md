@@ -44,7 +44,9 @@ scores yet.
 
 - Harness runtime: Python 3, standard library only.
 - Generator: `logfwd` itself running the `generator.profile=record` source and
-  shaping the benchmark envelope in SQL before writing to stdout.
+  shaping the benchmark envelope in SQL before writing to stdout. The SQL
+  envelope intentionally includes deterministic high-entropy fields so payloads
+  are less trivially compressible.
 - Sink: `logfwd` configured as a dumb capture sink writing JSON lines to a file.
 - Producer counters:
   - emitters expose `logfwd` diagnostics via `/api/stats`
@@ -227,3 +229,6 @@ The benchmark workflow also supports target EPS sweeps:
 - high tiers (`10k+`) are treated as capacity probes in CI:
   results are still collected and summarized, but they are non-gating
   because emitter/source capture can saturate before the collector does
+
+The summary table also includes measured CPU for the generator, sink, and
+collector so bottlenecks are easier to diagnose from the report alone.

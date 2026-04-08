@@ -25,6 +25,8 @@ class BenchResult:
     unexpected_event_count: int | None
     dup_estimate: int | None
     drop_estimate: int | None
+    sink_cpu_cores_avg: float | None
+    generator_cpu_cores_avg: float | None
     collector_cpu_cores_avg: float | None
     notes: str
 
@@ -91,6 +93,8 @@ def load_result(path: Path, artifact_name: str) -> BenchResult:
         unexpected_event_count=as_int(payload.get("unexpected_event_count")),
         dup_estimate=as_int(payload.get("dup_estimate")),
         drop_estimate=as_int(payload.get("drop_estimate")),
+        sink_cpu_cores_avg=as_float(payload.get("sink_cpu_cores_avg")),
+        generator_cpu_cores_avg=as_float(payload.get("generator_cpu_cores_avg")),
         collector_cpu_cores_avg=as_float(payload.get("collector_cpu_cores_avg")),
         notes=str(payload.get("notes") or ""),
     )
@@ -215,8 +219,8 @@ def render_markdown(
                     [
                         f"### Ingest: `{ingest_mode}`",
                         "",
-                        "| Collector | Target EPS | Status | EPS Avg | EPS/Target | Missing | Unexpected | Duplicates | Drop Estimate | Collector CPU Avg (%) |",
-                        "| --- | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+                        "| Collector | Target EPS | Status | EPS Avg | EPS/Target | Missing | Unexpected | Duplicates | Drop Estimate | Generator CPU Avg (%) | Sink CPU Avg (%) | Collector CPU Avg (%) |",
+                        "| --- | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
                     ]
                 )
                 for result in sorted(
@@ -231,7 +235,7 @@ def render_markdown(
                     if result.sink_lines_per_sec_avg is not None and result.total_target_eps > 0:
                         eps_ratio = result.sink_lines_per_sec_avg / result.total_target_eps
                     lines.append(
-                        "| {collector} | {target_eps} | {status} | {eps_avg} | {ratio} | {missing} | {unexpected} | {dup} | {drop} | {cpu_avg} |".format(
+                        "| {collector} | {target_eps} | {status} | {eps_avg} | {ratio} | {missing} | {unexpected} | {dup} | {drop} | {generator_cpu_avg} | {sink_cpu_avg} | {collector_cpu_avg} |".format(
                             collector=result.collector,
                             target_eps="max" if result.total_target_eps == 0 else fmt_int(result.total_target_eps),
                             status=result.status.upper(),
@@ -241,7 +245,9 @@ def render_markdown(
                             unexpected=fmt_int(result.unexpected_event_count),
                             dup=fmt_int(result.dup_estimate),
                             drop=fmt_int(result.drop_estimate),
-                            cpu_avg=fmt_percent(result.collector_cpu_cores_avg),
+                            generator_cpu_avg=fmt_percent(result.generator_cpu_cores_avg),
+                            sink_cpu_avg=fmt_percent(result.sink_cpu_cores_avg),
+                            collector_cpu_avg=fmt_percent(result.collector_cpu_cores_avg),
                         )
                     )
                 lines.append("")
@@ -299,6 +305,8 @@ def main() -> None:
                 "unexpected_event_count": result.unexpected_event_count,
                 "dup_estimate": result.dup_estimate,
                 "drop_estimate": result.drop_estimate,
+                "sink_cpu_cores_avg": result.sink_cpu_cores_avg,
+                "generator_cpu_cores_avg": result.generator_cpu_cores_avg,
                 "collector_cpu_cores_avg": result.collector_cpu_cores_avg,
                 "notes": result.notes,
             }

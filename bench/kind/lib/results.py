@@ -43,6 +43,9 @@ class BenchmarkResult:
     latency_ms_p50: float | None
     latency_ms_p95: float | None
     latency_ms_p99: float | None
+    sink_cpu_cores_avg: float | None
+    sink_cpu_cores_p95: float | None
+    generator_cpu_cores_avg: float | None
     collector_cpu_cores_avg: float | None
     collector_cpu_cores_p95: float | None
     collector_rss_mb_avg: float | None
@@ -115,6 +118,9 @@ def _metric_specs(result: BenchmarkResult) -> list[tuple[str, float | int | None
         ("latency_ms_p50", result.latency_ms_p50, "ms", "smaller_is_better", "outcome"),
         ("latency_ms_p95", result.latency_ms_p95, "ms", "smaller_is_better", "outcome"),
         ("latency_ms_p99", result.latency_ms_p99, "ms", "smaller_is_better", "outcome"),
+        ("sink_cpu_cores_avg", result.sink_cpu_cores_avg, "cores", "smaller_is_better", "diagnostic"),
+        ("sink_cpu_cores_p95", result.sink_cpu_cores_p95, "cores", "smaller_is_better", "diagnostic"),
+        ("generator_cpu_cores_avg", result.generator_cpu_cores_avg, "cores", "smaller_is_better", "diagnostic"),
         ("collector_cpu_cores_avg", result.collector_cpu_cores_avg, "cores", "smaller_is_better", "diagnostic"),
         ("collector_cpu_cores_p95", result.collector_cpu_cores_p95, "cores", "smaller_is_better", "diagnostic"),
         ("collector_rss_mb_avg", result.collector_rss_mb_avg, "MB", "smaller_is_better", "diagnostic"),
@@ -409,6 +415,8 @@ def render_summary(result: BenchmarkResult) -> str:
         f"- sink_lines_per_sec_avg: `{show(result.sink_lines_per_sec_avg)}`",
         f"- drop_estimate: `{show(result.drop_estimate)}`",
         f"- dup_estimate: `{show(result.dup_estimate)}`",
+        f"- sink_cpu_cores_avg: `{show(result.sink_cpu_cores_avg)}`",
+        f"- generator_cpu_cores_avg: `{show(result.generator_cpu_cores_avg)}`",
         f"- collector_cpu_cores_avg: `{show(result.collector_cpu_cores_avg)}`",
         f"- collector_rss_mb_avg: `{show(result.collector_rss_mb_avg)}`",
     ]

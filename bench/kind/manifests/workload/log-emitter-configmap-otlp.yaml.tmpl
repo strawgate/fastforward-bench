@@ -35,12 +35,30 @@ data:
           WHEN 2 THEN 'DEBUG'
           ELSE 'WARN'
         END AS level,
-        concat('bench event ', CAST(seq AS VARCHAR)) AS message,
+        concat(
+          'bench event seq=', CAST(seq AS VARCHAR),
+          ' tenant=', CAST(seq % 1024 AS VARCHAR),
+          ' shard=', CAST((seq * 17) % 128 AS VARCHAR),
+          ' req=', CAST((seq * 1103515245 + 12345) % 2147483647 AS VARCHAR),
+          ' span=', CAST((seq * 214013 + 2531011) % 2147483647 AS VARCHAR),
+          ' sess=', CAST((seq * 48271 + 1) % 2147483647 AS VARCHAR)
+        ) AS message,
         CASE
           WHEN CAST(seq % 4 AS BIGINT) = 0 THEN 500
           ELSE 200
         END AS status,
         CAST((seq % 250) + 1 AS BIGINT) AS duration_ms,
+        CAST(seq % 1024 AS BIGINT) AS tenant_id,
+        CAST((seq * 17) % 128 AS BIGINT) AS shard_id,
+        CAST((seq * 1103515245 + 12345) % 2147483647 AS BIGINT) AS entropy_a,
+        CAST((seq * 214013 + 2531011) % 2147483647 AS BIGINT) AS entropy_b,
+        CAST((seq * 48271 + 1) % 2147483647 AS BIGINT) AS entropy_c,
+        concat(
+          '/api/v1/resource/',
+          CAST(seq % 97 AS VARCHAR),
+          '/',
+          CAST((seq * 37) % 10000 AS VARCHAR)
+        ) AS route,
         service
       FROM logs
     output:
