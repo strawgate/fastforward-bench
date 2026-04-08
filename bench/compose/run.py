@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shutil
 import socket
 import subprocess
@@ -235,6 +236,37 @@ def run_capture(cmd: list[str], *, cwd: Path | None = None, env: dict[str, str] 
         stderr = completed.stderr.strip()
         raise RuntimeError(f"command failed ({completed.returncode}): {' '.join(cmd)}: {stderr}")
     return completed.stdout
+
+
+COUNT_TOKEN_RE = re.compile(r"^(?P<value>[0-9]+(?:\.[0-9]+)?)(?P<suffix>[KMG]?)$", re.IGNORECASE)
+GENERATOR_LINES_RE = re.compile(r"lines\s+\S+\s+in\s+→\s+(?P<out>\S+)\s+out", re.IGNORECASE)
+
+
+def parse_compact_count(token: str) -> int | None:
+    match = COUNT_TOKEN_RE.fullmatch(token.strip())
+    if match is None:
+        return None
+    value = float(match.group("value"))
+    suffix = match.group("suffix").upper()
+    multiplier = {
+        "": 1,
+        "K": 1_000,
+        "M": 1_000_000,
+        "G": 1_000_000_000,
+    }[suffix]
+    return int(round(value * multiplier))
+
+
+def generator_out_lines_from_logs(log_text: str) -> int | None:
+    parsed: int | None = None
+    for raw_line in log_text.splitlines():
+        match = GENERATOR_LINES_RE.search(raw_line)
+        if match is None:
+            continue
+        out_value = parse_compact_count(match.group("out"))
+        if out_value is not None:
+            parsed = out_value
+    return parsed
 
 
 def reserve_local_port() -> int:
@@ -1091,6 +1123,13 @@ def main() -> int:
             emitter_before_stop = None
 
         subprocess.run(compose + ["stop", "generator"], env=env, check=False)
+        emitter_from_logs: int | None = None
+        try:
+            generator_log_snapshot = run_capture(compose + ["logs", "--no-color", "generator"], env=env)
+            emitter_from_logs = generator_out_lines_from_logs(generator_log_snapshot)
+        except Exception:
+            emitter_from_logs = None
+
         if args.ingest_mode == "file":
             source_rows_total = count_rows_with_rollovers(events_file_path)
             if source_rows_total > 0:
@@ -1100,6 +1139,9 @@ def main() -> int:
                 result.emitter_reported_events_total = emitter_before_stop
         else:
             result.emitter_reported_events_total = emitter_before_stop
+
+        if emitter_from_logs is not None:
+            result.emitter_reported_events_total = max(result.emitter_reported_events_total or 0, emitter_from_logs)
         if result.emitter_reported_events_total is not None and result.emitter_reported_events_total > 0:
             result.sink_reported_events_total = wait_for_sink_catch_up(
                 adapter=adapter,
