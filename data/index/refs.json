@@ -1,9 +1,9 @@
 [
   {
     "ref": "refs/heads/codex/eps-target-sweep",
-    "latestRunId": "24110859427-1--kind-bench-smoke-otlp-t1m-single-logfwd",
-    "latestTimestamp": "2026-04-08T00:23:07.998Z",
-    "latestCommit": "7b844301676ff2219a1a762aea12f952bb77661a",
+    "latestRunId": "24111336101-1--kind-bench-smoke-file-profile-smoke-single-fluent-bit",
+    "latestTimestamp": "2026-04-08T00:36:41.340Z",
+    "latestCommit": "2e5a8e342b95d109f04e2ab02634f6cd6537324a",
     "runCount": 50
   }
 ]
