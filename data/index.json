@@ -2,7 +2,7 @@
   "runs": [
     {
       "id": "24111535469-1--kind-bench-smoke-file-profile-smoke-single-fluent-bit",
-      "timestamp": "2026-04-08T00:53:00.800Z",
+      "timestamp": "2026-04-08T01:00:40.020Z",
       "commit": "2b1fcaf8f24d906c29db6f300042811468451186",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -10,7 +10,7 @@
     },
     {
       "id": "24111336101-1--kind-bench-smoke-file-profile-smoke-single-fluent-bit",
-      "timestamp": "2026-04-08T00:53:00.799Z",
+      "timestamp": "2026-04-08T01:00:40.019Z",
       "commit": "2e5a8e342b95d109f04e2ab02634f6cd6537324a",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -18,7 +18,7 @@
     },
     {
       "id": "24110859427-1--kind-bench-smoke-otlp-t1m-single-logfwd",
-      "timestamp": "2026-04-08T00:53:00.799Z",
+      "timestamp": "2026-04-08T01:00:40.019Z",
       "commit": "7b844301676ff2219a1a762aea12f952bb77661a",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -26,7 +26,7 @@
     },
     {
       "id": "24109049871-1--kind-bench-smoke-file-t1m-single-logfwd",
-      "timestamp": "2026-04-08T00:53:00.796Z",
+      "timestamp": "2026-04-08T01:00:40.016Z",
       "commit": "f2f1bcbb69418c46bb9c21bb64b7925d3299e92e",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -34,7 +34,7 @@
     },
     {
       "id": "24109049871-1--kind-bench-smoke-file-t100k-single-logfwd",
-      "timestamp": "2026-04-08T00:53:00.795Z",
+      "timestamp": "2026-04-08T01:00:40.015Z",
       "commit": "f2f1bcbb69418c46bb9c21bb64b7925d3299e92e",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -42,7 +42,7 @@
     },
     {
       "id": "24108861801-1--kind-bench-smoke-file-t1m-single-logfwd",
-      "timestamp": "2026-04-08T00:53:00.794Z",
+      "timestamp": "2026-04-08T01:00:40.014Z",
       "commit": "946a8ae74fe68e40b9a28020e34842e39071191d",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -50,7 +50,7 @@
     },
     {
       "id": "24108861801-1--kind-bench-smoke-file-t100k-single-logfwd",
-      "timestamp": "2026-04-08T00:53:00.794Z",
+      "timestamp": "2026-04-08T01:00:40.014Z",
       "commit": "946a8ae74fe68e40b9a28020e34842e39071191d",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -58,7 +58,7 @@
     },
     {
       "id": "24106177640-1--kind-bench-smoke-file-profile-smoke-single-vector",
-      "timestamp": "2026-04-08T00:53:00.792Z",
+      "timestamp": "2026-04-08T01:00:40.011Z",
       "commit": "2575fa3bf51b3715d692423bd71961f1494504a3",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -66,7 +66,7 @@
     },
     {
       "id": "24097782241-1--kind-bench-smoke-otlp-t1m-single-otelcol",
-      "timestamp": "2026-04-08T00:53:00.792Z",
+      "timestamp": "2026-04-08T01:00:40.011Z",
       "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -74,7 +74,7 @@
     },
     {
       "id": "24097782241-1--kind-bench-smoke-otlp-t100k-single-otelcol",
-      "timestamp": "2026-04-08T00:53:00.792Z",
+      "timestamp": "2026-04-08T01:00:40.011Z",
       "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -82,7 +82,7 @@
     },
     {
       "id": "24092902509-1--kind-bench-smoke-tmax-single-vector",
-      "timestamp": "2026-04-08T00:53:00.792Z",
+      "timestamp": "2026-04-08T01:00:40.011Z",
       "commit": "8728b2520567fe55f8544ee9827159c2bc067f26",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -90,7 +90,7 @@
     },
     {
       "id": "24092902509-1--kind-bench-smoke-tmax-single-otelcol",
-      "timestamp": "2026-04-08T00:53:00.791Z",
+      "timestamp": "2026-04-08T01:00:40.011Z",
       "commit": "8728b2520567fe55f8544ee9827159c2bc067f26",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -98,7 +98,7 @@
     },
     {
       "id": "24092902509-1--kind-bench-smoke-tmax-multi-vector",
-      "timestamp": "2026-04-08T00:53:00.791Z",
+      "timestamp": "2026-04-08T01:00:40.011Z",
       "commit": "8728b2520567fe55f8544ee9827159c2bc067f26",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -106,7 +106,7 @@
     },
     {
       "id": "24092480398-1--kind-bench-smoke-profile-smoke-single-vector",
-      "timestamp": "2026-04-08T00:53:00.791Z",
+      "timestamp": "2026-04-08T01:00:40.011Z",
       "commit": "e353482c67c2e71ff4deb7fd37212264e976922d",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -114,7 +114,7 @@
     },
     {
       "id": "24092480398-1--kind-bench-smoke-profile-smoke-multi-vector",
-      "timestamp": "2026-04-08T00:53:00.791Z",
+      "timestamp": "2026-04-08T01:00:40.011Z",
       "commit": "e353482c67c2e71ff4deb7fd37212264e976922d",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -122,7 +122,7 @@
     },
     {
       "id": "24090514698-1--kind-bench-smoke-t100k-single-logfwd",
-      "timestamp": "2026-04-08T00:53:00.791Z",
+      "timestamp": "2026-04-08T01:00:40.011Z",
       "commit": "795369e4a4d5032483d8585a80808ebe391b6dd0",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -130,7 +130,7 @@
     },
     {
       "id": "24089288411-1--kind-bench-smoke-target-max-single-logfwd",
-      "timestamp": "2026-04-08T00:53:00.791Z",
+      "timestamp": "2026-04-08T01:00:40.011Z",
       "commit": "689cb2943152294233f12fc73eadb7ee55feced7",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -138,7 +138,7 @@
     },
     {
       "id": "24089087310-1--kind-bench-smoke-target-max-single-logfwd",
-      "timestamp": "2026-04-08T00:53:00.791Z",
+      "timestamp": "2026-04-08T01:00:40.011Z",
       "commit": "80c09d05001fb974dfbda389497988207179023e",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -146,7 +146,7 @@
     },
     {
       "id": "24088457868-1--kind-bench-smoke-target-max-single-logfwd",
-      "timestamp": "2026-04-08T00:53:00.791Z",
+      "timestamp": "2026-04-08T01:00:40.011Z",
       "commit": "baa4422026b45b2f97a6a380bf200c1d0c55b3da",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -154,11 +154,35 @@
     },
     {
       "id": "24088165741-1--kind-bench-smoke-target-max-single-logfwd",
-      "timestamp": "2026-04-08T00:53:00.791Z",
+      "timestamp": "2026-04-08T01:00:40.011Z",
       "commit": "c9277487896b5a0510f17051418961868ff70cd6",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
       "metrics": []
+    },
+    {
+      "id": "24111887249-1--kind-bench-smoke-file-profile-smoke-single-vlagent",
+      "timestamp": "2026-04-08T00:56:37.000Z",
+      "commit": "723141e744e1c1810f809fd029ed0ddf783ccabf",
+      "ref": "refs/heads/codex/eps-target-sweep",
+      "benchmarks": 1,
+      "metrics": [
+        "captured_rows_total",
+        "collector_cpu_cores_avg",
+        "collector_cpu_cores_p95",
+        "collector_rss_mb_avg",
+        "collector_rss_mb_p95",
+        "drop_estimate",
+        "emitter_reported_events_total",
+        "generator_cpu_cores_avg",
+        "missing_source_count",
+        "sink_lines_per_sec_avg",
+        "sink_lines_per_sec_p50",
+        "sink_lines_per_sec_p95",
+        "sink_lines_per_sec_p99",
+        "sink_lines_total",
+        "sink_reported_events_total"
+      ]
     },
     {
       "id": "24111691147-1--kind-bench-smoke-file-profile-smoke-single-vlagent",
@@ -896,33 +920,6 @@
       "id": "24107213191-1--kind-bench-smoke-file-profile-smoke-single-logfwd",
       "timestamp": "2026-04-07T22:20:10.000Z",
       "commit": "df2cb04df0109f74dabc63699f0bcec6bcc1e497",
-      "ref": "refs/heads/codex/eps-target-sweep",
-      "benchmarks": 1,
-      "metrics": [
-        "captured_rows_total",
-        "collector_cpu_cores_avg",
-        "collector_cpu_cores_p95",
-        "collector_rss_mb_avg",
-        "collector_rss_mb_p95",
-        "drop_estimate",
-        "dup_estimate",
-        "emitter_reported_events_total",
-        "missing_event_count",
-        "missing_source_count",
-        "sink_lines_per_sec_avg",
-        "sink_lines_per_sec_p50",
-        "sink_lines_per_sec_p95",
-        "sink_lines_per_sec_p99",
-        "sink_lines_total",
-        "sink_reported_events_total",
-        "source_rows_total",
-        "unexpected_event_count"
-      ]
-    },
-    {
-      "id": "24106813438-1--kind-bench-smoke-file-profile-smoke-single-logfwd",
-      "timestamp": "2026-04-07T22:08:49.000Z",
-      "commit": "1f21f3e5f6131450723833713461fbb84b4134d0",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 1,
       "metrics": [

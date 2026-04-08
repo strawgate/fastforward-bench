@@ -19,12 +19,6 @@
       },
       "points": [
         {
-          "timestamp": "2026-04-07T22:08:49.000Z",
-          "value": 0.03,
-          "commit": "1f21f3e5f6131450723833713461fbb84b4134d0",
-          "run_id": "24106813438-1--kind-bench-smoke-file-profile-smoke-single-logfwd"
-        },
-        {
           "timestamp": "2026-04-07T22:20:10.000Z",
           "value": 0.04,
           "commit": "df2cb04df0109f74dabc63699f0bcec6bcc1e497",
@@ -349,6 +343,12 @@
           "value": 0.02,
           "commit": "ae68c0a50d9594625e0b84fe82c4e6b2e37b9e0d",
           "run_id": "24111691147-1--kind-bench-smoke-file-profile-smoke-single-vlagent"
+        },
+        {
+          "timestamp": "2026-04-08T00:56:37.000Z",
+          "value": 0.02,
+          "commit": "723141e744e1c1810f809fd029ed0ddf783ccabf",
+          "run_id": "24111887249-1--kind-bench-smoke-file-profile-smoke-single-vlagent"
         }
       ]
     },
