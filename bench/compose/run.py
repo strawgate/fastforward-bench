@@ -655,7 +655,7 @@ services:
   collector-filebeat:
     profiles: ["filebeat"]
     image: ${FILEBEAT_COLLECTOR_IMAGE}
-    command: ["-e", "-strict.perms=false", "-c", "/config/collector-filebeat.yaml"]
+    command: ["-e", "--strict.perms=false", "-c", "/config/collector-filebeat.yaml"]
     user: "0:0"
     volumes:
       - ${BENCH_RESULTS_RUNTIME_DIR}:/runtime
