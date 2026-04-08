@@ -1,0 +1,24 @@
+{
+  "metric": "process.memory.usage",
+  "unit": "By",
+  "series": {
+    "": {
+      "points": [
+        {
+          "timestamp": "2026-04-08T19:29:19.000Z",
+          "value": 8286672.52,
+          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
+          "run_id": "24154075042-1--compose-bench-smoke-file-t100-multi-vector",
+          "range": 205664256
+        },
+        {
+          "timestamp": "2026-04-08T19:29:28.000Z",
+          "value": 15627486.65,
+          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
+          "run_id": "24154075042-1--compose-bench-smoke-otlp-tmax-single-otelcol",
+          "range": 1202450432
+        }
+      ]
+    }
+  }
+}

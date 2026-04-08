@@ -1,0 +1,48 @@
+{
+  "metric": "process.disk.io",
+  "unit": "By",
+  "series": {
+    " [direction=read]": {
+      "tags": {
+        "direction": "read"
+      },
+      "points": [
+        {
+          "timestamp": "2026-04-08T19:29:19.000Z",
+          "value": 154939527.03,
+          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
+          "run_id": "24154075042-1--compose-bench-smoke-file-t100-multi-vector",
+          "range": 1015246706
+        },
+        {
+          "timestamp": "2026-04-08T19:29:28.000Z",
+          "value": 155350091.64,
+          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
+          "run_id": "24154075042-1--compose-bench-smoke-otlp-tmax-single-otelcol",
+          "range": 1015249098
+        }
+      ]
+    },
+    " [direction=write]": {
+      "tags": {
+        "direction": "write"
+      },
+      "points": [
+        {
+          "timestamp": "2026-04-08T19:29:19.000Z",
+          "value": 195204073.15,
+          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
+          "run_id": "24154075042-1--compose-bench-smoke-file-t100-multi-vector",
+          "range": 1309175607
+        },
+        {
+          "timestamp": "2026-04-08T19:29:28.000Z",
+          "value": 195512617.21,
+          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
+          "run_id": "24154075042-1--compose-bench-smoke-otlp-tmax-single-otelcol",
+          "range": 1309168770
+        }
+      ]
+    }
+  }
+}
