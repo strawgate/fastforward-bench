@@ -421,6 +421,8 @@ def sink_reported_events_total(
 ) -> int:
     if sink_stats_kind == "capture_reader":
         return int(sink_reported_stats.get("benchmark_rows_total", 0) or 0)
+    if sink_stats_kind == "capture_reader_all":
+        return int(sink_reported_stats.get("capture_rows_total", 0) or 0)
     return int(sink_reported_stats.get("output_lines", 0) or 0)
 
 
@@ -559,8 +561,12 @@ def run_smoke_phase(
     result: BenchmarkResult,
 ) -> int:
     max_throughput_mode = profile.eps_per_pod == 0
-    sink_stats_kind = "capture_reader" if adapter.sink_transport == "http_ndjson" else "logfwd"
-    sink_stats_port = 8081 if adapter.sink_transport == "http_ndjson" else 9090
+    if adapter.sink_transport == "http_ndjson":
+        sink_stats_kind = "capture_reader_all" if not adapter.supports_strict_source_oracle else "capture_reader"
+        sink_stats_port = 8081
+    else:
+        sink_stats_kind = "logfwd"
+        sink_stats_port = 9090
 
     apply_manifest(manifests["collector_configmap"])
     apply_manifest(manifests["collector_workload"])
