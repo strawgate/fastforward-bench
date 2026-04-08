@@ -274,6 +274,12 @@ jobs:
           echo "Delaying stash push by ${sleep_seconds}s to reduce bench-data contention"
           sleep "${sleep_seconds}"
       - if: env.PERSIST_BENCH_DATA == 'true'
+        name: Configure git identity for bench-data stash
+        shell: bash
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - if: env.PERSIST_BENCH_DATA == 'true'
         name: Stash benchmark run
         continue-on-error: true
         env:
