@@ -238,35 +238,7 @@ def run_capture(cmd: list[str], *, cwd: Path | None = None, env: dict[str, str] 
     return completed.stdout
 
 
-COUNT_TOKEN_RE = re.compile(r"^(?P<value>[0-9]+(?:\.[0-9]+)?)(?P<suffix>[KMG]?)$", re.IGNORECASE)
-GENERATOR_LINES_RE = re.compile(r"lines\s+\S+\s+in\s+→\s+(?P<out>\S+)\s+out", re.IGNORECASE)
-
-
-def parse_compact_count(token: str) -> int | None:
-    match = COUNT_TOKEN_RE.fullmatch(token.strip())
-    if match is None:
-        return None
-    value = float(match.group("value"))
-    suffix = match.group("suffix").upper()
-    multiplier = {
-        "": 1,
-        "K": 1_000,
-        "M": 1_000_000,
-        "G": 1_000_000_000,
-    }[suffix]
-    return int(round(value * multiplier))
-
-
-def generator_out_lines_from_logs(log_text: str) -> int | None:
-    parsed: int | None = None
-    for raw_line in log_text.splitlines():
-        match = GENERATOR_LINES_RE.search(raw_line)
-        if match is None:
-            continue
-        out_value = parse_compact_count(match.group("out"))
-        if out_value is not None:
-            parsed = out_value
-    return parsed
+SEQ_FIELD_RE = re.compile(rb'"seq"\s*:\s*([0-9]+)')
 
 
 def reserve_local_port() -> int:
@@ -909,6 +881,26 @@ def count_rows_with_rollovers(base_file_path: Path) -> int:
     return sum(count_ndjson_rows(path) for path in files)
 
 
+def max_seq_with_rollovers(base_file_path: Path) -> int:
+    parent = base_file_path.parent
+    base_name = base_file_path.name
+    files = sorted(path for path in parent.glob(f"{base_name}*") if path.is_file())
+    max_seq = 0
+    for path in files:
+        try:
+            with path.open("rb") as handle:
+                for raw_line in handle:
+                    match = SEQ_FIELD_RE.search(raw_line)
+                    if match is None:
+                        continue
+                    candidate = int(match.group(1))
+                    if candidate > max_seq:
+                        max_seq = candidate
+        except OSError:
+            continue
+    return max_seq
+
+
 def wait_for_sink_catch_up(
     *,
     adapter: CollectorAdapter,
@@ -1123,13 +1115,6 @@ def main() -> int:
             emitter_before_stop = None
 
         subprocess.run(compose + ["stop", "generator"], env=env, check=False)
-        emitter_from_logs: int | None = None
-        try:
-            generator_log_snapshot = run_capture(compose + ["logs", "--no-color", "generator"], env=env)
-            emitter_from_logs = generator_out_lines_from_logs(generator_log_snapshot)
-        except Exception:
-            emitter_from_logs = None
-
         if args.ingest_mode == "file":
             source_rows_total = count_rows_with_rollovers(events_file_path)
             if source_rows_total > 0:
@@ -1139,9 +1124,6 @@ def main() -> int:
                 result.emitter_reported_events_total = emitter_before_stop
         else:
             result.emitter_reported_events_total = emitter_before_stop
-
-        if emitter_from_logs is not None:
-            result.emitter_reported_events_total = max(result.emitter_reported_events_total or 0, emitter_from_logs)
         if result.emitter_reported_events_total is not None and result.emitter_reported_events_total > 0:
             result.sink_reported_events_total = wait_for_sink_catch_up(
                 adapter=adapter,
@@ -1169,6 +1151,10 @@ def main() -> int:
         exact_captured_rows = count_rows_with_rollovers(capture_file_path)
         if exact_captured_rows > 0:
             result.sink_reported_events_total = exact_captured_rows
+        captured_max_seq = max_seq_with_rollovers(capture_file_path)
+        if captured_max_seq > 0:
+            result.source_rows_total = max(result.source_rows_total or 0, captured_max_seq)
+            result.emitter_reported_events_total = max(result.emitter_reported_events_total or 0, captured_max_seq)
 
         result.sink_lines_total = diff_output_lines(sink_samples)
         result.captured_rows_total = result.sink_reported_events_total
