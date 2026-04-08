@@ -46,6 +46,12 @@
           "value": 0.02,
           "commit": "2e5a8e342b95d109f04e2ab02634f6cd6537324a",
           "run_id": "24111336096-1--kind-bench-smoke-file-profile-smoke-single-vlagent"
+        },
+        {
+          "timestamp": "2026-04-08T00:43:17.000Z",
+          "value": 0.02,
+          "commit": "2b1fcaf8f24d906c29db6f300042811468451186",
+          "run_id": "24111535456-1--kind-bench-smoke-file-profile-smoke-single-vlagent"
         }
       ]
     },
