@@ -28,6 +28,12 @@ data:
         message,
         status,
         duration_ms,
+        tenant_id,
+        shard_id,
+        entropy_a,
+        entropy_b,
+        entropy_c,
+        route,
         service
       FROM logs
       WHERE benchmark_id = '${BENCHMARK_ID}'

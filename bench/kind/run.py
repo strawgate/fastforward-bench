@@ -36,10 +36,8 @@ from lib.kube import (
     get_first_pod_name,
     get_pod_names,
     rollout_status,
-    scale_statefulset,
     wait_for_deployment,
     wait_for_namespace,
-    wait_for_statefulset_replicas,
 )
 from lib.measure import (
     StatsSample,
@@ -738,10 +736,6 @@ def run_smoke_phase(
             destination=emitter_logs_path,
             tail=-1,
         )
-    # Freeze generator output at the post-measure snapshot so sink catch-up and
-    # oracle checks compare against a stable event set.
-    scale_statefulset(args.namespace, "log-emitter", replicas=0)
-    wait_for_statefulset_replicas(args.namespace, "log-emitter", replicas=0, timeout_sec=120)
 
     sink_pod = get_first_pod_name(args.namespace, "app.kubernetes.io/name=logfwd-capture")
     if not sink_pod:
@@ -1045,15 +1039,15 @@ def run_smoke_phase(
             result.drop_estimate = None
 
         if diagnostics_oracle_clean and observed_any_sink_output:
-            result.status = "pass"
+            result.status = "partial"
             result.notes = (
-                f"smoke benchmark passed in {adapter.benchmark_mode} with degraded source oracle; "
+                f"smoke benchmark produced output in {adapter.benchmark_mode}, but source oracle was degraded; "
                 f"source rows captured ({comparison.source_row_count}) were lower than emitter diagnostics total "
-                f"({result.emitter_reported_events_total}), so pass/fail used emitter/sink diagnostics totals instead. "
+                f"({result.emitter_reported_events_total}), so strict source-vs-sink validation was not possible. "
                 f"captured_rows_total={comparison.sink_row_count}, sink_lines_total={result.sink_lines_total}, "
                 f"sink_reported_events_total={result.sink_reported_events_total}, drop_estimate={result.drop_estimate}."
             )
-            return 0
+            return 1
 
         if diagnostics_available:
             result.status = "fail"
