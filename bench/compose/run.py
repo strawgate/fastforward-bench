@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shutil
 import socket
 import subprocess
 import sys
@@ -228,6 +229,11 @@ def write_text(path: Path, content: str) -> None:
 
 def write_json(path: Path, payload: object) -> None:
     write_text(path, json.dumps(payload, indent=2, sort_keys=True) + "\n")
+
+
+def ensure_world_writable_dir(path: Path) -> None:
+    path.mkdir(parents=True, exist_ok=True)
+    os.chmod(path, 0o777)
 
 
 def build_generator_config(benchmark_id: str, eps_per_sec: int) -> str:
@@ -638,12 +644,13 @@ def main() -> int:
     runtime_dir = results_dir / "runtime"
     artifacts_dir = results_dir / "artifacts"
     rendered_dir.mkdir(parents=True, exist_ok=True)
-    runtime_dir.mkdir(parents=True, exist_ok=True)
+    ensure_world_writable_dir(runtime_dir)
     artifacts_dir.mkdir(parents=True, exist_ok=True)
 
-    # Pre-truncate files to avoid stale carryover in reruns.
-    write_text(runtime_dir / "events.ndjson", "")
-    write_text(runtime_dir / "capture.ndjson", "")
+    # Remove stale runtime files from prior local reruns.
+    for stale_file in (runtime_dir / "events.ndjson", runtime_dir / "capture.ndjson"):
+        if stale_file.exists():
+            stale_file.unlink()
 
     compose_file = rendered_dir / "compose.yaml"
     write_text(compose_file, build_compose_yaml())
@@ -827,15 +834,9 @@ def main() -> int:
                 )
 
         if (runtime_dir / "capture.ndjson").exists():
-            subprocess.run(
-                ["cp", str(runtime_dir / "capture.ndjson"), str(artifacts_dir / "sink-capture.ndjson")],
-                check=False,
-            )
+            shutil.copy2(runtime_dir / "capture.ndjson", artifacts_dir / "sink-capture.ndjson")
         if (runtime_dir / "events.ndjson").exists():
-            subprocess.run(
-                ["cp", str(runtime_dir / "events.ndjson"), str(artifacts_dir / "generator-events.ndjson")],
-                check=False,
-            )
+            shutil.copy2(runtime_dir / "events.ndjson", artifacts_dir / "generator-events.ndjson")
 
         subprocess.run(compose + ["down", "-v", "--remove-orphans"], env=env, check=False)
 
