@@ -726,6 +726,10 @@ def run_smoke_phase(
         raise CommandError("sink pod not found after rollout")
 
     drain_timeout_sec = 45 if adapter.sink_transport == "http_ndjson" else 10
+    if not adapter.supports_strict_source_oracle:
+        # Non-oracle collectors (for example, those that forward via buffered
+        # HTTP adapters) can lag longer before the sink catches up.
+        drain_timeout_sec = max(drain_timeout_sec, 120)
     if profile.eps_per_pod >= SOURCE_ORACLE_MAX_TARGET_EPS_PER_POD:
         # High-rate runs can end with a larger in-flight queue; allow extra drain time
         # before assessing diagnostics-based drop estimates.
