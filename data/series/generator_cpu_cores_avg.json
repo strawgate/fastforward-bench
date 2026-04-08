@@ -99,6 +99,12 @@
           "value": 0.02,
           "commit": "723141e744e1c1810f809fd029ed0ddf783ccabf",
           "run_id": "24112097877-1--kind-bench-smoke-file-profile-smoke-single-otelcol"
+        },
+        {
+          "timestamp": "2026-04-08T01:25:38.000Z",
+          "value": 0.02,
+          "commit": "777a8ebb89753ebfd13966fcd8cdc7d95691d805",
+          "run_id": "24112680801-1--kind-bench-smoke-file-profile-smoke-single-otelcol"
         }
       ]
     },
@@ -186,6 +192,12 @@
           "value": 0.02,
           "commit": "723141e744e1c1810f809fd029ed0ddf783ccabf",
           "run_id": "24112097877-1--kind-bench-smoke-file-profile-smoke-single-vector"
+        },
+        {
+          "timestamp": "2026-04-08T01:25:43.000Z",
+          "value": 0.01,
+          "commit": "777a8ebb89753ebfd13966fcd8cdc7d95691d805",
+          "run_id": "24112680801-1--kind-bench-smoke-file-profile-smoke-single-vector"
         }
       ]
     }
