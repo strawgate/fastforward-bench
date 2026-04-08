@@ -3,49 +3,49 @@
   "unit": "events",
   "direction": "smaller_is_better",
   "series": {
-    "kind/smoke/baseline-pass-through/file [benchkit.cluster=docker-compose,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=logfwd,benchkit.ingest_mode=file,benchkit.namespace=compose,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]": {
+    "kind/smoke/baseline-pass-through/file [benchkit.cluster=docker-compose,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=vector,benchkit.ingest_mode=file,benchkit.namespace=compose,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=http_ndjson,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]": {
       "tags": {
         "benchkit.cluster": "docker-compose",
         "benchkit.cluster_cpu_limit_cores": "1.0",
         "benchkit.cpu_profile": "single",
-        "benchkit.impl": "logfwd",
+        "benchkit.impl": "vector",
         "benchkit.ingest_mode": "file",
         "benchkit.namespace": "compose",
         "benchkit.pods": "1",
         "benchkit.profile": "smoke",
-        "benchkit.protocol": "otlp_http",
+        "benchkit.protocol": "http_ndjson",
         "benchkit.target_eps_per_pod": "0",
         "benchkit.total_target_eps": "0"
       },
       "points": [
         {
-          "timestamp": "2026-04-08T16:22:54.000Z",
-          "value": 2667016,
-          "commit": "ab9a65b8cef21a8ec61f4d0df6249b21d46c629c",
-          "run_id": "24146309842-1--compose-bench-smoke-tmax-single-logfwd"
+          "timestamp": "2026-04-08T16:27:56.000Z",
+          "value": 6209157,
+          "commit": "cd38a9d2f356fe0ba8e59b212a39095a56bf1538",
+          "run_id": "24146536133-1--compose-bench-smoke-tmax-single-vector"
         }
       ]
     },
-    "kind/smoke/baseline-pass-through/file [benchkit.cluster=docker-compose,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=logfwd,benchkit.ingest_mode=file,benchkit.namespace=compose,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]": {
+    "kind/smoke/baseline-pass-through/file [benchkit.cluster=docker-compose,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=vector,benchkit.ingest_mode=file,benchkit.namespace=compose,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=http_ndjson,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]": {
       "tags": {
         "benchkit.cluster": "docker-compose",
         "benchkit.cluster_cpu_limit_cores": "2.0",
         "benchkit.cpu_profile": "multi",
-        "benchkit.impl": "logfwd",
+        "benchkit.impl": "vector",
         "benchkit.ingest_mode": "file",
         "benchkit.namespace": "compose",
         "benchkit.pods": "1",
         "benchkit.profile": "smoke",
-        "benchkit.protocol": "otlp_http",
+        "benchkit.protocol": "http_ndjson",
         "benchkit.target_eps_per_pod": "0",
         "benchkit.total_target_eps": "0"
       },
       "points": [
         {
-          "timestamp": "2026-04-08T16:22:58.000Z",
-          "value": 2896311,
-          "commit": "ab9a65b8cef21a8ec61f4d0df6249b21d46c629c",
-          "run_id": "24146309842-1--compose-bench-smoke-tmax-multi-logfwd"
+          "timestamp": "2026-04-08T16:27:59.000Z",
+          "value": 5859242,
+          "commit": "cd38a9d2f356fe0ba8e59b212a39095a56bf1538",
+          "run_id": "24146536133-1--compose-bench-smoke-tmax-multi-vector"
         }
       ]
     }
