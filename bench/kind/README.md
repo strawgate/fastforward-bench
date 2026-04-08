@@ -212,7 +212,7 @@ Each new report issue auto-links and closes the prior live issue for that suite.
 
 The benchmark workflow also supports target EPS sweeps:
 
-- `ladder`: `1, 10, 100, 500, 1k, 10k, 100k, 1m`
+- `ladder`: `1, 10, 100, 1k, 10k, 100k, 1m`
 - `max`: unbounded generator mode (`eps_per_pod=0`) for
   "fast as the current resource allocation allows"
 - high tiers (`10k+`) are treated as capacity probes in CI:

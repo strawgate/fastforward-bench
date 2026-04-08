@@ -46,6 +46,7 @@ on:
           - logfwd
           - otelcol
           - vector
+          - filebeat
       cpu_profile:
         description: CPU profile to benchmark
         required: false
@@ -119,10 +120,10 @@ jobs:
               fi
               ;;
             ladder)
-              echo 'workloads=[{"label":"t1","eps_per_sec":1},{"label":"t10","eps_per_sec":10},{"label":"t100","eps_per_sec":100},{"label":"t500","eps_per_sec":500},{"label":"t1k","eps_per_sec":1000},{"label":"t10k","eps_per_sec":10000},{"label":"t100k","eps_per_sec":100000},{"label":"t1m","eps_per_sec":1000000}]' >>"$GITHUB_OUTPUT"
+              echo 'workloads=[{"label":"t1","eps_per_sec":1},{"label":"t10","eps_per_sec":10},{"label":"t100","eps_per_sec":100},{"label":"t1k","eps_per_sec":1000},{"label":"t10k","eps_per_sec":10000},{"label":"t100k","eps_per_sec":100000},{"label":"t1m","eps_per_sec":1000000}]' >>"$GITHUB_OUTPUT"
               ;;
             ladder_and_max)
-              echo 'workloads=[{"label":"t1","eps_per_sec":1},{"label":"t10","eps_per_sec":10},{"label":"t100","eps_per_sec":100},{"label":"t500","eps_per_sec":500},{"label":"t1k","eps_per_sec":1000},{"label":"t10k","eps_per_sec":10000},{"label":"t100k","eps_per_sec":100000},{"label":"t1m","eps_per_sec":1000000},{"label":"tmax","eps_per_sec":0}]' >>"$GITHUB_OUTPUT"
+              echo 'workloads=[{"label":"t1","eps_per_sec":1},{"label":"t10","eps_per_sec":10},{"label":"t100","eps_per_sec":100},{"label":"t1k","eps_per_sec":1000},{"label":"t10k","eps_per_sec":10000},{"label":"t100k","eps_per_sec":100000},{"label":"t1m","eps_per_sec":1000000},{"label":"tmax","eps_per_sec":0}]' >>"$GITHUB_OUTPUT"
               ;;
             max)
               echo 'workloads=[{"label":"tmax","eps_per_sec":0}]' >>"$GITHUB_OUTPUT"
@@ -136,7 +137,7 @@ jobs:
           if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${INPUT_COLLECTOR}" != "all" ]]; then
             echo "collectors=[\"${INPUT_COLLECTOR}\"]" >>"$GITHUB_OUTPUT"
           else
-            echo 'collectors=["logfwd","otelcol","vector"]' >>"$GITHUB_OUTPUT"
+            echo 'collectors=["logfwd","otelcol","vector","filebeat"]' >>"$GITHUB_OUTPUT"
           fi
           if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${INPUT_CPU_PROFILE}" != "all" ]]; then
             echo "cpu_profiles=[\"${INPUT_CPU_PROFILE}\"]" >>"$GITHUB_OUTPUT"
@@ -163,6 +164,8 @@ jobs:
         exclude:
           - ingest_mode: otlp
             collector: vector
+          - ingest_mode: otlp
+            collector: filebeat
     env:
       MEMAGENT_REPO_ROOT: ${{ github.workspace }}/memagent
       BENCH_PROFILE: ${{ needs.plan.outputs.bench_profile }}
@@ -388,6 +391,8 @@ jobs:
           expected = len(collectors) * len(cpu_profiles) * len(ingest_modes) * len(workloads)
           if "vector" in collectors and "otlp" in ingest_modes:
             expected -= len(cpu_profiles) * len(workloads)
+          if "filebeat" in collectors and "otlp" in ingest_modes:
+            expected -= len(cpu_profiles) * len(workloads)
 
           print(
             f"expected={expected} benchmark_count={benchmark_count} failed_count={failed_count}"
@@ -404,5 +409,30 @@ jobs:
               f"benchmark failures detected in summary: failed_count={failed_count}",
               file=sys.stderr,
             )
+            sys.exit(1)
+
+          integrity_violations = []
+          for row in summary.get("results", []):
+            if int(row.get("total_target_eps", 0) or 0) == 0:
+              continue
+            missing = int(row.get("missing_event_count", 0) or 0)
+            unexpected = int(row.get("unexpected_event_count", 0) or 0)
+            dup = int(row.get("dup_estimate", 0) or 0)
+            drop = int(row.get("drop_estimate", 0) or 0)
+            if missing > 0 or unexpected > 0 or dup > 0 or drop > 0:
+              integrity_violations.append(
+                {
+                  "artifact": row.get("artifact_name"),
+                  "missing": missing,
+                  "unexpected": unexpected,
+                  "dup": dup,
+                  "drop": drop,
+                }
+              )
+
+          if integrity_violations:
+            print("integrity violations detected:", file=sys.stderr)
+            for violation in integrity_violations[:20]:
+              print(violation, file=sys.stderr)
             sys.exit(1)
           PY

@@ -136,7 +136,7 @@ def status_rank(status: str) -> int:
 
 
 def collector_rank(name: str) -> tuple[int, str]:
-    order = {"logfwd": 0, "otelcol": 1, "vector": 2}
+    order = {"logfwd": 0, "otelcol": 1, "filebeat": 2, "vector": 3}
     return (order.get(name, 99), name)
 
 
@@ -199,6 +199,56 @@ def render_markdown(
     else:
         cpu_profiles = sorted({result.cpu_profile for result in sorted_results}, key=cpu_rank)
         ingest_modes = sorted({result.ingest_mode for result in sorted_results}, key=ingest_rank)
+        collectors = sorted({result.collector for result in sorted_results}, key=collector_rank)
+
+        lines.extend(
+            [
+                "",
+                "## Max EPS Snapshot",
+                "",
+                "| Collector | Ingest | CPU | Max EPS | Collector CPU Avg | % of Target | Source Target |",
+                "| --- | --- | --- | ---: | ---: | ---: | --- |",
+            ]
+        )
+        for collector in collectors:
+            for ingest_mode in ingest_modes:
+                for cpu_profile in cpu_profiles:
+                    subset = [
+                        result
+                        for result in sorted_results
+                        if result.collector == collector
+                        and result.ingest_mode == ingest_mode
+                        and result.cpu_profile == cpu_profile
+                    ]
+                    if not subset:
+                        continue
+                    max_target_rows = [result for result in subset if result.total_target_eps == 0]
+                    if max_target_rows:
+                        chosen = max(
+                            max_target_rows,
+                            key=lambda item: item.sink_lines_per_sec_avg or -1.0,
+                        )
+                    else:
+                        chosen = max(
+                            subset,
+                            key=lambda item: item.sink_lines_per_sec_avg or -1.0,
+                        )
+                    pct_of_target = None
+                    if chosen.total_target_eps > 0 and chosen.sink_lines_per_sec_avg is not None:
+                        pct_of_target = chosen.sink_lines_per_sec_avg / chosen.total_target_eps
+                    source_target = "max" if chosen.total_target_eps == 0 else str(chosen.total_target_eps)
+                    lines.append(
+                        "| {collector} | {ingest_mode} | {cpu_profile} | {eps_avg} | {cpu_avg} | {pct} | {source_target} |".format(
+                            collector=collector,
+                            ingest_mode=ingest_mode,
+                            cpu_profile=cpu_profile,
+                            eps_avg=fmt_float(chosen.sink_lines_per_sec_avg),
+                            cpu_avg=fmt_float(chosen.collector_cpu_cores_avg),
+                            pct=fmt_percent(pct_of_target),
+                            source_target=source_target,
+                        )
+                    )
+        lines.append("")
 
         for cpu_profile in cpu_profiles:
             lines.extend(["", f"## CPU: `{cpu_profile}`", ""])
@@ -214,7 +264,7 @@ def render_markdown(
                     [
                         f"### Ingest: `{ingest_mode}`",
                         "",
-                        "| Collector | Target EPS | Status | EPS Avg | EPS/Target | Missing | Unexpected | Duplicates | Drop Estimate | Collector CPU Avg |",
+                        "| Collector | Target EPS | Status | EPS Avg | Collector CPU Avg | % of Target | Missing | Unexpected | Duplicates | Dropped |",
                         "| --- | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
                     ]
                 )
@@ -230,17 +280,17 @@ def render_markdown(
                     if result.sink_lines_per_sec_avg is not None and result.total_target_eps > 0:
                         eps_ratio = result.sink_lines_per_sec_avg / result.total_target_eps
                     lines.append(
-                        "| {collector} | {target_eps} | {status} | {eps_avg} | {ratio} | {missing} | {unexpected} | {dup} | {drop} | {cpu_avg} |".format(
+                        "| {collector} | {target_eps} | {status} | {eps_avg} | {cpu_avg} | {ratio} | {missing} | {unexpected} | {dup} | {drop} |".format(
                             collector=result.collector,
                             target_eps="max" if result.total_target_eps == 0 else fmt_int(result.total_target_eps),
                             status=result.status.upper(),
                             eps_avg=fmt_float(result.sink_lines_per_sec_avg),
+                            cpu_avg=fmt_float(result.collector_cpu_cores_avg),
                             ratio=fmt_percent(eps_ratio),
                             missing=fmt_int(result.missing_event_count),
                             unexpected=fmt_int(result.unexpected_event_count),
                             dup=fmt_int(result.dup_estimate),
                             drop=fmt_int(result.drop_estimate),
-                            cpu_avg=fmt_float(result.collector_cpu_cores_avg),
                         )
                     )
                 lines.append("")
