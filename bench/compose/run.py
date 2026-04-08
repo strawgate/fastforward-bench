@@ -459,11 +459,6 @@ services:
     ports:
       - "${SINK_DIAG_PORT}:9090"
       - "${SINK_OTLP_PORT}:4318"
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:9090/ready"]
-      interval: 2s
-      timeout: 2s
-      retries: 30
     cpus: "${SINK_CPUS}"
     mem_limit: "${SINK_MEMORY}"
 
@@ -477,16 +472,11 @@ services:
       - ${BENCH_RESULTS_RENDERED_DIR}:/config:ro
     ports:
       - "${CAPTURE_STATS_PORT}:8081"
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8081/stats"]
-      interval: 2s
-      timeout: 2s
-      retries: 30
     cpus: "${CAPTURE_READER_CPUS}"
     mem_limit: "${CAPTURE_READER_MEMORY}"
     depends_on:
       sink:
-        condition: service_healthy
+        condition: service_started
 
   generator:
     image: ${MEMAGENT_IMAGE}
@@ -496,11 +486,6 @@ services:
       - ${BENCH_RESULTS_RENDERED_DIR}:/config:ro
     ports:
       - "${GENERATOR_DIAG_PORT}:9090"
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:9090/ready"]
-      interval: 2s
-      timeout: 2s
-      retries: 30
     cpus: "${GENERATOR_CPUS}"
     mem_limit: "${GENERATOR_MEMORY}"
 
@@ -513,16 +498,11 @@ services:
       - ${BENCH_RESULTS_RENDERED_DIR}:/config:ro
     ports:
       - "${COLLECTOR_STATS_PORT}:9090"
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:9090/ready"]
-      interval: 2s
-      timeout: 2s
-      retries: 30
     cpus: "${COLLECTOR_CPUS}"
     mem_limit: "${COLLECTOR_MEMORY}"
     depends_on:
       sink:
-        condition: service_healthy
+        condition: service_started
 
   collector-otelcol:
     profiles: ["otelcol"]
@@ -537,7 +517,7 @@ services:
     mem_limit: "${COLLECTOR_MEMORY}"
     depends_on:
       sink:
-        condition: service_healthy
+        condition: service_started
 
   collector-vector:
     profiles: ["vector"]
@@ -552,7 +532,7 @@ services:
     mem_limit: "${COLLECTOR_MEMORY}"
     depends_on:
       capture-reader:
-        condition: service_healthy
+        condition: service_started
 """
 
 
