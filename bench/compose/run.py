@@ -775,7 +775,7 @@ def stats_sample_from_capture_file(capture_file_path: Path, benchmark_id: str) -
     del benchmark_id
     return StatsSample(
         timestamp=time.time(),
-        output_lines=count_captured_rows(capture_file_path),
+        output_lines=count_rows_with_rollovers(capture_file_path),
         rss_bytes=0,
         cpu_total_ms=0,
     )
@@ -868,9 +868,9 @@ def count_ndjson_rows(path: Path) -> int:
     return rows
 
 
-def count_captured_rows(capture_file_path: Path) -> int:
-    parent = capture_file_path.parent
-    base_name = capture_file_path.name
+def count_rows_with_rollovers(base_file_path: Path) -> int:
+    parent = base_file_path.parent
+    base_name = base_file_path.name
     files = sorted(path for path in parent.glob(f"{base_name}*") if path.is_file())
     if not files:
         return 0
@@ -1043,6 +1043,7 @@ def main() -> int:
     collector_cpu_samples: list[float] = []
     collector_rss_samples: list[float] = []
     capture_file_path = runtime_dir / "capture.ndjson"
+    events_file_path = runtime_dir / "events.ndjson"
     max_throughput_mode = eps_per_sec == 0
 
     try:
@@ -1083,8 +1084,16 @@ def main() -> int:
         if base_profile.cooldown_sec > 0:
             time.sleep(base_profile.cooldown_sec)
 
-        result.emitter_reported_events_total = emitter_reported_events(generator_diag_port)
         subprocess.run(compose + ["stop", "generator"], env=env, check=False)
+        if args.ingest_mode == "file":
+            source_rows_total = count_rows_with_rollovers(events_file_path)
+            if source_rows_total > 0:
+                result.source_rows_total = source_rows_total
+                result.emitter_reported_events_total = source_rows_total
+            else:
+                result.emitter_reported_events_total = emitter_reported_events(generator_diag_port)
+        else:
+            result.emitter_reported_events_total = emitter_reported_events(generator_diag_port)
         if result.emitter_reported_events_total is not None and result.emitter_reported_events_total > 0:
             result.sink_reported_events_total = wait_for_sink_catch_up(
                 adapter=adapter,
@@ -1109,7 +1118,7 @@ def main() -> int:
 
         # Final integrity counts should come from the sink capture file, not per-process
         # diagnostics counters, which can lag under sustained load.
-        exact_captured_rows = count_captured_rows(capture_file_path)
+        exact_captured_rows = count_rows_with_rollovers(capture_file_path)
         if exact_captured_rows > 0:
             result.sink_reported_events_total = exact_captured_rows
 
