@@ -69,8 +69,12 @@ ${SINK_OUTPUT_BLOCK}
             benchmark_rows = len(rows)
           else:
             for line in rows:
+              line_text = line.decode("utf-8", errors="replace")
+              if benchmark_id in line_text:
+                benchmark_rows += 1
+                continue
               try:
-                row = json.loads(line.decode("utf-8"))
+                row = json.loads(line_text)
               except Exception:
                 continue
               if row_matches_benchmark(row):
