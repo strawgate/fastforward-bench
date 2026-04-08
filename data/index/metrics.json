@@ -1,128 +1,128 @@
 [
   {
     "metric": "captured_rows_total",
-    "latestSeriesCount": 10,
-    "latestRunId": "24110859427-1--kind-bench-smoke-otlp-t100k-single-logfwd",
-    "latestTimestamp": "2026-04-08T00:19:02.000Z"
+    "latestSeriesCount": 11,
+    "latestRunId": "24111349184-1--kind-bench-smoke-file-profile-smoke-single-logfwd",
+    "latestTimestamp": "2026-04-08T00:36:13.000Z"
   },
   {
     "metric": "collector_cpu_cores_avg",
-    "latestSeriesCount": 10,
-    "latestRunId": "24110859427-1--kind-bench-smoke-otlp-t100k-single-logfwd",
-    "latestTimestamp": "2026-04-08T00:19:02.000Z"
+    "latestSeriesCount": 11,
+    "latestRunId": "24111349184-1--kind-bench-smoke-file-profile-smoke-single-logfwd",
+    "latestTimestamp": "2026-04-08T00:36:13.000Z"
   },
   {
     "metric": "collector_cpu_cores_p95",
-    "latestSeriesCount": 10,
-    "latestRunId": "24110859427-1--kind-bench-smoke-otlp-t100k-single-logfwd",
-    "latestTimestamp": "2026-04-08T00:19:02.000Z"
+    "latestSeriesCount": 11,
+    "latestRunId": "24111349184-1--kind-bench-smoke-file-profile-smoke-single-logfwd",
+    "latestTimestamp": "2026-04-08T00:36:13.000Z"
   },
   {
     "metric": "collector_rss_mb_avg",
-    "latestSeriesCount": 10,
-    "latestRunId": "24110859427-1--kind-bench-smoke-otlp-t100k-single-logfwd",
-    "latestTimestamp": "2026-04-08T00:19:02.000Z"
+    "latestSeriesCount": 11,
+    "latestRunId": "24111349184-1--kind-bench-smoke-file-profile-smoke-single-logfwd",
+    "latestTimestamp": "2026-04-08T00:36:13.000Z"
   },
   {
     "metric": "collector_rss_mb_p95",
-    "latestSeriesCount": 10,
-    "latestRunId": "24110859427-1--kind-bench-smoke-otlp-t100k-single-logfwd",
-    "latestTimestamp": "2026-04-08T00:19:02.000Z"
+    "latestSeriesCount": 11,
+    "latestRunId": "24111349184-1--kind-bench-smoke-file-profile-smoke-single-logfwd",
+    "latestTimestamp": "2026-04-08T00:36:13.000Z"
   },
   {
     "metric": "drop_estimate",
-    "latestSeriesCount": 10,
-    "latestRunId": "24110859427-1--kind-bench-smoke-otlp-t100k-single-logfwd",
-    "latestTimestamp": "2026-04-08T00:19:02.000Z"
+    "latestSeriesCount": 11,
+    "latestRunId": "24111349184-1--kind-bench-smoke-file-profile-smoke-single-logfwd",
+    "latestTimestamp": "2026-04-08T00:36:13.000Z"
   },
   {
     "metric": "dup_estimate",
-    "latestSeriesCount": 6,
-    "latestRunId": "24109264497-1--kind-bench-smoke-file-t1-single-logfwd",
-    "latestTimestamp": "2026-04-07T23:24:09.000Z"
+    "latestSeriesCount": 7,
+    "latestRunId": "24111349184-1--kind-bench-smoke-file-profile-smoke-single-logfwd",
+    "latestTimestamp": "2026-04-08T00:36:13.000Z"
   },
   {
     "metric": "emitter_reported_events_total",
-    "latestSeriesCount": 10,
-    "latestRunId": "24110859427-1--kind-bench-smoke-otlp-t100k-single-logfwd",
-    "latestTimestamp": "2026-04-08T00:19:02.000Z"
+    "latestSeriesCount": 11,
+    "latestRunId": "24111349184-1--kind-bench-smoke-file-profile-smoke-single-logfwd",
+    "latestTimestamp": "2026-04-08T00:36:13.000Z"
   },
   {
     "metric": "generator_cpu_cores_avg",
-    "latestSeriesCount": 1,
-    "latestRunId": "24110859427-1--kind-bench-smoke-otlp-t100k-single-logfwd",
-    "latestTimestamp": "2026-04-08T00:19:02.000Z"
+    "latestSeriesCount": 3,
+    "latestRunId": "24111349184-1--kind-bench-smoke-file-profile-smoke-single-logfwd",
+    "latestTimestamp": "2026-04-08T00:36:13.000Z"
   },
   {
     "metric": "missing_event_count",
-    "latestSeriesCount": 6,
-    "latestRunId": "24109264497-1--kind-bench-smoke-file-t1-single-logfwd",
-    "latestTimestamp": "2026-04-07T23:24:09.000Z"
+    "latestSeriesCount": 7,
+    "latestRunId": "24111349184-1--kind-bench-smoke-file-profile-smoke-single-logfwd",
+    "latestTimestamp": "2026-04-08T00:36:13.000Z"
   },
   {
     "metric": "missing_source_count",
-    "latestSeriesCount": 9,
-    "latestRunId": "24109498073-1--kind-bench-smoke-file-t1m-single-logfwd",
-    "latestTimestamp": "2026-04-07T23:31:51.000Z"
+    "latestSeriesCount": 10,
+    "latestRunId": "24111349184-1--kind-bench-smoke-file-profile-smoke-single-logfwd",
+    "latestTimestamp": "2026-04-08T00:36:13.000Z"
   },
   {
     "metric": "sink_cpu_cores_avg",
-    "latestSeriesCount": 1,
-    "latestRunId": "24110859427-1--kind-bench-smoke-otlp-t100k-single-logfwd",
-    "latestTimestamp": "2026-04-08T00:19:02.000Z"
+    "latestSeriesCount": 3,
+    "latestRunId": "24111349184-1--kind-bench-smoke-file-profile-smoke-single-logfwd",
+    "latestTimestamp": "2026-04-08T00:36:13.000Z"
   },
   {
     "metric": "sink_cpu_cores_p95",
-    "latestSeriesCount": 1,
-    "latestRunId": "24110859427-1--kind-bench-smoke-otlp-t100k-single-logfwd",
-    "latestTimestamp": "2026-04-08T00:19:02.000Z"
+    "latestSeriesCount": 3,
+    "latestRunId": "24111349184-1--kind-bench-smoke-file-profile-smoke-single-logfwd",
+    "latestTimestamp": "2026-04-08T00:36:13.000Z"
   },
   {
     "metric": "sink_lines_per_sec_avg",
-    "latestSeriesCount": 10,
-    "latestRunId": "24110859427-1--kind-bench-smoke-otlp-t100k-single-logfwd",
-    "latestTimestamp": "2026-04-08T00:19:02.000Z"
+    "latestSeriesCount": 11,
+    "latestRunId": "24111349184-1--kind-bench-smoke-file-profile-smoke-single-logfwd",
+    "latestTimestamp": "2026-04-08T00:36:13.000Z"
   },
   {
     "metric": "sink_lines_per_sec_p50",
-    "latestSeriesCount": 10,
-    "latestRunId": "24110859427-1--kind-bench-smoke-otlp-t100k-single-logfwd",
-    "latestTimestamp": "2026-04-08T00:19:02.000Z"
+    "latestSeriesCount": 11,
+    "latestRunId": "24111349184-1--kind-bench-smoke-file-profile-smoke-single-logfwd",
+    "latestTimestamp": "2026-04-08T00:36:13.000Z"
   },
   {
     "metric": "sink_lines_per_sec_p95",
-    "latestSeriesCount": 10,
-    "latestRunId": "24110859427-1--kind-bench-smoke-otlp-t100k-single-logfwd",
-    "latestTimestamp": "2026-04-08T00:19:02.000Z"
+    "latestSeriesCount": 11,
+    "latestRunId": "24111349184-1--kind-bench-smoke-file-profile-smoke-single-logfwd",
+    "latestTimestamp": "2026-04-08T00:36:13.000Z"
   },
   {
     "metric": "sink_lines_per_sec_p99",
-    "latestSeriesCount": 10,
-    "latestRunId": "24110859427-1--kind-bench-smoke-otlp-t100k-single-logfwd",
-    "latestTimestamp": "2026-04-08T00:19:02.000Z"
+    "latestSeriesCount": 11,
+    "latestRunId": "24111349184-1--kind-bench-smoke-file-profile-smoke-single-logfwd",
+    "latestTimestamp": "2026-04-08T00:36:13.000Z"
   },
   {
     "metric": "sink_lines_total",
-    "latestSeriesCount": 10,
-    "latestRunId": "24110859427-1--kind-bench-smoke-otlp-t100k-single-logfwd",
-    "latestTimestamp": "2026-04-08T00:19:02.000Z"
+    "latestSeriesCount": 11,
+    "latestRunId": "24111349184-1--kind-bench-smoke-file-profile-smoke-single-logfwd",
+    "latestTimestamp": "2026-04-08T00:36:13.000Z"
   },
   {
     "metric": "sink_reported_events_total",
-    "latestSeriesCount": 10,
-    "latestRunId": "24110859427-1--kind-bench-smoke-otlp-t100k-single-logfwd",
-    "latestTimestamp": "2026-04-08T00:19:02.000Z"
+    "latestSeriesCount": 11,
+    "latestRunId": "24111349184-1--kind-bench-smoke-file-profile-smoke-single-logfwd",
+    "latestTimestamp": "2026-04-08T00:36:13.000Z"
   },
   {
     "metric": "source_rows_total",
-    "latestSeriesCount": 7,
-    "latestRunId": "24109264497-1--kind-bench-smoke-file-t1-single-logfwd",
-    "latestTimestamp": "2026-04-07T23:24:09.000Z"
+    "latestSeriesCount": 8,
+    "latestRunId": "24111349184-1--kind-bench-smoke-file-profile-smoke-single-logfwd",
+    "latestTimestamp": "2026-04-08T00:36:13.000Z"
   },
   {
     "metric": "unexpected_event_count",
-    "latestSeriesCount": 6,
-    "latestRunId": "24109264497-1--kind-bench-smoke-file-t1-single-logfwd",
-    "latestTimestamp": "2026-04-07T23:24:09.000Z"
+    "latestSeriesCount": 7,
+    "latestRunId": "24111349184-1--kind-bench-smoke-file-profile-smoke-single-logfwd",
+    "latestTimestamp": "2026-04-08T00:36:13.000Z"
   }
 ]
