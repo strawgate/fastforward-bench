@@ -31,24 +31,26 @@ ${SINK_OUTPUT_BLOCK}
       "benchmark_id": benchmark_id,
     }
 
-    def row_matches_benchmark(row):
-      if not isinstance(row, dict):
-        return False
-      if row.get("benchmark_id") == benchmark_id:
-        return True
-      for key in ("_msg", "log", "message"):
-        value = row.get(key)
-        if not isinstance(value, str):
-          continue
-        if not value.startswith("{"):
-          continue
-        try:
-          nested = json.loads(value)
-        except Exception:
-          continue
-        if isinstance(nested, dict) and nested.get("benchmark_id") == benchmark_id:
+    def value_matches_benchmark(value):
+      if isinstance(value, dict):
+        if value.get("benchmark_id") == benchmark_id:
           return True
+        return any(value_matches_benchmark(inner) for inner in value.values())
+      if isinstance(value, list):
+        return any(value_matches_benchmark(inner) for inner in value)
+      if isinstance(value, str):
+        if benchmark_id in value:
+          return True
+        if value.startswith("{") or value.startswith("["):
+          try:
+            nested = json.loads(value)
+          except Exception:
+            return False
+          return value_matches_benchmark(nested)
       return False
+
+    def row_matches_benchmark(row):
+      return value_matches_benchmark(row)
 
     class Handler(BaseHTTPRequestHandler):
       def do_POST(self):
