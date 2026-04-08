@@ -554,6 +554,7 @@ output.file:
   filename: capture.ndjson
   rotate_every_kb: 1048576
   number_of_files: 3
+  permissions: 0644
   codec.json:
     pretty: false
 
@@ -849,13 +850,16 @@ def count_ndjson_rows(path: Path) -> int:
         return 0
     rows = 0
     ends_with_newline = True
-    with path.open("rb") as handle:
-        while True:
-            chunk = handle.read(1024 * 1024)
-            if not chunk:
-                break
-            rows += chunk.count(b"\n")
-            ends_with_newline = chunk.endswith(b"\n")
+    try:
+        with path.open("rb") as handle:
+            while True:
+                chunk = handle.read(1024 * 1024)
+                if not chunk:
+                    break
+                rows += chunk.count(b"\n")
+                ends_with_newline = chunk.endswith(b"\n")
+    except OSError:
+        return 0
     if rows == 0:
         return 0
     if not ends_with_newline:
@@ -1216,11 +1220,14 @@ def main() -> int:
 
         capture_files = sorted(path for path in runtime_dir.glob("capture.ndjson*") if path.is_file())
         for capture_file in capture_files:
-            copy_with_cap(
-                capture_file,
-                artifacts_dir / f"sink-{capture_file.name}",
-                max_bytes=10 * 1024 * 1024,
-            )
+            try:
+                copy_with_cap(
+                    capture_file,
+                    artifacts_dir / f"sink-{capture_file.name}",
+                    max_bytes=10 * 1024 * 1024,
+                )
+            except OSError:
+                continue
         if (runtime_dir / "events.ndjson").exists():
             copy_with_cap(
                 runtime_dir / "events.ndjson",
