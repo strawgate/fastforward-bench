@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
   "label": "collector rss mb p95",
-  "message": "114.78 MB",
-  "color": "blue"
+  "message": "114.65 MB",
+  "color": "brightgreen"
 }

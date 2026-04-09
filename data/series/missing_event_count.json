@@ -3,11 +3,11 @@
   "unit": "events",
   "direction": "smaller_is_better",
   "series": {
-    "kind/smoke/baseline-pass-through/file [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=logfwd,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]": {
+    "kind/smoke/baseline-pass-through/file [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=logfwd,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]": {
       "tags": {
         "benchkit.cluster": "kind-single-node",
-        "benchkit.cluster_cpu_limit_cores": "1.0",
-        "benchkit.cpu_profile": "single",
+        "benchkit.cluster_cpu_limit_cores": "2.0",
+        "benchkit.cpu_profile": "multi",
         "benchkit.impl": "logfwd",
         "benchkit.ingest_mode": "file",
         "benchkit.namespace": "memagent-bench",
@@ -19,16 +19,10 @@
       },
       "points": [
         {
-          "timestamp": "2026-04-09T04:05:23.000Z",
-          "value": 0,
-          "commit": "5c23fe336b2dce2766ca2ce94ebd7ece9d3a5290",
-          "run_id": "24171755832-1--kind-bench-smoke-file-profile-smoke-single-logfwd"
-        },
-        {
-          "timestamp": "2026-04-09T05:03:49.000Z",
+          "timestamp": "2026-04-09T06:06:44.000Z",
           "value": 0,
           "commit": "271ada9988fceeaeb27ffcb89bfe1d7eb087e221",
-          "run_id": "24173378594-1--kind-bench-smoke-file-profile-smoke-single-logfwd"
+          "run_id": "24175260751-1--kind-bench-smoke-file-profile-smoke-multi-logfwd"
         }
       ]
     }
