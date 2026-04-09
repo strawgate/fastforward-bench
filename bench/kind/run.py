@@ -700,15 +700,16 @@ def run_smoke_phase(
         destination=artifacts_dir / "sink-logs.txt",
         tail=-1,
     )
-    collect_sink_capture(args.namespace, sink_pod, artifacts_dir / "sink-capture.ndjson")
-
-    sink_rows = filter_rows_to_emitter_snapshot(
-        benchmark_rows(load_json_lines(artifacts_dir / "sink-capture.ndjson"), result.benchmark_id),
-        emitter_reported_stats,
-    )
+    sink_rows: list[dict[str, object]] = []
+    if not max_throughput_mode:
+        collect_sink_capture(args.namespace, sink_pod, artifacts_dir / "sink-capture.ndjson")
+        sink_rows = filter_rows_to_emitter_snapshot(
+            benchmark_rows(load_json_lines(artifacts_dir / "sink-capture.ndjson"), result.benchmark_id),
+            emitter_reported_stats,
+        )
 
     if max_throughput_mode:
-        result.captured_rows_total = len(sink_rows)
+        result.captured_rows_total = None
         result.source_rows_total = None
         result.missing_source_count = None
         result.missing_event_count = None
@@ -719,7 +720,7 @@ def run_smoke_phase(
         else:
             result.drop_estimate = None
 
-        write_json(results_dir / "actual_rows.json", sink_rows)
+        write_json(results_dir / "actual_rows.json", [])
         write_json(results_dir / "source_rows.json", [])
         write_json(
             results_dir / "stream-summary.json",
