@@ -1,8 +1,8 @@
 {
   "run": {
-    "id": "24205363010-1--kind-bench-smoke-file-tmax-multi-otelcol",
+    "id": "24205640997-1--kind-bench-smoke-file-tmax-multi-otelcol",
     "timestamp": "2026-04-09T18:10:07.070Z",
-    "commit": "367668d3a6f67d8b38cd052b442c32c4aedff714",
+    "commit": "de440308d286a988a806839df0ef1540e6165620",
     "ref": "refs/heads/codex/kind-bench-max-eps-fixes",
     "benchmarks": 0,
     "metrics": []
