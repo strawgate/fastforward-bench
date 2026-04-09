@@ -231,24 +231,25 @@ def build_resource_plan(
 
     capacity_probe = eps_per_pod >= 10_000 or unbounded_generator
     if capacity_probe:
-        # For ladder/max capacity probes, lift the benchmark envelope so sink and
-        # generator are not the first bottleneck. Keep smoke profile lightweight.
+        # For ladder/max capacity probes, use an explicit CPU envelope:
+        # generator total = 1 core, sink pod total = 1 core, collector = 1 or 2 cores.
+        # Keep smoke profile lightweight.
         if cpu_profile.name == "single":
             node_budget_mcpu = 3000
-            sink_mcpu = 850
-            capture_reader_mcpu = 50
-            collector_mcpu_min = 900
-            collector_mcpu_target = 900
+            sink_mcpu = 900
+            capture_reader_mcpu = 100
+            collector_mcpu_min = 1000
+            collector_mcpu_target = 1000
         else:
             node_budget_mcpu = 4000
-            sink_mcpu = 850
-            capture_reader_mcpu = 50
-            collector_mcpu_min = 1400
-            collector_mcpu_target = 1400
+            sink_mcpu = 900
+            capture_reader_mcpu = 100
+            collector_mcpu_min = 2000
+            collector_mcpu_target = 2000
 
     reserved_mcpu = sink_mcpu + capture_reader_mcpu
     if capacity_probe:
-        emitter_total_budget_mcpu = 900
+        emitter_total_budget_mcpu = 1000
         emitter_mcpu = max(cpu_profile.emitter_cpu_mcpu_per_pod, emitter_total_budget_mcpu // emitter_pods)
     else:
         emitter_mcpu = cpu_profile.emitter_cpu_mcpu_per_pod
