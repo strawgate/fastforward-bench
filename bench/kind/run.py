@@ -99,9 +99,9 @@ CPU_PROFILES: dict[str, CpuProfile] = {
         name="single",
         cluster_cpu_cores=3.0,
         collector_cpu_mcpu_min=900,
-        collector_cpu_mcpu_target=1000,
+        collector_cpu_mcpu_target=900,
         emitter_cpu_mcpu_per_pod=1,
-        sink_cpu_mcpu=950,
+        sink_cpu_mcpu=850,
         capture_reader_cpu_mcpu=50,
         collector_memory_limit="512Mi",
         emitter_memory_limit="96Mi",
@@ -112,9 +112,9 @@ CPU_PROFILES: dict[str, CpuProfile] = {
         name="multi",
         cluster_cpu_cores=4.0,
         collector_cpu_mcpu_min=1800,
-        collector_cpu_mcpu_target=2000,
+        collector_cpu_mcpu_target=1800,
         emitter_cpu_mcpu_per_pod=1,
-        sink_cpu_mcpu=950,
+        sink_cpu_mcpu=850,
         capture_reader_cpu_mcpu=50,
         collector_memory_limit="1Gi",
         emitter_memory_limit="96Mi",
@@ -227,11 +227,9 @@ def build_resource_plan(
     capture_reader_mcpu = cpu_profile.capture_reader_cpu_mcpu
     reserved_mcpu = sink_mcpu + capture_reader_mcpu
 
-    # Keep generator constrained to ~1 core total so collector-vs-sink comparisons
-    # run under a consistent budget envelope:
-    # - single profile: generator ~1 core, sink ~1 core, collector ~1 core
-    # - multi profile:  generator ~1 core, sink ~1 core, collector ~2 cores
-    emitter_total_budget_mcpu = 1000
+    # Keep generator/sink near 1 core class while leaving scheduler headroom for
+    # node/system overhead on hosted runners.
+    emitter_total_budget_mcpu = 900
     emitter_mcpu = max(cpu_profile.emitter_cpu_mcpu_per_pod, emitter_total_budget_mcpu // emitter_pods)
     collector_mcpu = node_budget_mcpu - reserved_mcpu - (emitter_mcpu * emitter_pods)
 
