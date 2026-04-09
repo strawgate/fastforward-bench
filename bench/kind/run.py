@@ -610,6 +610,10 @@ def run_smoke_phase(
     result: BenchmarkResult,
 ) -> int:
     max_throughput_mode = profile.eps_per_pod == 0
+    # At very high bounded targets, source/sink row capture is too expensive and
+    # can dominate the lane runtime. Treat these as saturation probes regardless
+    # of ingest mode and rely on diagnostics totals + sink throughput signals.
+    saturation_target_mode = profile.eps_per_pod >= 100_000
 
     apply_manifest(manifests["collector_configmap"])
     apply_manifest(manifests["collector_workload"])
@@ -736,7 +740,7 @@ def run_smoke_phase(
         tail=-1,
     )
     sink_rows: list[dict[str, object]] = []
-    if not max_throughput_mode:
+    if not max_throughput_mode and not saturation_target_mode:
         collect_sink_capture(args.namespace, sink_pod, artifacts_dir / "sink-capture.ndjson")
         sink_rows = filter_rows_to_emitter_snapshot(
             benchmark_rows(load_json_lines(artifacts_dir / "sink-capture.ndjson"), result.benchmark_id),
@@ -793,6 +797,59 @@ def run_smoke_phase(
         result.status = "fail"
         result.notes = (
             "max-throughput benchmark did not observe sink output in unbounded mode; "
+            f"sink_lines_total={result.sink_lines_total}, sink_reported_events_total={result.sink_reported_events_total}."
+        )
+        return 1
+
+    if saturation_target_mode:
+        result.captured_rows_total = None
+        result.source_rows_total = None
+        result.missing_source_count = None
+        result.missing_event_count = None
+        result.unexpected_event_count = None
+        result.dup_estimate = None
+        if result.emitter_reported_events_total is not None and result.sink_reported_events_total is not None:
+            result.drop_estimate = max(0, result.emitter_reported_events_total - result.sink_reported_events_total)
+        else:
+            result.drop_estimate = None
+
+        write_json(results_dir / "actual_rows.json", [])
+        write_json(results_dir / "source_rows.json", [])
+        write_json(
+            results_dir / "stream-summary.json",
+            {
+                "mode": "saturation-target",
+                "source_oracle": "relaxed",
+                "target_eps_per_pod": profile.eps_per_pod,
+                "emitter_reported_events_total": result.emitter_reported_events_total,
+                "sink_reported_events_total": result.sink_reported_events_total,
+                "sink_lines_total": result.sink_lines_total,
+                "sink_lines_per_sec_avg": result.sink_lines_per_sec_avg,
+                "drop_estimate": result.drop_estimate,
+            },
+        )
+        write_json(results_dir / "emitter-stats.json", emitter_reported_stats)
+        write_json(results_dir / "sink-stats.json", sink_reported_stats)
+
+        observed_sink_output = bool(
+            (result.sink_lines_total is not None and result.sink_lines_total > 0)
+            or (result.sink_reported_events_total is not None and result.sink_reported_events_total > 0)
+        )
+        if observed_sink_output:
+            result.status = "pass"
+            result.notes = (
+                f"smoke benchmark completed in {adapter.benchmark_mode} at saturation target "
+                f"(target_eps_per_pod={profile.eps_per_pod}); strict source-vs-sink oracle is relaxed in this mode. "
+                f"sink_lines_total={result.sink_lines_total}, sink_lines_per_sec_avg={result.sink_lines_per_sec_avg}, "
+                f"emitter_reported_events_total={result.emitter_reported_events_total}, "
+                f"sink_reported_events_total={result.sink_reported_events_total}, "
+                f"drop_estimate={result.drop_estimate}."
+            )
+            return 0
+
+        result.status = "fail"
+        result.notes = (
+            f"smoke benchmark did not observe sink output at saturation target (target_eps_per_pod={profile.eps_per_pod}); "
             f"sink_lines_total={result.sink_lines_total}, sink_reported_events_total={result.sink_reported_events_total}."
         )
         return 1
@@ -1087,7 +1144,10 @@ def main() -> int:
         wait_for_namespace(args.namespace)
         apply_manifest(manifests["sink_configmap"])
         apply_manifest(manifests["sink_deployment"])
-        wait_for_deployment(args.namespace, "logfwd-capture", timeout_sec=90)
+        # Cold-start image pulls and CNI bring-up on shared runners can make
+        # sink rollout occasionally exceed 90s; use a wider timeout to reduce
+        # false negatives on low-EPS gating lanes.
+        wait_for_deployment(args.namespace, "logfwd-capture", timeout_sec=180)
         result.sink_ready = True
 
         if args.phase == "infra":

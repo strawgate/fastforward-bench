@@ -227,6 +227,11 @@ jobs:
         name: Start Octo11y monitor
         id: monitor
         uses: strawgate/octo11y/actions/monitor@main-dist
+        env:
+          GIT_AUTHOR_NAME: github-actions[bot]
+          GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+          GIT_COMMITTER_NAME: github-actions[bot]
+          GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
         with:
           run-id: ${{ env.BENCHKIT_RUN_ID }}
           scrape-interval: 1s
@@ -234,7 +239,10 @@ jobs:
       - name: Run compose benchmark harness
         continue-on-error: ${{ github.event_name == 'schedule' || matrix.workload.label == 'tmax' || matrix.workload.eps_per_sec >= 10000 }}
         run: |
-          python3 bench/compose/run.py \
+          set -euo pipefail
+          mkdir -p "${BENCH_RESULTS_DIR}"
+          HARNESS_LOG="${BENCH_RESULTS_DIR}/harness.log"
+          if ! python3 bench/compose/run.py \
             --collector "${BENCH_COLLECTOR}" \
             --ingest-mode "${BENCH_INGEST_MODE}" \
             --profile "${BENCH_PROFILE}" \
@@ -242,7 +250,13 @@ jobs:
             --eps-per-sec "${BENCH_EPS_PER_SEC}" \
             --benchkit-run-id "${BENCHKIT_RUN_ID}" \
             --benchkit-kind "hybrid" \
-            --results-dir "${BENCH_RESULTS_DIR}"
+            --results-dir "${BENCH_RESULTS_DIR}" \
+            >"${HARNESS_LOG}" 2>&1; then
+            echo "compose harness failed, tailing ${HARNESS_LOG}"
+            tail -n 200 "${HARNESS_LOG}" || true
+            exit 1
+          fi
+          tail -n 40 "${HARNESS_LOG}" || true
       - if: always()
         name: Ensure fallback benchmark result exists
         run: |
