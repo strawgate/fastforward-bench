@@ -1,6 +1,0 @@
-{
-  "schemaVersion": 1,
-  "label": "system.cpu.load average.1m",
-  "message": "0.92 {thread}",
-  "color": "blue"
-}

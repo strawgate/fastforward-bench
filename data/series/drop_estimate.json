@@ -3,29 +3,6 @@
   "unit": "events",
   "direction": "smaller_is_better",
   "series": {
-    "kind/smoke/baseline-pass-through/otlp [benchkit.cluster=docker-compose,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=otelcol,benchkit.ingest_mode=otlp,benchkit.namespace=compose,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]": {
-      "tags": {
-        "benchkit.cluster": "docker-compose",
-        "benchkit.cluster_cpu_limit_cores": "1.0",
-        "benchkit.cpu_profile": "single",
-        "benchkit.impl": "otelcol",
-        "benchkit.ingest_mode": "otlp",
-        "benchkit.namespace": "compose",
-        "benchkit.pods": "1",
-        "benchkit.profile": "smoke",
-        "benchkit.protocol": "otlp_http",
-        "benchkit.target_eps_per_pod": "0",
-        "benchkit.total_target_eps": "0"
-      },
-      "points": [
-        {
-          "timestamp": "2026-04-08T19:29:28.000Z",
-          "value": 122880,
-          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
-          "run_id": "24154075042-1--compose-bench-smoke-otlp-tmax-single-otelcol"
-        }
-      ]
-    },
     "kind/smoke/baseline-pass-through/file [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=logfwd,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]": {
       "tags": {
         "benchkit.cluster": "kind-single-node",
@@ -46,6 +23,12 @@
           "value": 0,
           "commit": "5c23fe336b2dce2766ca2ce94ebd7ece9d3a5290",
           "run_id": "24171755832-1--kind-bench-smoke-file-profile-smoke-single-logfwd"
+        },
+        {
+          "timestamp": "2026-04-09T05:03:49.000Z",
+          "value": 0,
+          "commit": "271ada9988fceeaeb27ffcb89bfe1d7eb087e221",
+          "run_id": "24173378594-1--kind-bench-smoke-file-profile-smoke-single-logfwd"
         }
       ]
     }

@@ -2,5 +2,5 @@
   "schemaVersion": 1,
   "label": "missing source count",
   "message": "0 sources",
-  "color": "blue"
+  "color": "red"
 }
