@@ -243,8 +243,8 @@ def build_resource_plan(
             node_budget_mcpu = 4000
             sink_mcpu = 850
             capture_reader_mcpu = 50
-            collector_mcpu_min = 1800
-            collector_mcpu_target = 1800
+            collector_mcpu_min = 1400
+            collector_mcpu_target = 1400
 
     reserved_mcpu = sink_mcpu + capture_reader_mcpu
     if capacity_probe:
