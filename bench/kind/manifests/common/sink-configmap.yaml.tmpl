@@ -31,6 +31,7 @@ data:
       "benchmark_rows_total": 0,
       "capture_size_bytes": 0,
       "benchmark_id": benchmark_id,
+      "benchmark_max_seq_by_pod": {},
     }
 
     class Handler(BaseHTTPRequestHandler):
@@ -46,6 +47,7 @@ data:
             body += b"\n"
           rows = [line for line in body.splitlines() if line.strip()]
           benchmark_rows = 0
+          benchmark_max_seq_by_pod = {}
           if benchmark_id is None:
             benchmark_rows = len(rows)
           else:
@@ -56,12 +58,23 @@ data:
                 continue
               if isinstance(row, dict) and row.get("benchmark_id") == benchmark_id:
                 benchmark_rows += 1
+                pod_name = row.get("pod_name")
+                seq = row.get("seq")
+                if isinstance(pod_name, str) and isinstance(seq, int):
+                  current = benchmark_max_seq_by_pod.get(pod_name)
+                  if current is None or seq > current:
+                    benchmark_max_seq_by_pod[pod_name] = seq
           with capture_lock:
             with capture_path.open("ab") as handle:
               handle.write(body)
             metrics["capture_size_bytes"] += len(body)
             metrics["capture_rows_total"] += len(rows)
             metrics["benchmark_rows_total"] += benchmark_rows
+            max_seq_by_pod = metrics["benchmark_max_seq_by_pod"]
+            for pod_name, seq in benchmark_max_seq_by_pod.items():
+              current = max_seq_by_pod.get(pod_name)
+              if current is None or seq > current:
+                max_seq_by_pod[pod_name] = seq
         self.send_response(200)
         self.end_headers()
 

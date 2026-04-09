@@ -341,7 +341,7 @@ jobs:
           run-id: ${{ env.BENCHKIT_RUN_ID }}
           summary: true
       - if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: kind-bench-${{ needs.plan.outputs.bench_profile }}-${{ matrix.ingest_mode }}-${{ matrix.workload.label }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}
           path: ${{ env.BENCH_RESULTS_DIR }}
@@ -355,7 +355,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           path: artifacts
       - name: Render benchmark summary
@@ -373,7 +373,7 @@ jobs:
             --output-json bench-summary.json
       - name: Publish benchmark summary
         run: cat bench-summary.md >>"$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: bench-kind-summary
           path: |
@@ -413,3 +413,123 @@ jobs:
           ISSUE_SUITE_KEY: ${{ steps.issue_meta.outputs.suite_key }}
           ISSUE_LABELS: ${{ steps.issue_meta.outputs.labels }}
         run: tests/e2e/lib/upsert_issue.sh
+      - if: always()
+        name: Enforce benchmark matrix truthfulness
+        env:
+          EXPECTED_COLLECTORS: ${{ needs.plan.outputs.collectors }}
+          EXPECTED_CPU_PROFILES: ${{ needs.plan.outputs.cpu_profiles }}
+          EXPECTED_INGEST_MODES: ${{ needs.plan.outputs.ingest_modes }}
+          EXPECTED_WORKLOADS: ${{ needs.plan.outputs.workloads }}
+          NON_GATING_COLLECTORS: '["vector"]'
+          NON_GATING_EPS_MIN: "10000"
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import sys
+
+          with open("bench-summary.json", "r", encoding="utf-8") as handle:
+            summary = json.load(handle)
+
+          benchmark_count = int(summary.get("benchmark_count", 0))
+          failed_count = int(summary.get("failed_count", 0))
+          non_gating_eps_min = int(os.environ.get("NON_GATING_EPS_MIN", "10000"))
+          non_gating_collectors = set(json.loads(os.environ.get("NON_GATING_COLLECTORS", "[]")))
+
+          collectors = json.loads(os.environ["EXPECTED_COLLECTORS"])
+          cpu_profiles = json.loads(os.environ["EXPECTED_CPU_PROFILES"])
+          ingest_modes = json.loads(os.environ["EXPECTED_INGEST_MODES"])
+          workloads = json.loads(os.environ["EXPECTED_WORKLOADS"])
+
+          expected = len(collectors) * len(cpu_profiles) * len(ingest_modes) * len(workloads)
+          if "vector" in collectors and "otlp" in ingest_modes:
+            expected -= len(cpu_profiles) * len(workloads)
+
+          print(
+            f"expected={expected} benchmark_count={benchmark_count} failed_count={failed_count}"
+          )
+
+          if benchmark_count < expected:
+            print(
+              f"missing benchmark artifacts: expected {expected}, got {benchmark_count}",
+              file=sys.stderr,
+            )
+            sys.exit(1)
+
+          gating_failures = []
+          tolerated_failures = []
+          for row in summary.get("results", []):
+            status = str(row.get("status") or "fail").lower()
+            collector = str(row.get("collector") or "")
+            target_eps = int(row.get("total_target_eps", 0) or 0)
+            non_gating = (
+              collector in non_gating_collectors
+              or target_eps == 0
+              or target_eps >= non_gating_eps_min
+            )
+            if status == "pass":
+              continue
+            if non_gating:
+              tolerated_failures.append(
+                {
+                  "artifact": row.get("artifact_name"),
+                  "collector": collector,
+                  "ingest_mode": row.get("ingest_mode"),
+                  "cpu_profile": row.get("cpu_profile"),
+                  "target_eps": target_eps,
+                  "status": status,
+                }
+              )
+            else:
+              gating_failures.append(
+                {
+                  "artifact": row.get("artifact_name"),
+                  "collector": collector,
+                  "ingest_mode": row.get("ingest_mode"),
+                  "cpu_profile": row.get("cpu_profile"),
+                  "target_eps": target_eps,
+                  "status": status,
+                }
+              )
+
+          if tolerated_failures:
+            print(f"tolerating {len(tolerated_failures)} non-gating failures")
+            for row in tolerated_failures[:20]:
+              print(row)
+          if gating_failures:
+            print("gating benchmark failures detected:", file=sys.stderr)
+            for row in gating_failures[:20]:
+              print(row, file=sys.stderr)
+            sys.exit(1)
+
+          integrity_violations = []
+          for row in summary.get("results", []):
+            collector = str(row.get("collector") or "")
+            target_eps = int(row.get("total_target_eps", 0) or 0)
+            if (
+              collector in non_gating_collectors
+              or target_eps == 0
+              or target_eps >= non_gating_eps_min
+            ):
+              continue
+            missing = int(row.get("missing_event_count", 0) or 0)
+            unexpected = int(row.get("unexpected_event_count", 0) or 0)
+            dup = int(row.get("dup_estimate", 0) or 0)
+            drop = int(row.get("drop_estimate", 0) or 0)
+            if missing > 0 or unexpected > 0 or dup > 0 or drop > 0:
+              integrity_violations.append(
+                {
+                  "artifact": row.get("artifact_name"),
+                  "missing": missing,
+                  "unexpected": unexpected,
+                  "dup": dup,
+                  "drop": drop,
+                }
+              )
+
+          if integrity_violations:
+            print("integrity violations detected:", file=sys.stderr)
+            for violation in integrity_violations[:20]:
+              print(violation, file=sys.stderr)
+            sys.exit(1)
+          PY
