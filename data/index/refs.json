@@ -2,29 +2,29 @@
   {
     "ref": "refs/heads/master",
     "latestRunId": "24197214811-1--kind-bench-smoke-file-t1m-multi-vector",
-    "latestTimestamp": "2026-04-09T15:37:31.762Z",
+    "latestTimestamp": "2026-04-09T15:43:20.222Z",
     "latestCommit": "12c922c56223fc8eeea543bb296fb855c08fe51e",
     "runCount": 8
   },
   {
     "ref": "refs/heads/codex/bench-compose-smoke",
     "latestRunId": "24146309842-1--compose-bench-smoke-tmax-single-vector",
-    "latestTimestamp": "2026-04-09T15:37:31.762Z",
+    "latestTimestamp": "2026-04-09T15:43:20.222Z",
     "latestCommit": "ab9a65b8cef21a8ec61f4d0df6249b21d46c629c",
     "runCount": 21
   },
   {
     "ref": "refs/heads/codex/eps-target-sweep",
     "latestRunId": "24111535469-1--kind-bench-smoke-file-profile-smoke-single-fluent-bit",
-    "latestTimestamp": "2026-04-09T15:37:31.761Z",
+    "latestTimestamp": "2026-04-09T15:43:20.221Z",
     "latestCommit": "2b1fcaf8f24d906c29db6f300042811468451186",
     "runCount": 20
   },
   {
     "ref": "refs/heads/codex/kind-bench-max-eps-fixes",
-    "latestRunId": "24198786890-1--kind-bench-smoke-file-tmax-single-logfwd",
-    "latestTimestamp": "2026-04-09T15:32:44.000Z",
-    "latestCommit": "4bf38ecbd821ef4229bd0002be828a430382f112",
+    "latestRunId": "24199120948-1--kind-bench-smoke-file-tmax-single-logfwd",
+    "latestTimestamp": "2026-04-09T15:39:49.000Z",
+    "latestCommit": "3ec886c2bd533c039538a8aacf9874bcd8f2dc96",
     "runCount": 1
   }
 ]

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
   "label": "sink reported events total",
-  "message": "922.1k events",
+  "message": "2.9M events",
   "color": "blue"
 }
