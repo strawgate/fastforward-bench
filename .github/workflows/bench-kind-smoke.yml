@@ -249,6 +249,75 @@ jobs:
             --benchkit-kind "hybrid" \
             --benchkit-otlp-http-endpoint "${{ steps.monitor.outputs.otlp-http-endpoint }}" \
             --results-dir "${BENCH_RESULTS_DIR}"
+      - if: always()
+        name: Ensure fallback benchmark result exists
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          results_dir = Path(os.environ["BENCH_RESULTS_DIR"])
+          result_path = results_dir / "result.json"
+          if result_path.exists():
+            raise SystemExit(0)
+
+          results_dir.mkdir(parents=True, exist_ok=True)
+          target_eps = int(os.environ.get("BENCH_EPS_PER_POD", "0") or 0) * int(os.environ.get("BENCH_PODS", "1") or 1)
+          fallback = {
+            "benchmark_id": "missing-result",
+            "timestamp_utc": "",
+            "phase": "smoke",
+            "benchmark_mode": "baseline-pass-through",
+            "cluster": "kind",
+            "cluster_name": os.environ.get("CLUSTER_NAME", ""),
+            "namespace": "bench",
+            "collector": os.environ.get("BENCH_COLLECTOR", "unknown"),
+            "protocol": "otlp_http",
+            "ingest_mode": os.environ.get("BENCH_INGEST_MODE", "unknown"),
+            "cpu_profile": os.environ.get("BENCH_CPU_PROFILE", "unknown"),
+            "cluster_cpu_limit_cores": None,
+            "pods": int(os.environ.get("BENCH_PODS", "1") or 1),
+            "target_eps_per_pod": int(os.environ.get("BENCH_EPS_PER_POD", "0") or 0),
+            "total_target_eps": target_eps,
+            "warmup_sec": None,
+            "measure_sec": None,
+            "cooldown_sec": None,
+            "sink_lines_total": 0,
+            "emitter_reported_events_total": None,
+            "sink_reported_events_total": 0,
+            "captured_rows_total": None,
+            "source_rows_total": None,
+            "missing_source_count": None,
+            "missing_event_count": None,
+            "unexpected_event_count": None,
+            "sink_lines_per_sec_avg": 0.0,
+            "sink_lines_per_sec_p50": None,
+            "sink_lines_per_sec_p95": None,
+            "sink_lines_per_sec_p99": None,
+            "drop_estimate": None,
+            "dup_estimate": None,
+            "latency_ms_p50": None,
+            "latency_ms_p95": None,
+            "latency_ms_p99": None,
+            "collector_cpu_cores_avg": None,
+            "collector_cpu_cores_p95": None,
+            "collector_rss_mb_avg": None,
+            "collector_rss_mb_p95": None,
+            "cluster_ready": False,
+            "sink_ready": False,
+            "status": "fail",
+            "notes": "kind benchmark harness exited before writing result.json",
+          }
+          result_path.write_text(json.dumps(fallback, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+          (results_dir / "summary.md").write_text(
+            "# Benchmark result missing\n\n"
+            "- status: `fail`\n"
+            "- notes: kind benchmark harness exited before writing result.json\n",
+            encoding="utf-8",
+          )
+          print(f"wrote fallback result at {result_path}")
+          PY
       - if: env.PERSIST_BENCH_DATA == 'true'
         name: Stash jitter
         shell: bash
