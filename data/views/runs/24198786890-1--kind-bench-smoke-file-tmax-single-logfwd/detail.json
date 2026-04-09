@@ -1,9 +1,9 @@
 {
   "run": {
-    "id": "24197214811-1--kind-bench-smoke-file-tmax-multi-vector",
-    "timestamp": "2026-04-09T15:05:56.000Z",
-    "commit": "12c922c56223fc8eeea543bb296fb855c08fe51e",
-    "ref": "refs/heads/master",
+    "id": "24198786890-1--kind-bench-smoke-file-tmax-single-logfwd",
+    "timestamp": "2026-04-09T15:32:44.000Z",
+    "commit": "4bf38ecbd821ef4229bd0002be828a430382f112",
+    "ref": "refs/heads/codex/kind-bench-max-eps-fixes",
     "benchmarks": 1,
     "metrics": [
       "captured_rows_total",
@@ -32,20 +32,20 @@
       "direction": "bigger_is_better",
       "values": [
         {
-          "name": "vector [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=vector,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=http_ndjson,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
-          "value": 127799,
+          "name": "logfwd [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=logfwd,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
+          "value": 1025233,
           "unit": "events",
           "direction": "bigger_is_better",
           "tags": {
             "benchkit.cluster": "kind-single-node",
-            "benchkit.cluster_cpu_limit_cores": "2.0",
-            "benchkit.cpu_profile": "multi",
-            "benchkit.impl": "vector",
+            "benchkit.cluster_cpu_limit_cores": "1.0",
+            "benchkit.cpu_profile": "single",
+            "benchkit.impl": "logfwd",
             "benchkit.ingest_mode": "file",
             "benchkit.namespace": "memagent-bench",
             "benchkit.pods": "1",
             "benchkit.profile": "smoke",
-            "benchkit.protocol": "http_ndjson",
+            "benchkit.protocol": "otlp_http",
             "benchkit.target_eps_per_pod": "0",
             "benchkit.total_target_eps": "0"
           }
@@ -58,20 +58,20 @@
       "direction": "smaller_is_better",
       "values": [
         {
-          "name": "vector [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=vector,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=http_ndjson,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
-          "value": 0,
+          "name": "logfwd [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=logfwd,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
+          "value": 0.18057510300324547,
           "unit": "cores",
           "direction": "smaller_is_better",
           "tags": {
             "benchkit.cluster": "kind-single-node",
-            "benchkit.cluster_cpu_limit_cores": "2.0",
-            "benchkit.cpu_profile": "multi",
-            "benchkit.impl": "vector",
+            "benchkit.cluster_cpu_limit_cores": "1.0",
+            "benchkit.cpu_profile": "single",
+            "benchkit.impl": "logfwd",
             "benchkit.ingest_mode": "file",
             "benchkit.namespace": "memagent-bench",
             "benchkit.pods": "1",
             "benchkit.profile": "smoke",
-            "benchkit.protocol": "http_ndjson",
+            "benchkit.protocol": "otlp_http",
             "benchkit.target_eps_per_pod": "0",
             "benchkit.total_target_eps": "0"
           }
@@ -84,20 +84,20 @@
       "direction": "smaller_is_better",
       "values": [
         {
-          "name": "vector [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=vector,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=http_ndjson,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
-          "value": 0,
+          "name": "logfwd [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=logfwd,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
+          "value": 0.2503208791209959,
           "unit": "cores",
           "direction": "smaller_is_better",
           "tags": {
             "benchkit.cluster": "kind-single-node",
-            "benchkit.cluster_cpu_limit_cores": "2.0",
-            "benchkit.cpu_profile": "multi",
-            "benchkit.impl": "vector",
+            "benchkit.cluster_cpu_limit_cores": "1.0",
+            "benchkit.cpu_profile": "single",
+            "benchkit.impl": "logfwd",
             "benchkit.ingest_mode": "file",
             "benchkit.namespace": "memagent-bench",
             "benchkit.pods": "1",
             "benchkit.profile": "smoke",
-            "benchkit.protocol": "http_ndjson",
+            "benchkit.protocol": "otlp_http",
             "benchkit.target_eps_per_pod": "0",
             "benchkit.total_target_eps": "0"
           }
@@ -110,20 +110,20 @@
       "direction": "smaller_is_better",
       "values": [
         {
-          "name": "vector [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=vector,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=http_ndjson,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
-          "value": 0,
+          "name": "logfwd [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=logfwd,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
+          "value": 324.39296875,
           "unit": "MB",
           "direction": "smaller_is_better",
           "tags": {
             "benchkit.cluster": "kind-single-node",
-            "benchkit.cluster_cpu_limit_cores": "2.0",
-            "benchkit.cpu_profile": "multi",
-            "benchkit.impl": "vector",
+            "benchkit.cluster_cpu_limit_cores": "1.0",
+            "benchkit.cpu_profile": "single",
+            "benchkit.impl": "logfwd",
             "benchkit.ingest_mode": "file",
             "benchkit.namespace": "memagent-bench",
             "benchkit.pods": "1",
             "benchkit.profile": "smoke",
-            "benchkit.protocol": "http_ndjson",
+            "benchkit.protocol": "otlp_http",
             "benchkit.target_eps_per_pod": "0",
             "benchkit.total_target_eps": "0"
           }
@@ -136,20 +136,20 @@
       "direction": "smaller_is_better",
       "values": [
         {
-          "name": "vector [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=vector,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=http_ndjson,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
-          "value": 0,
+          "name": "logfwd [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=logfwd,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
+          "value": 339.37109375,
           "unit": "MB",
           "direction": "smaller_is_better",
           "tags": {
             "benchkit.cluster": "kind-single-node",
-            "benchkit.cluster_cpu_limit_cores": "2.0",
-            "benchkit.cpu_profile": "multi",
-            "benchkit.impl": "vector",
+            "benchkit.cluster_cpu_limit_cores": "1.0",
+            "benchkit.cpu_profile": "single",
+            "benchkit.impl": "logfwd",
             "benchkit.ingest_mode": "file",
             "benchkit.namespace": "memagent-bench",
             "benchkit.pods": "1",
             "benchkit.profile": "smoke",
-            "benchkit.protocol": "http_ndjson",
+            "benchkit.protocol": "otlp_http",
             "benchkit.target_eps_per_pod": "0",
             "benchkit.total_target_eps": "0"
           }
@@ -162,20 +162,20 @@
       "direction": "smaller_is_better",
       "values": [
         {
-          "name": "vector [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=vector,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=http_ndjson,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
-          "value": 1576554,
+          "name": "logfwd [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=logfwd,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
+          "value": 117576,
           "unit": "events",
           "direction": "smaller_is_better",
           "tags": {
             "benchkit.cluster": "kind-single-node",
-            "benchkit.cluster_cpu_limit_cores": "2.0",
-            "benchkit.cpu_profile": "multi",
-            "benchkit.impl": "vector",
+            "benchkit.cluster_cpu_limit_cores": "1.0",
+            "benchkit.cpu_profile": "single",
+            "benchkit.impl": "logfwd",
             "benchkit.ingest_mode": "file",
             "benchkit.namespace": "memagent-bench",
             "benchkit.pods": "1",
             "benchkit.profile": "smoke",
-            "benchkit.protocol": "http_ndjson",
+            "benchkit.protocol": "otlp_http",
             "benchkit.target_eps_per_pod": "0",
             "benchkit.total_target_eps": "0"
           }
@@ -188,20 +188,20 @@
       "direction": "bigger_is_better",
       "values": [
         {
-          "name": "vector [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=vector,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=http_ndjson,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
-          "value": 1701824,
+          "name": "logfwd [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=logfwd,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
+          "value": 1039680,
           "unit": "events",
           "direction": "bigger_is_better",
           "tags": {
             "benchkit.cluster": "kind-single-node",
-            "benchkit.cluster_cpu_limit_cores": "2.0",
-            "benchkit.cpu_profile": "multi",
-            "benchkit.impl": "vector",
+            "benchkit.cluster_cpu_limit_cores": "1.0",
+            "benchkit.cpu_profile": "single",
+            "benchkit.impl": "logfwd",
             "benchkit.ingest_mode": "file",
             "benchkit.namespace": "memagent-bench",
             "benchkit.pods": "1",
             "benchkit.profile": "smoke",
-            "benchkit.protocol": "http_ndjson",
+            "benchkit.protocol": "otlp_http",
             "benchkit.target_eps_per_pod": "0",
             "benchkit.total_target_eps": "0"
           }
@@ -214,20 +214,20 @@
       "direction": "smaller_is_better",
       "values": [
         {
-          "name": "vector [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=vector,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=http_ndjson,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
-          "value": 0,
+          "name": "logfwd [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=logfwd,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
+          "value": 0.24890443847023502,
           "unit": "cores",
           "direction": "smaller_is_better",
           "tags": {
             "benchkit.cluster": "kind-single-node",
-            "benchkit.cluster_cpu_limit_cores": "2.0",
-            "benchkit.cpu_profile": "multi",
-            "benchkit.impl": "vector",
+            "benchkit.cluster_cpu_limit_cores": "1.0",
+            "benchkit.cpu_profile": "single",
+            "benchkit.impl": "logfwd",
             "benchkit.ingest_mode": "file",
             "benchkit.namespace": "memagent-bench",
             "benchkit.pods": "1",
             "benchkit.profile": "smoke",
-            "benchkit.protocol": "http_ndjson",
+            "benchkit.protocol": "otlp_http",
             "benchkit.target_eps_per_pod": "0",
             "benchkit.total_target_eps": "0"
           }
@@ -240,20 +240,20 @@
       "direction": "smaller_is_better",
       "values": [
         {
-          "name": "vector [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=vector,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=http_ndjson,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
-          "value": 0,
+          "name": "logfwd [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=logfwd,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
+          "value": 0.26352752713603594,
           "unit": "cores",
           "direction": "smaller_is_better",
           "tags": {
             "benchkit.cluster": "kind-single-node",
-            "benchkit.cluster_cpu_limit_cores": "2.0",
-            "benchkit.cpu_profile": "multi",
-            "benchkit.impl": "vector",
+            "benchkit.cluster_cpu_limit_cores": "1.0",
+            "benchkit.cpu_profile": "single",
+            "benchkit.impl": "logfwd",
             "benchkit.ingest_mode": "file",
             "benchkit.namespace": "memagent-bench",
             "benchkit.pods": "1",
             "benchkit.profile": "smoke",
-            "benchkit.protocol": "http_ndjson",
+            "benchkit.protocol": "otlp_http",
             "benchkit.target_eps_per_pod": "0",
             "benchkit.total_target_eps": "0"
           }
@@ -266,20 +266,20 @@
       "direction": "bigger_is_better",
       "values": [
         {
-          "name": "vector [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=vector,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=http_ndjson,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
-          "value": 2130.2530331964067,
+          "name": "logfwd [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=logfwd,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
+          "value": 25235.69030245239,
           "unit": "events/sec",
           "direction": "bigger_is_better",
           "tags": {
             "benchkit.cluster": "kind-single-node",
-            "benchkit.cluster_cpu_limit_cores": "2.0",
-            "benchkit.cpu_profile": "multi",
-            "benchkit.impl": "vector",
+            "benchkit.cluster_cpu_limit_cores": "1.0",
+            "benchkit.cpu_profile": "single",
+            "benchkit.impl": "logfwd",
             "benchkit.ingest_mode": "file",
             "benchkit.namespace": "memagent-bench",
             "benchkit.pods": "1",
             "benchkit.profile": "smoke",
-            "benchkit.protocol": "http_ndjson",
+            "benchkit.protocol": "otlp_http",
             "benchkit.target_eps_per_pod": "0",
             "benchkit.total_target_eps": "0"
           }
@@ -292,20 +292,20 @@
       "direction": "bigger_is_better",
       "values": [
         {
-          "name": "vector [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=vector,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=http_ndjson,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
-          "value": 2308.3874723565777,
+          "name": "logfwd [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=logfwd,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
+          "value": 23698.77974675147,
           "unit": "events/sec",
           "direction": "bigger_is_better",
           "tags": {
             "benchkit.cluster": "kind-single-node",
-            "benchkit.cluster_cpu_limit_cores": "2.0",
-            "benchkit.cpu_profile": "multi",
-            "benchkit.impl": "vector",
+            "benchkit.cluster_cpu_limit_cores": "1.0",
+            "benchkit.cpu_profile": "single",
+            "benchkit.impl": "logfwd",
             "benchkit.ingest_mode": "file",
             "benchkit.namespace": "memagent-bench",
             "benchkit.pods": "1",
             "benchkit.profile": "smoke",
-            "benchkit.protocol": "http_ndjson",
+            "benchkit.protocol": "otlp_http",
             "benchkit.target_eps_per_pod": "0",
             "benchkit.total_target_eps": "0"
           }
@@ -318,20 +318,20 @@
       "direction": "bigger_is_better",
       "values": [
         {
-          "name": "vector [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=vector,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=http_ndjson,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
-          "value": 4558.960299755567,
+          "name": "logfwd [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=logfwd,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
+          "value": 40327.30105935718,
           "unit": "events/sec",
           "direction": "bigger_is_better",
           "tags": {
             "benchkit.cluster": "kind-single-node",
-            "benchkit.cluster_cpu_limit_cores": "2.0",
-            "benchkit.cpu_profile": "multi",
-            "benchkit.impl": "vector",
+            "benchkit.cluster_cpu_limit_cores": "1.0",
+            "benchkit.cpu_profile": "single",
+            "benchkit.impl": "logfwd",
             "benchkit.ingest_mode": "file",
             "benchkit.namespace": "memagent-bench",
             "benchkit.pods": "1",
             "benchkit.profile": "smoke",
-            "benchkit.protocol": "http_ndjson",
+            "benchkit.protocol": "otlp_http",
             "benchkit.target_eps_per_pod": "0",
             "benchkit.total_target_eps": "0"
           }
@@ -344,20 +344,20 @@
       "direction": "bigger_is_better",
       "values": [
         {
-          "name": "vector [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=vector,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=http_ndjson,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
-          "value": 4862.607364151532,
+          "name": "logfwd [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=logfwd,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
+          "value": 41845.78000661981,
           "unit": "events/sec",
           "direction": "bigger_is_better",
           "tags": {
             "benchkit.cluster": "kind-single-node",
-            "benchkit.cluster_cpu_limit_cores": "2.0",
-            "benchkit.cpu_profile": "multi",
-            "benchkit.impl": "vector",
+            "benchkit.cluster_cpu_limit_cores": "1.0",
+            "benchkit.cpu_profile": "single",
+            "benchkit.impl": "logfwd",
             "benchkit.ingest_mode": "file",
             "benchkit.namespace": "memagent-bench",
             "benchkit.pods": "1",
             "benchkit.profile": "smoke",
-            "benchkit.protocol": "http_ndjson",
+            "benchkit.protocol": "otlp_http",
             "benchkit.target_eps_per_pod": "0",
             "benchkit.total_target_eps": "0"
           }
@@ -370,20 +370,20 @@
       "direction": "bigger_is_better",
       "values": [
         {
-          "name": "vector [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=vector,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=http_ndjson,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
-          "value": 30825,
+          "name": "logfwd [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=logfwd,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
+          "value": 387560,
           "unit": "events",
           "direction": "bigger_is_better",
           "tags": {
             "benchkit.cluster": "kind-single-node",
-            "benchkit.cluster_cpu_limit_cores": "2.0",
-            "benchkit.cpu_profile": "multi",
-            "benchkit.impl": "vector",
+            "benchkit.cluster_cpu_limit_cores": "1.0",
+            "benchkit.cpu_profile": "single",
+            "benchkit.impl": "logfwd",
             "benchkit.ingest_mode": "file",
             "benchkit.namespace": "memagent-bench",
             "benchkit.pods": "1",
             "benchkit.profile": "smoke",
-            "benchkit.protocol": "http_ndjson",
+            "benchkit.protocol": "otlp_http",
             "benchkit.target_eps_per_pod": "0",
             "benchkit.total_target_eps": "0"
           }
@@ -396,20 +396,20 @@
       "direction": "bigger_is_better",
       "values": [
         {
-          "name": "vector [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=vector,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=http_ndjson,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
-          "value": 125270,
+          "name": "logfwd [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=logfwd,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
+          "value": 922104,
           "unit": "events",
           "direction": "bigger_is_better",
           "tags": {
             "benchkit.cluster": "kind-single-node",
-            "benchkit.cluster_cpu_limit_cores": "2.0",
-            "benchkit.cpu_profile": "multi",
-            "benchkit.impl": "vector",
+            "benchkit.cluster_cpu_limit_cores": "1.0",
+            "benchkit.cpu_profile": "single",
+            "benchkit.impl": "logfwd",
             "benchkit.ingest_mode": "file",
             "benchkit.namespace": "memagent-bench",
             "benchkit.pods": "1",
             "benchkit.profile": "smoke",
-            "benchkit.protocol": "http_ndjson",
+            "benchkit.protocol": "otlp_http",
             "benchkit.target_eps_per_pod": "0",
             "benchkit.total_target_eps": "0"
           }
@@ -422,20 +422,20 @@
       "direction": "smaller_is_better",
       "values": [
         {
-          "name": "vector [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=vector,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=http_ndjson,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
-          "value": 0,
+          "name": "logfwd [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=logfwd,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
+          "value": 307.3111979166667,
           "unit": "MB",
           "direction": "smaller_is_better",
           "tags": {
             "benchkit.cluster": "kind-single-node",
-            "benchkit.cluster_cpu_limit_cores": "2.0",
-            "benchkit.cpu_profile": "multi",
-            "benchkit.impl": "vector",
+            "benchkit.cluster_cpu_limit_cores": "1.0",
+            "benchkit.cpu_profile": "single",
+            "benchkit.impl": "logfwd",
             "benchkit.ingest_mode": "file",
             "benchkit.namespace": "memagent-bench",
             "benchkit.pods": "1",
             "benchkit.profile": "smoke",
-            "benchkit.protocol": "http_ndjson",
+            "benchkit.protocol": "otlp_http",
             "benchkit.target_eps_per_pod": "0",
             "benchkit.total_target_eps": "0"
           }
@@ -448,20 +448,20 @@
       "direction": "smaller_is_better",
       "values": [
         {
-          "name": "vector [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=vector,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=http_ndjson,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
-          "value": 0,
+          "name": "logfwd [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=logfwd,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]",
+          "value": 316.82421875,
           "unit": "MB",
           "direction": "smaller_is_better",
           "tags": {
             "benchkit.cluster": "kind-single-node",
-            "benchkit.cluster_cpu_limit_cores": "2.0",
-            "benchkit.cpu_profile": "multi",
-            "benchkit.impl": "vector",
+            "benchkit.cluster_cpu_limit_cores": "1.0",
+            "benchkit.cpu_profile": "single",
+            "benchkit.impl": "logfwd",
             "benchkit.ingest_mode": "file",
             "benchkit.namespace": "memagent-bench",
             "benchkit.pods": "1",
             "benchkit.profile": "smoke",
-            "benchkit.protocol": "http_ndjson",
+            "benchkit.protocol": "otlp_http",
             "benchkit.target_eps_per_pod": "0",
             "benchkit.total_target_eps": "0"
           }
