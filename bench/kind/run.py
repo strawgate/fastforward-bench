@@ -610,7 +610,10 @@ def run_smoke_phase(
     result: BenchmarkResult,
 ) -> int:
     max_throughput_mode = profile.eps_per_pod == 0
-    saturation_target_mode = args.ingest_mode == "file" and profile.eps_per_pod >= 100_000
+    # At very high bounded targets, source/sink row capture is too expensive and
+    # can dominate the lane runtime. Treat these as saturation probes regardless
+    # of ingest mode and rely on diagnostics totals + sink throughput signals.
+    saturation_target_mode = profile.eps_per_pod >= 100_000
 
     apply_manifest(manifests["collector_configmap"])
     apply_manifest(manifests["collector_workload"])
