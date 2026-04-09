@@ -3,49 +3,26 @@
   "unit": "events",
   "direction": "bigger_is_better",
   "series": {
-    "kind/smoke/baseline-pass-through/otlp [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=otelcol,benchkit.ingest_mode=otlp,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]": {
+    "kind/smoke/baseline-pass-through/file [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=2.0,benchkit.cpu_profile=multi,benchkit.impl=vector,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=1,benchkit.profile=smoke,benchkit.protocol=http_ndjson,benchkit.target_eps_per_pod=0,benchkit.total_target_eps=0]": {
       "tags": {
         "benchkit.cluster": "kind-single-node",
         "benchkit.cluster_cpu_limit_cores": "2.0",
         "benchkit.cpu_profile": "multi",
-        "benchkit.impl": "otelcol",
-        "benchkit.ingest_mode": "otlp",
-        "benchkit.namespace": "memagent-bench",
-        "benchkit.pods": "5",
-        "benchkit.profile": "smoke",
-        "benchkit.protocol": "otlp_http",
-        "benchkit.target_eps_per_pod": "100",
-        "benchkit.total_target_eps": "500"
-      },
-      "points": [
-        {
-          "timestamp": "2026-04-09T14:28:30.000Z",
-          "value": 23552,
-          "commit": "12c922c56223fc8eeea543bb296fb855c08fe51e",
-          "run_id": "24195638080-1--kind-bench-smoke-otlp-profile-smoke-multi-otelcol"
-        }
-      ]
-    },
-    "kind/smoke/baseline-pass-through/file [benchkit.cluster=kind-single-node,benchkit.cluster_cpu_limit_cores=1.0,benchkit.cpu_profile=single,benchkit.impl=otelcol,benchkit.ingest_mode=file,benchkit.namespace=memagent-bench,benchkit.pods=5,benchkit.profile=smoke,benchkit.protocol=otlp_http,benchkit.target_eps_per_pod=100,benchkit.total_target_eps=500]": {
-      "tags": {
-        "benchkit.cluster": "kind-single-node",
-        "benchkit.cluster_cpu_limit_cores": "1.0",
-        "benchkit.cpu_profile": "single",
-        "benchkit.impl": "otelcol",
+        "benchkit.impl": "vector",
         "benchkit.ingest_mode": "file",
         "benchkit.namespace": "memagent-bench",
-        "benchkit.pods": "5",
+        "benchkit.pods": "1",
         "benchkit.profile": "smoke",
-        "benchkit.protocol": "otlp_http",
-        "benchkit.target_eps_per_pod": "100",
-        "benchkit.total_target_eps": "500"
+        "benchkit.protocol": "http_ndjson",
+        "benchkit.target_eps_per_pod": "0",
+        "benchkit.total_target_eps": "0"
       },
       "points": [
         {
-          "timestamp": "2026-04-09T14:28:31.000Z",
-          "value": 23552,
+          "timestamp": "2026-04-09T15:05:56.000Z",
+          "value": 127799,
           "commit": "12c922c56223fc8eeea543bb296fb855c08fe51e",
-          "run_id": "24195638080-1--kind-bench-smoke-file-profile-smoke-single-otelcol"
+          "run_id": "24197214811-1--kind-bench-smoke-file-tmax-multi-vector"
         }
       ]
     }
