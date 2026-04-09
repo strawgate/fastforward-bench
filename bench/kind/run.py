@@ -84,7 +84,9 @@ class CpuProfile:
 @dataclass(frozen=True)
 class ResourcePlan:
     cpu_profile: CpuProfile
+    cluster_cpu_cores: float
     collector_cpu: str
+    emitter_cpu_request: str
     emitter_cpu: str
     sink_cpu: str
     capture_reader_cpu: str
@@ -223,24 +225,59 @@ def build_resource_plan(
         raise ValueError("emitter pod count must be > 0")
 
     node_budget_mcpu = int(cpu_profile.cluster_cpu_cores * 1000)
-    reserved_mcpu = cpu_profile.sink_cpu_mcpu + cpu_profile.capture_reader_cpu_mcpu
-    emitter_mcpu = cpu_profile.emitter_cpu_mcpu_per_pod
-    if eps_per_pod >= 100_000:
-        emitter_mcpu = max(emitter_mcpu, 200)
-    if unbounded_generator:
-        emitter_mcpu = max(emitter_mcpu, 200)
+    sink_mcpu = cpu_profile.sink_cpu_mcpu
+    capture_reader_mcpu = cpu_profile.capture_reader_cpu_mcpu
+    collector_mcpu_min = cpu_profile.collector_cpu_mcpu_min
+    collector_mcpu_target = cpu_profile.collector_cpu_mcpu_target
+
+    capacity_probe = eps_per_pod >= 10_000 or unbounded_generator
+    if capacity_probe:
+        # For ladder/max capacity probes, use an explicit CPU envelope:
+        # generator total = 1 core, sink pod total = 1 core, collector = 1 or 2 cores.
+        # Keep smoke profile lightweight.
+        if cpu_profile.name == "single":
+            node_budget_mcpu = 3000
+            sink_mcpu = 900
+            capture_reader_mcpu = 100
+            collector_mcpu_min = 1000
+            collector_mcpu_target = 1000
+        else:
+            node_budget_mcpu = 4000
+            # 4-core GH runners have tighter allocatable CPU than nominal.
+            # Keep multi-lane capacity probes on a proven schedulable envelope.
+            sink_mcpu = 850
+            capture_reader_mcpu = 50
+            collector_mcpu_min = 1400
+            collector_mcpu_target = 1400
+
+    reserved_mcpu = sink_mcpu + capture_reader_mcpu
+    if capacity_probe:
+        emitter_total_budget_mcpu = 1000 if cpu_profile.name == "single" else 900
+        emitter_mcpu = max(cpu_profile.emitter_cpu_mcpu_per_pod, emitter_total_budget_mcpu // emitter_pods)
+    else:
+        emitter_mcpu = cpu_profile.emitter_cpu_mcpu_per_pod
+        if eps_per_pod >= 100_000:
+            emitter_mcpu = max(emitter_mcpu, 200)
+        if unbounded_generator:
+            emitter_mcpu = max(emitter_mcpu, 200)
     collector_mcpu = node_budget_mcpu - reserved_mcpu - (emitter_mcpu * emitter_pods)
 
-    if collector_mcpu < cpu_profile.collector_cpu_mcpu_min:
-        emitter_budget = max(1, (node_budget_mcpu - reserved_mcpu - cpu_profile.collector_cpu_mcpu_min) // emitter_pods)
+    if collector_mcpu < collector_mcpu_min:
+        emitter_budget = max(1, (node_budget_mcpu - reserved_mcpu - collector_mcpu_min) // emitter_pods)
         emitter_mcpu = min(emitter_mcpu, emitter_budget)
         collector_mcpu = node_budget_mcpu - reserved_mcpu - (emitter_mcpu * emitter_pods)
 
-    collector_mcpu = min(collector_mcpu, cpu_profile.collector_cpu_mcpu_target)
+    collector_mcpu = min(collector_mcpu, collector_mcpu_target)
     if collector_mcpu < 100:
         raise ValueError(
             f"cpu profile '{cpu_profile.name}' leaves only {collector_mcpu}m for collector with {emitter_pods} emitter pods"
         )
+
+    emitter_request_mcpu = emitter_mcpu
+    if capacity_probe and cpu_profile.name == "multi":
+        # Keep max-mode emitter schedulable on 4-core runners while preserving
+        # burst headroom under the configured CPU limit.
+        emitter_request_mcpu = min(emitter_mcpu, 300)
 
     # Keep generator and sink memory fixed at 1Gi for benchmark stability.
     # This avoids memory-limit artifacts while we tune throughput behavior.
@@ -249,10 +286,12 @@ def build_resource_plan(
 
     return ResourcePlan(
         cpu_profile=cpu_profile,
+        cluster_cpu_cores=node_budget_mcpu / 1000.0,
         collector_cpu=format_cpu_quantity(collector_mcpu),
+        emitter_cpu_request=format_cpu_quantity(emitter_request_mcpu),
         emitter_cpu=format_cpu_quantity(emitter_mcpu),
-        sink_cpu=format_cpu_quantity(cpu_profile.sink_cpu_mcpu),
-        capture_reader_cpu=format_cpu_quantity(cpu_profile.capture_reader_cpu_mcpu),
+        sink_cpu=format_cpu_quantity(sink_mcpu),
+        capture_reader_cpu=format_cpu_quantity(capture_reader_mcpu),
         collector_memory=cpu_profile.collector_memory_limit,
         emitter_memory=emitter_memory_limit,
         sink_memory=sink_memory_limit,
@@ -383,12 +422,32 @@ def filter_rows_to_emitter_snapshot(
     rows: list[dict[str, object]],
     emitter_reported_stats: list[dict[str, object]],
 ) -> list[dict[str, object]]:
+    seq_bounds_by_pod: dict[str, tuple[int, int]] = {}
+    for row in rows:
+        pod_name = row.get("pod_name")
+        seq = row.get("seq")
+        if not isinstance(pod_name, str) or not isinstance(seq, int):
+            continue
+        bounds = seq_bounds_by_pod.get(pod_name)
+        if bounds is None:
+            seq_bounds_by_pod[pod_name] = (seq, seq)
+            continue
+        min_seq, max_seq = bounds
+        seq_bounds_by_pod[pod_name] = (min(min_seq, seq), max(max_seq, seq))
+
     cutoff_by_pod: dict[str, int] = {}
     for stat in emitter_reported_stats:
         pod_name = stat.get("pod_name")
         output_lines = stat.get("output_lines")
         if isinstance(pod_name, str) and isinstance(output_lines, int):
-            cutoff_by_pod[pod_name] = output_lines
+            bounds = seq_bounds_by_pod.get(pod_name)
+            if bounds is None:
+                continue
+            min_seq, _max_seq = bounds
+            # `output_lines` is a count, not an absolute sequence number.
+            # Sequence values can begin well above 1, so anchor the cutoff to
+            # the first observed sequence for this benchmark snapshot.
+            cutoff_by_pod[pod_name] = min_seq + max(0, output_lines - 1)
 
     filtered: list[dict[str, object]] = []
     for row in rows:
@@ -502,7 +561,7 @@ def render_manifests(
         "COLLECTOR_CPU_LIMIT": resource_plan.collector_cpu,
         "COLLECTOR_MEMORY_REQUEST": resource_plan.collector_memory,
         "COLLECTOR_MEMORY_LIMIT": resource_plan.collector_memory,
-        "EMITTER_CPU_REQUEST": resource_plan.emitter_cpu,
+        "EMITTER_CPU_REQUEST": resource_plan.emitter_cpu_request,
         "EMITTER_CPU_LIMIT": resource_plan.emitter_cpu,
         "EMITTER_MEMORY_REQUEST": resource_plan.emitter_memory,
         "EMITTER_MEMORY_LIMIT": resource_plan.emitter_memory,
@@ -676,15 +735,16 @@ def run_smoke_phase(
         destination=artifacts_dir / "sink-logs.txt",
         tail=-1,
     )
-    collect_sink_capture(args.namespace, sink_pod, artifacts_dir / "sink-capture.ndjson")
-
-    sink_rows = filter_rows_to_emitter_snapshot(
-        benchmark_rows(load_json_lines(artifacts_dir / "sink-capture.ndjson"), result.benchmark_id),
-        emitter_reported_stats,
-    )
+    sink_rows: list[dict[str, object]] = []
+    if not max_throughput_mode:
+        collect_sink_capture(args.namespace, sink_pod, artifacts_dir / "sink-capture.ndjson")
+        sink_rows = filter_rows_to_emitter_snapshot(
+            benchmark_rows(load_json_lines(artifacts_dir / "sink-capture.ndjson"), result.benchmark_id),
+            emitter_reported_stats,
+        )
 
     if max_throughput_mode:
-        result.captured_rows_total = len(sink_rows)
+        result.captured_rows_total = None
         result.source_rows_total = None
         result.missing_source_count = None
         result.missing_event_count = None
@@ -695,7 +755,7 @@ def run_smoke_phase(
         else:
             result.drop_estimate = None
 
-        write_json(results_dir / "actual_rows.json", sink_rows)
+        write_json(results_dir / "actual_rows.json", [])
         write_json(results_dir / "source_rows.json", [])
         write_json(
             results_dir / "stream-summary.json",
@@ -960,7 +1020,7 @@ def main() -> int:
         protocol=adapter.sink_transport if args.protocol == "otlp_http" else args.protocol,
         ingest_mode=args.ingest_mode,
         cpu_profile=args.cpu_profile,
-        cluster_cpu_limit_cores=cpu_profile.cluster_cpu_cores,
+        cluster_cpu_limit_cores=resource_plan.cluster_cpu_cores,
         pods=profile.pods,
         target_eps_per_pod=profile.eps_per_pod,
         total_target_eps=profile.total_target_eps,
@@ -1019,7 +1079,7 @@ def main() -> int:
             event="start",
         )
         create_kind_cluster(args.cluster_name)
-        set_kind_control_plane_cpu_limit(args.cluster_name, cpu_profile.cluster_cpu_cores)
+        set_kind_control_plane_cpu_limit(args.cluster_name, resource_plan.cluster_cpu_cores)
         result.cluster_ready = True
         load_image_into_kind(args.cluster_name, args.memagent_image)
 
