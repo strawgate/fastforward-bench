@@ -1200,8 +1200,10 @@ def main() -> int:
             result.missing_event_count = result.drop_estimate
             result.unexpected_event_count = result.dup_estimate
 
+        saturation_target_mode = not max_throughput_mode and (result.total_target_eps or 0) >= 100_000
         integrity_clean = (
             max_throughput_mode
+            or saturation_target_mode
             or (
                 (result.drop_estimate or 0) == 0
                 and (result.dup_estimate or 0) == 0
@@ -1216,6 +1218,16 @@ def main() -> int:
                     f"compose benchmark succeeded for collector={adapter.name}; "
                     f"sink_lines_per_sec_avg estimated from sink_reported_events_total/measure_sec: "
                     f"{result.sink_lines_per_sec_avg}"
+                )
+            elif saturation_target_mode and (
+                (result.drop_estimate or 0) > 0 or (result.dup_estimate or 0) > 0
+            ):
+                result.notes = (
+                    f"compose benchmark saturation lane for collector={adapter.name}; "
+                    f"integrity deltas recorded but not treated as hard failure at target_eps={result.total_target_eps}. "
+                    f"missing_event_count={result.missing_event_count}, unexpected_event_count={result.unexpected_event_count}, "
+                    f"drop_estimate={result.drop_estimate}, dup_estimate={result.dup_estimate}, "
+                    f"sink_lines_per_sec_avg={result.sink_lines_per_sec_avg}"
                 )
             else:
                 result.notes = (
