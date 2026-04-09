@@ -245,12 +245,12 @@ def build_resource_plan(
             sink_mcpu = 900
             capture_reader_mcpu = 100
             # Leave kube-system scheduling headroom on 4-core runners.
-            collector_mcpu_min = 1800
-            collector_mcpu_target = 1800
+            collector_mcpu_min = 1700
+            collector_mcpu_target = 1700
 
     reserved_mcpu = sink_mcpu + capture_reader_mcpu
     if capacity_probe:
-        emitter_total_budget_mcpu = 1000 if cpu_profile.name == "single" else 900
+        emitter_total_budget_mcpu = 1000 if cpu_profile.name == "single" else 700
         emitter_mcpu = max(cpu_profile.emitter_cpu_mcpu_per_pod, emitter_total_budget_mcpu // emitter_pods)
     else:
         emitter_mcpu = cpu_profile.emitter_cpu_mcpu_per_pod
