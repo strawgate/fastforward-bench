@@ -1144,7 +1144,10 @@ def main() -> int:
         wait_for_namespace(args.namespace)
         apply_manifest(manifests["sink_configmap"])
         apply_manifest(manifests["sink_deployment"])
-        wait_for_deployment(args.namespace, "logfwd-capture", timeout_sec=90)
+        # Cold-start image pulls and CNI bring-up on shared runners can make
+        # sink rollout occasionally exceed 90s; use a wider timeout to reduce
+        # false negatives on low-EPS gating lanes.
+        wait_for_deployment(args.namespace, "logfwd-capture", timeout_sec=180)
         result.sink_ready = True
 
         if args.phase == "infra":
