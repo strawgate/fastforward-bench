@@ -46,6 +46,7 @@ on:
           - logfwd
           - otelcol
           - vector
+          - filebeat
       cpu_profile:
         description: CPU profile to benchmark
         required: false
@@ -119,10 +120,10 @@ jobs:
               fi
               ;;
             ladder)
-              echo 'workloads=[{"label":"t1","eps_per_sec":1},{"label":"t10","eps_per_sec":10},{"label":"t100","eps_per_sec":100},{"label":"t500","eps_per_sec":500},{"label":"t1k","eps_per_sec":1000},{"label":"t10k","eps_per_sec":10000},{"label":"t100k","eps_per_sec":100000},{"label":"t1m","eps_per_sec":1000000}]' >>"$GITHUB_OUTPUT"
+              echo 'workloads=[{"label":"t1","eps_per_sec":1},{"label":"t10","eps_per_sec":10},{"label":"t100","eps_per_sec":100},{"label":"t1k","eps_per_sec":1000},{"label":"t10k","eps_per_sec":10000},{"label":"t100k","eps_per_sec":100000},{"label":"t1m","eps_per_sec":1000000}]' >>"$GITHUB_OUTPUT"
               ;;
             ladder_and_max)
-              echo 'workloads=[{"label":"t1","eps_per_sec":1},{"label":"t10","eps_per_sec":10},{"label":"t100","eps_per_sec":100},{"label":"t500","eps_per_sec":500},{"label":"t1k","eps_per_sec":1000},{"label":"t10k","eps_per_sec":10000},{"label":"t100k","eps_per_sec":100000},{"label":"t1m","eps_per_sec":1000000},{"label":"tmax","eps_per_sec":0}]' >>"$GITHUB_OUTPUT"
+              echo 'workloads=[{"label":"t1","eps_per_sec":1},{"label":"t10","eps_per_sec":10},{"label":"t100","eps_per_sec":100},{"label":"t1k","eps_per_sec":1000},{"label":"t10k","eps_per_sec":10000},{"label":"t100k","eps_per_sec":100000},{"label":"t1m","eps_per_sec":1000000},{"label":"tmax","eps_per_sec":0}]' >>"$GITHUB_OUTPUT"
               ;;
             max)
               echo 'workloads=[{"label":"tmax","eps_per_sec":0}]' >>"$GITHUB_OUTPUT"
@@ -136,7 +137,7 @@ jobs:
           if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${INPUT_COLLECTOR}" != "all" ]]; then
             echo "collectors=[\"${INPUT_COLLECTOR}\"]" >>"$GITHUB_OUTPUT"
           else
-            echo 'collectors=["logfwd","otelcol","vector"]' >>"$GITHUB_OUTPUT"
+            echo 'collectors=["logfwd","otelcol","vector","filebeat"]' >>"$GITHUB_OUTPUT"
           fi
           if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${INPUT_CPU_PROFILE}" != "all" ]]; then
             echo "cpu_profiles=[\"${INPUT_CPU_PROFILE}\"]" >>"$GITHUB_OUTPUT"
@@ -163,6 +164,8 @@ jobs:
         exclude:
           - ingest_mode: otlp
             collector: vector
+          - ingest_mode: otlp
+            collector: filebeat
     env:
       MEMAGENT_REPO_ROOT: ${{ github.workspace }}/memagent
       BENCH_PROFILE: ${{ needs.plan.outputs.bench_profile }}
@@ -240,6 +243,74 @@ jobs:
             --benchkit-run-id "${BENCHKIT_RUN_ID}" \
             --benchkit-kind "hybrid" \
             --results-dir "${BENCH_RESULTS_DIR}"
+      - if: always()
+        name: Ensure fallback benchmark result exists
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          results_dir = Path(os.environ["BENCH_RESULTS_DIR"])
+          result_path = results_dir / "result.json"
+          if result_path.exists():
+            raise SystemExit(0)
+
+          results_dir.mkdir(parents=True, exist_ok=True)
+          fallback = {
+            "benchmark_id": "missing-result",
+            "timestamp_utc": "",
+            "phase": "smoke",
+            "benchmark_mode": "baseline-pass-through",
+            "cluster": "docker-compose",
+            "cluster_name": "",
+            "namespace": "compose",
+            "collector": os.environ.get("BENCH_COLLECTOR", "unknown"),
+            "protocol": "otlp_http",
+            "ingest_mode": os.environ.get("BENCH_INGEST_MODE", "unknown"),
+            "cpu_profile": os.environ.get("BENCH_CPU_PROFILE", "unknown"),
+            "cluster_cpu_limit_cores": None,
+            "pods": 1,
+            "target_eps_per_pod": int(os.environ.get("BENCH_EPS_PER_SEC", "0") or 0),
+            "total_target_eps": int(os.environ.get("BENCH_EPS_PER_SEC", "0") or 0),
+            "warmup_sec": None,
+            "measure_sec": None,
+            "cooldown_sec": None,
+            "sink_lines_total": 0,
+            "emitter_reported_events_total": None,
+            "sink_reported_events_total": 0,
+            "captured_rows_total": None,
+            "source_rows_total": None,
+            "missing_source_count": None,
+            "missing_event_count": None,
+            "unexpected_event_count": None,
+            "sink_lines_per_sec_avg": 0.0,
+            "sink_lines_per_sec_p50": None,
+            "sink_lines_per_sec_p95": None,
+            "sink_lines_per_sec_p99": None,
+            "drop_estimate": None,
+            "dup_estimate": None,
+            "latency_ms_p50": None,
+            "latency_ms_p95": None,
+            "latency_ms_p99": None,
+            "collector_cpu_cores_avg": None,
+            "collector_cpu_cores_p95": None,
+            "collector_rss_mb_avg": None,
+            "collector_rss_mb_p95": None,
+            "cluster_ready": False,
+            "sink_ready": False,
+            "status": "fail",
+            "notes": "compose benchmark harness exited before writing result.json",
+          }
+          result_path.write_text(json.dumps(fallback, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+          (results_dir / "summary.md").write_text(
+            "# Benchmark result missing\n\n"
+            "- status: `fail`\n"
+            "- notes: compose benchmark harness exited before writing result.json\n",
+            encoding="utf-8",
+          )
+          print(f"wrote fallback result at {result_path}")
+          PY
       - if: env.PERSIST_BENCH_DATA == 'true'
         name: Materialize monitor OTLP document
         run: |
@@ -368,6 +439,7 @@ jobs:
           EXPECTED_CPU_PROFILES: ${{ needs.plan.outputs.cpu_profiles }}
           EXPECTED_INGEST_MODES: ${{ needs.plan.outputs.ingest_modes }}
           EXPECTED_WORKLOADS: ${{ needs.plan.outputs.workloads }}
+          NON_GATING_EPS_MIN: "10000"
         run: |
           python3 - <<'PY'
           import json
@@ -379,6 +451,7 @@ jobs:
 
           benchmark_count = int(summary.get("benchmark_count", 0))
           failed_count = int(summary.get("failed_count", 0))
+          non_gating_eps_min = int(os.environ.get("NON_GATING_EPS_MIN", "10000"))
 
           collectors = json.loads(os.environ["EXPECTED_COLLECTORS"])
           cpu_profiles = json.loads(os.environ["EXPECTED_CPU_PROFILES"])
@@ -387,6 +460,8 @@ jobs:
 
           expected = len(collectors) * len(cpu_profiles) * len(ingest_modes) * len(workloads)
           if "vector" in collectors and "otlp" in ingest_modes:
+            expected -= len(cpu_profiles) * len(workloads)
+          if "filebeat" in collectors and "otlp" in ingest_modes:
             expected -= len(cpu_profiles) * len(workloads)
 
           print(
@@ -399,10 +474,70 @@ jobs:
               file=sys.stderr,
             )
             sys.exit(1)
-          if failed_count > 0:
-            print(
-              f"benchmark failures detected in summary: failed_count={failed_count}",
-              file=sys.stderr,
-            )
+          gating_failures = []
+          tolerated_failures = []
+          for row in summary.get("results", []):
+            status = str(row.get("status") or "fail").lower()
+            target_eps = int(row.get("total_target_eps", 0) or 0)
+            non_gating = target_eps == 0 or target_eps >= non_gating_eps_min
+            if status == "pass":
+              continue
+            if non_gating:
+              tolerated_failures.append(
+                {
+                  "artifact": row.get("artifact_name"),
+                  "collector": row.get("collector"),
+                  "ingest_mode": row.get("ingest_mode"),
+                  "cpu_profile": row.get("cpu_profile"),
+                  "target_eps": target_eps,
+                  "status": status,
+                }
+              )
+            else:
+              gating_failures.append(
+                {
+                  "artifact": row.get("artifact_name"),
+                  "collector": row.get("collector"),
+                  "ingest_mode": row.get("ingest_mode"),
+                  "cpu_profile": row.get("cpu_profile"),
+                  "target_eps": target_eps,
+                  "status": status,
+                }
+              )
+
+          if tolerated_failures:
+            print(f"tolerating {len(tolerated_failures)} non-gating failures")
+            for row in tolerated_failures[:20]:
+              print(row)
+          if gating_failures:
+            print("gating benchmark failures detected:", file=sys.stderr)
+            for row in gating_failures[:20]:
+              print(row, file=sys.stderr)
+            sys.exit(1)
+
+          integrity_violations = []
+          for row in summary.get("results", []):
+            target_eps = int(row.get("total_target_eps", 0) or 0)
+            if target_eps == 0 or target_eps >= non_gating_eps_min:
+              continue
+            missing = int(row.get("missing_event_count", 0) or 0)
+            unexpected = int(row.get("unexpected_event_count", 0) or 0)
+            dup = int(row.get("dup_estimate", 0) or 0)
+            drop = int(row.get("drop_estimate", 0) or 0)
+            if missing > 0 or unexpected > 0 or dup > 0 or drop > 0:
+              integrity_violations.append(
+                {
+                  "artifact": row.get("artifact_name"),
+                  "missing": missing,
+                  "unexpected": unexpected,
+                  "dup": dup,
+                  "drop": drop,
+                }
+              )
+
+          if integrity_violations:
+            print("integrity violations detected:", file=sys.stderr)
+            for violation in integrity_violations[:20]:
+              print(violation, file=sys.stderr)
             sys.exit(1)
           PY

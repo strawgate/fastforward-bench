@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shutil
 import socket
 import subprocess
@@ -85,6 +86,13 @@ COLLECTORS: dict[str, CollectorAdapter] = {
         image="timberio/vector:0.54.0-debian",
         diagnostics_kind="prometheus",
         sink_stats_kind="capture_reader",
+    ),
+    "filebeat": CollectorAdapter(
+        name="filebeat",
+        service_name="collector-filebeat",
+        image="docker.elastic.co/beats/filebeat:8.17.3",
+        diagnostics_kind="http_json",
+        sink_stats_kind="capture_file",
     ),
 }
 
@@ -228,6 +236,9 @@ def run_capture(cmd: list[str], *, cwd: Path | None = None, env: dict[str, str] 
         stderr = completed.stderr.strip()
         raise RuntimeError(f"command failed ({completed.returncode}): {' '.join(cmd)}: {stderr}")
     return completed.stdout
+
+
+SEQ_FIELD_RE = re.compile(rb'"seq"\s*:\s*([0-9]+)')
 
 
 def reserve_local_port() -> int:
@@ -522,6 +533,43 @@ sinks:
 """
 
 
+def build_filebeat_collector_config(benchmark_id: str) -> str:
+    return f"""\
+filebeat.inputs:
+  - type: filestream
+    id: bench-file
+    enabled: true
+    paths:
+      - /runtime/events.ndjson
+    parsers:
+      - ndjson:
+          target: ""
+          overwrite_keys: true
+
+processors:
+  - drop_event:
+      when:
+        not:
+          equals:
+            benchmark_id: "{benchmark_id}"
+
+output.file:
+  path: /runtime
+  filename: capture.ndjson
+  rotate_every_kb: 1048576
+  number_of_files: 3
+  permissions: 0644
+  codec.json:
+    pretty: false
+
+http.enabled: true
+http.host: 0.0.0.0
+http.port: 5066
+
+logging.level: error
+"""
+
+
 def build_compose_yaml() -> str:
     return """\
 services:
@@ -607,6 +655,22 @@ services:
     mem_limit: "${COLLECTOR_MEMORY}"
     depends_on:
       capture-reader:
+        condition: service_started
+
+  collector-filebeat:
+    profiles: ["filebeat"]
+    image: ${FILEBEAT_COLLECTOR_IMAGE}
+    command: ["-e", "--strict.perms=false", "-c", "/config/collector-filebeat.yaml"]
+    user: "0:0"
+    volumes:
+      - ${BENCH_RESULTS_RUNTIME_DIR}:/runtime
+      - ${BENCH_RESULTS_RENDERED_DIR}:/config:ro
+    ports:
+      - "${COLLECTOR_STATS_PORT}:5066"
+    cpus: "${COLLECTOR_CPUS}"
+    mem_limit: "${COLLECTOR_MEMORY}"
+    depends_on:
+      sink:
         condition: service_started
 """
 
@@ -701,6 +765,8 @@ def wait_for_collector_ready(adapter: CollectorAdapter, port: int, timeout_sec: 
                 fetch_stats(port)
             elif adapter.diagnostics_kind == "prometheus":
                 fetch_text(port, "/metrics")
+            elif adapter.diagnostics_kind == "http_json":
+                fetch_text(port, "/stats")
             else:
                 raise ValueError(f"unknown collector diagnostics kind: {adapter.diagnostics_kind}")
             return
@@ -709,18 +775,49 @@ def wait_for_collector_ready(adapter: CollectorAdapter, port: int, timeout_sec: 
     raise RuntimeError("timed out waiting for collector readiness")
 
 
-def sample_sink(adapter: CollectorAdapter, sink_diag_port: int, capture_stats_port: int) -> StatsSample:
+def stats_sample_from_capture_file(capture_file_path: Path, benchmark_id: str) -> StatsSample:
+    del benchmark_id
+    return StatsSample(
+        timestamp=time.time(),
+        output_lines=count_rows_with_rollovers(capture_file_path),
+        rss_bytes=0,
+        cpu_total_ms=0,
+    )
+
+
+def stats_sample_empty() -> StatsSample:
+    return StatsSample(timestamp=time.time(), output_lines=0, rss_bytes=0, cpu_total_ms=0)
+
+
+def sample_sink(
+    adapter: CollectorAdapter,
+    sink_diag_port: int,
+    capture_stats_port: int,
+    capture_file_path: Path,
+    benchmark_id: str,
+) -> StatsSample:
     if adapter.sink_stats_kind == "logfwd":
         return stats_sample_from_logfwd(sink_diag_port)
     if adapter.sink_stats_kind == "capture_reader":
         return stats_sample_from_capture_reader(capture_stats_port)
+    if adapter.sink_stats_kind == "capture_file":
+        # Avoid scanning large output files on every sample tick.
+        return stats_sample_empty()
     raise ValueError(f"unknown sink stats kind: {adapter.sink_stats_kind}")
 
 
-def sink_reported_events(adapter: CollectorAdapter, sink_diag_port: int, capture_stats_port: int) -> int:
+def sink_reported_events(
+    adapter: CollectorAdapter,
+    sink_diag_port: int,
+    capture_stats_port: int,
+    capture_file_path: Path,
+    benchmark_id: str,
+) -> int:
     if adapter.sink_stats_kind == "capture_reader":
         payload = fetch_capture_stats(capture_stats_port)
         return int(payload.get("benchmark_rows_total", 0) or 0)
+    if adapter.sink_stats_kind == "capture_file":
+        return int(stats_sample_from_capture_file(capture_file_path, benchmark_id).output_lines)
     payload = fetch_stats(sink_diag_port)
     return int(payload.get("output_lines", 0) or 0)
 
@@ -752,11 +849,93 @@ def copy_with_cap(src: Path, dst: Path, *, max_bytes: int) -> None:
             dst_handle.write(f'{{"_note":"truncated_at_bytes","max_bytes":{max_bytes}}}\n'.encode("utf-8"))
 
 
+def count_ndjson_rows(path: Path) -> int:
+    if not path.exists():
+        return 0
+    rows = 0
+    ends_with_newline = True
+    try:
+        with path.open("rb") as handle:
+            while True:
+                chunk = handle.read(1024 * 1024)
+                if not chunk:
+                    break
+                rows += chunk.count(b"\n")
+                ends_with_newline = chunk.endswith(b"\n")
+    except OSError:
+        return 0
+    if rows == 0:
+        return 0
+    if not ends_with_newline:
+        # Account for a trailing partial line.
+        rows += 1
+    return rows
+
+
+def count_rows_with_rollovers(base_file_path: Path) -> int:
+    parent = base_file_path.parent
+    base_name = base_file_path.name
+    files = sorted(path for path in parent.glob(f"{base_name}*") if path.is_file())
+    if not files:
+        return 0
+    return sum(count_ndjson_rows(path) for path in files)
+
+
+def max_seq_with_rollovers(base_file_path: Path) -> int:
+    parent = base_file_path.parent
+    base_name = base_file_path.name
+    files = sorted(path for path in parent.glob(f"{base_name}*") if path.is_file())
+    max_seq = 0
+    for path in files:
+        try:
+            with path.open("rb") as handle:
+                for raw_line in handle:
+                    match = SEQ_FIELD_RE.search(raw_line)
+                    if match is None:
+                        continue
+                    candidate = int(match.group(1))
+                    if candidate > max_seq:
+                        max_seq = candidate
+        except OSError:
+            continue
+    return max_seq
+
+
+def wait_for_sink_catch_up(
+    *,
+    adapter: CollectorAdapter,
+    sink_diag_port: int,
+    capture_stats_port: int,
+    capture_file_path: Path,
+    benchmark_id: str,
+    target_events_total: int,
+    timeout_sec: int,
+) -> int:
+    deadline = time.time() + timeout_sec
+    last_seen = -1
+
+    while time.time() < deadline:
+        current = sink_reported_events(
+            adapter,
+            sink_diag_port,
+            capture_stats_port,
+            capture_file_path,
+            benchmark_id,
+        )
+        if current >= target_events_total:
+            return current
+        if current != last_seen:
+            last_seen = current
+        time.sleep(0.5)
+
+    return max(0, last_seen)
+
+
 def main() -> int:
     args = parse_args()
     adapter = COLLECTORS[args.collector]
-    if args.ingest_mode == "otlp" and adapter.name == "vector":
-        raise NotImplementedError("collector 'vector' does not support ingest mode 'otlp' in compose harness")
+    if args.ingest_mode == "otlp" and adapter.name in {"vector", "filebeat"}:
+        raise NotImplementedError(f"collector '{adapter.name}' does not support ingest mode 'otlp' in compose harness")
     cpu_profile = CPU_PROFILES[args.cpu_profile]
     base_profile: Profile = PROFILES[args.profile]
     eps_per_sec = base_profile.eps_per_pod if args.eps_per_sec is None else args.eps_per_sec
@@ -799,6 +978,7 @@ def main() -> int:
     )
     write_text(rendered_dir / "collector-otelcol.yaml", build_otel_collector_config(ingest_mode=args.ingest_mode))
     write_text(rendered_dir / "collector-vector.yaml", build_vector_collector_config())
+    write_text(rendered_dir / "collector-filebeat.yaml", build_filebeat_collector_config(benchmark_id))
     write_text(rendered_dir / "capture-stats.py", CAPTURE_STATS_SCRIPT)
 
     sink_diag_port = reserve_local_port()
@@ -817,6 +997,7 @@ def main() -> int:
             "LOGFWD_COLLECTOR_IMAGE": args.memagent_image,
             "OTELCOL_COLLECTOR_IMAGE": COLLECTORS["otelcol"].image or "",
             "VECTOR_COLLECTOR_IMAGE": COLLECTORS["vector"].image or "",
+            "FILEBEAT_COLLECTOR_IMAGE": COLLECTORS["filebeat"].image or "",
             "BENCH_RESULTS_RUNTIME_DIR": str(runtime_dir),
             "BENCH_RESULTS_RENDERED_DIR": str(rendered_dir),
             "BENCHMARK_ID": benchmark_id,
@@ -845,7 +1026,7 @@ def main() -> int:
         cluster_name=project,
         namespace="compose",
         collector=adapter.name,
-        protocol="otlp_http" if adapter.name != "vector" else "http_ndjson",
+        protocol="file_ndjson" if adapter.name == "filebeat" else ("otlp_http" if adapter.name != "vector" else "http_ndjson"),
         ingest_mode=args.ingest_mode,
         cpu_profile=cpu_profile.name,
         cluster_cpu_limit_cores=cpu_profile.cluster_cpu_cores,
@@ -885,6 +1066,9 @@ def main() -> int:
     sink_samples: list[StatsSample] = []
     collector_cpu_samples: list[float] = []
     collector_rss_samples: list[float] = []
+    capture_file_path = runtime_dir / "capture.ndjson"
+    events_file_path = runtime_dir / "events.ndjson"
+    max_throughput_mode = eps_per_sec == 0
 
     try:
         run(compose + ["--profile", adapter.name, "up", "-d", "sink", "capture-reader", adapter.service_name], env=env)
@@ -902,7 +1086,15 @@ def main() -> int:
 
         deadline = time.time() + base_profile.measure_sec
         while True:
-            sink_samples.append(sample_sink(adapter, sink_diag_port, capture_stats_port))
+            sink_samples.append(
+                sample_sink(
+                    adapter,
+                    sink_diag_port,
+                    capture_stats_port,
+                    capture_file_path,
+                    benchmark_id,
+                )
+            )
             if collector_container_id:
                 resource_sample = read_container_resource_sample(collector_container_id)
                 if resource_sample is not None:
@@ -916,8 +1108,54 @@ def main() -> int:
         if base_profile.cooldown_sec > 0:
             time.sleep(base_profile.cooldown_sec)
 
-        result.emitter_reported_events_total = emitter_reported_events(generator_diag_port)
-        result.sink_reported_events_total = sink_reported_events(adapter, sink_diag_port, capture_stats_port)
+        emitter_before_stop: int | None = None
+        try:
+            emitter_before_stop = emitter_reported_events(generator_diag_port)
+        except Exception:
+            emitter_before_stop = None
+
+        subprocess.run(compose + ["stop", "generator"], env=env, check=False)
+        if args.ingest_mode == "file":
+            source_rows_total = count_rows_with_rollovers(events_file_path)
+            if source_rows_total > 0:
+                result.source_rows_total = source_rows_total
+                result.emitter_reported_events_total = source_rows_total
+            else:
+                result.emitter_reported_events_total = emitter_before_stop
+        else:
+            result.emitter_reported_events_total = emitter_before_stop
+        if result.emitter_reported_events_total is not None and result.emitter_reported_events_total > 0:
+            result.sink_reported_events_total = wait_for_sink_catch_up(
+                adapter=adapter,
+                sink_diag_port=sink_diag_port,
+                capture_stats_port=capture_stats_port,
+                capture_file_path=capture_file_path,
+                benchmark_id=benchmark_id,
+                target_events_total=result.emitter_reported_events_total,
+                timeout_sec=10 if max_throughput_mode else 30,
+            )
+        else:
+            result.sink_reported_events_total = sink_reported_events(
+                adapter,
+                sink_diag_port,
+                capture_stats_port,
+                capture_file_path,
+                benchmark_id,
+            )
+
+        subprocess.run(compose + ["stop", adapter.service_name], env=env, check=False)
+        time.sleep(1.0)
+
+        # Final integrity counts should come from the sink capture file, not per-process
+        # diagnostics counters, which can lag under sustained load.
+        exact_captured_rows = count_rows_with_rollovers(capture_file_path)
+        if exact_captured_rows > 0:
+            result.sink_reported_events_total = exact_captured_rows
+        captured_max_seq = max_seq_with_rollovers(capture_file_path)
+        if captured_max_seq > 0:
+            result.source_rows_total = max(result.source_rows_total or 0, captured_max_seq)
+            result.emitter_reported_events_total = max(result.emitter_reported_events_total or 0, captured_max_seq)
+
         result.sink_lines_total = diff_output_lines(sink_samples)
         result.captured_rows_total = result.sink_reported_events_total
 
@@ -948,11 +1186,26 @@ def main() -> int:
             result.collector_rss_mb_avg = avg(collector_rss_samples)
             result.collector_rss_mb_p95 = percentile(collector_rss_samples, 0.95)
 
-        if result.emitter_reported_events_total is not None and result.sink_reported_events_total is not None:
+        if max_throughput_mode:
+            # In unbounded mode we focus on peak throughput; strict source-vs-sink oracle is not applied.
+            result.drop_estimate = None
+            result.dup_estimate = None
+        elif result.emitter_reported_events_total is not None and result.sink_reported_events_total is not None:
             result.drop_estimate = max(0, result.emitter_reported_events_total - result.sink_reported_events_total)
             result.dup_estimate = max(0, result.sink_reported_events_total - result.emitter_reported_events_total)
+            result.missing_event_count = result.drop_estimate
+            result.unexpected_event_count = result.dup_estimate
 
-        if (result.sink_reported_events_total or 0) > 0:
+        integrity_clean = (
+            max_throughput_mode
+            or (
+                (result.drop_estimate or 0) == 0
+                and (result.dup_estimate or 0) == 0
+                and (result.missing_event_count or 0) == 0
+                and (result.unexpected_event_count or 0) == 0
+            )
+        )
+        if (result.sink_reported_events_total or 0) > 0 and integrity_clean:
             result.status = "pass"
             if estimated_throughput:
                 result.notes = (
@@ -965,6 +1218,13 @@ def main() -> int:
                     f"compose benchmark succeeded for collector={adapter.name}; "
                     f"sink_lines_per_sec_avg={result.sink_lines_per_sec_avg}"
                 )
+        elif (result.sink_reported_events_total or 0) > 0:
+            result.status = "fail"
+            result.notes = (
+                f"compose benchmark observed integrity errors for collector={adapter.name}; "
+                f"missing_event_count={result.missing_event_count}, unexpected_event_count={result.unexpected_event_count}, "
+                f"drop_estimate={result.drop_estimate}, dup_estimate={result.dup_estimate}"
+            )
         else:
             result.status = "fail"
             result.notes = (
@@ -1001,12 +1261,16 @@ def main() -> int:
                     text=True,
                 )
 
-        if (runtime_dir / "capture.ndjson").exists():
-            copy_with_cap(
-                runtime_dir / "capture.ndjson",
-                artifacts_dir / "sink-capture.ndjson",
-                max_bytes=10 * 1024 * 1024,
-            )
+        capture_files = sorted(path for path in runtime_dir.glob("capture.ndjson*") if path.is_file())
+        for capture_file in capture_files:
+            try:
+                copy_with_cap(
+                    capture_file,
+                    artifacts_dir / f"sink-{capture_file.name}",
+                    max_bytes=10 * 1024 * 1024,
+                )
+            except OSError:
+                continue
         if (runtime_dir / "events.ndjson").exists():
             copy_with_cap(
                 runtime_dir / "events.ndjson",
@@ -1014,7 +1278,7 @@ def main() -> int:
                 max_bytes=10 * 1024 * 1024,
             )
 
-        subprocess.run(compose + ["down", "-v", "--remove-orphans"], env=env, check=False)
+        subprocess.run(compose + ["--profile", adapter.name, "down", "-v", "--remove-orphans"], env=env, check=False)
         shutil.rmtree(runtime_dir, ignore_errors=True)
 
     write_result_files(

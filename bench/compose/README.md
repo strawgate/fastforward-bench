@@ -16,6 +16,7 @@ the same collector adapters and output contracts for throughput checks.
   - `logfwd` collector adapter
 - Uses collector-specific images for competitor adapters:
   - `otel/opentelemetry-collector-contrib`
+  - `docker.elastic.co/beats/filebeat`
   - `timberio/vector`
 - Writes benchmark artifacts into the same result contract used by the KIND
   harness (`result.json`, `results.jsonl`, `summary.md`, `benchkit-run.otlp.json`).
@@ -24,9 +25,9 @@ the same collector adapters and output contracts for throughput checks.
 
 - phase: `smoke`
 - ingest modes:
-  - `file` for `logfwd`, `otelcol`, `vector`
+  - `file` for `logfwd`, `otelcol`, `filebeat`, `vector`
   - `otlp` for `logfwd`, `otelcol`
-- collectors: `logfwd`, `otelcol`, `vector`
+- collectors: `logfwd`, `otelcol`, `filebeat`, `vector`
 - profiles: `smoke`, `default`
 - CPU profiles: `single`, `multi`
 
