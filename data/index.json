@@ -2,7 +2,7 @@
   "runs": [
     {
       "id": "24146309842-1--compose-bench-smoke-tmax-single-vector",
-      "timestamp": "2026-04-09T07:41:52.524Z",
+      "timestamp": "2026-04-09T08:02:51.616Z",
       "commit": "ab9a65b8cef21a8ec61f4d0df6249b21d46c629c",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -10,7 +10,7 @@
     },
     {
       "id": "24146309842-1--compose-bench-smoke-tmax-single-otelcol",
-      "timestamp": "2026-04-09T07:41:52.524Z",
+      "timestamp": "2026-04-09T08:02:51.616Z",
       "commit": "ab9a65b8cef21a8ec61f4d0df6249b21d46c629c",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -18,7 +18,7 @@
     },
     {
       "id": "24146309842-1--compose-bench-smoke-tmax-multi-vector",
-      "timestamp": "2026-04-09T07:41:52.524Z",
+      "timestamp": "2026-04-09T08:02:51.616Z",
       "commit": "ab9a65b8cef21a8ec61f4d0df6249b21d46c629c",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -26,7 +26,7 @@
     },
     {
       "id": "24146309842-1--compose-bench-smoke-tmax-multi-otelcol",
-      "timestamp": "2026-04-09T07:41:52.524Z",
+      "timestamp": "2026-04-09T08:02:51.616Z",
       "commit": "ab9a65b8cef21a8ec61f4d0df6249b21d46c629c",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -34,7 +34,7 @@
     },
     {
       "id": "24145951313-1--compose-bench-default-tmax-single-vector",
-      "timestamp": "2026-04-09T07:41:52.524Z",
+      "timestamp": "2026-04-09T08:02:51.616Z",
       "commit": "1f8dc3f713ae5248b5b6be971263a88a930d87bf",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -42,7 +42,7 @@
     },
     {
       "id": "24145951313-1--compose-bench-default-tmax-single-otelcol",
-      "timestamp": "2026-04-09T07:41:52.524Z",
+      "timestamp": "2026-04-09T08:02:51.616Z",
       "commit": "1f8dc3f713ae5248b5b6be971263a88a930d87bf",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -50,7 +50,7 @@
     },
     {
       "id": "24145951313-1--compose-bench-default-tmax-single-logfwd",
-      "timestamp": "2026-04-09T07:41:52.524Z",
+      "timestamp": "2026-04-09T08:02:51.616Z",
       "commit": "1f8dc3f713ae5248b5b6be971263a88a930d87bf",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -58,7 +58,7 @@
     },
     {
       "id": "24145951313-1--compose-bench-default-tmax-multi-vector",
-      "timestamp": "2026-04-09T07:41:52.524Z",
+      "timestamp": "2026-04-09T08:02:51.616Z",
       "commit": "1f8dc3f713ae5248b5b6be971263a88a930d87bf",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -66,7 +66,7 @@
     },
     {
       "id": "24145951313-1--compose-bench-default-tmax-multi-otelcol",
-      "timestamp": "2026-04-09T07:41:52.524Z",
+      "timestamp": "2026-04-09T08:02:51.616Z",
       "commit": "1f8dc3f713ae5248b5b6be971263a88a930d87bf",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -74,7 +74,7 @@
     },
     {
       "id": "24145951313-1--compose-bench-default-tmax-multi-logfwd",
-      "timestamp": "2026-04-09T07:41:52.524Z",
+      "timestamp": "2026-04-09T08:02:51.616Z",
       "commit": "1f8dc3f713ae5248b5b6be971263a88a930d87bf",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -82,7 +82,7 @@
     },
     {
       "id": "24145642713-1--compose-bench-default-tmax-single-vector",
-      "timestamp": "2026-04-09T07:41:52.524Z",
+      "timestamp": "2026-04-09T08:02:51.616Z",
       "commit": "98d023529c3f0ad499b28fd4f4eb2ad952369010",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -90,7 +90,7 @@
     },
     {
       "id": "24145642713-1--compose-bench-default-tmax-single-otelcol",
-      "timestamp": "2026-04-09T07:41:52.524Z",
+      "timestamp": "2026-04-09T08:02:51.615Z",
       "commit": "98d023529c3f0ad499b28fd4f4eb2ad952369010",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -98,7 +98,7 @@
     },
     {
       "id": "24145642713-1--compose-bench-default-tmax-single-logfwd",
-      "timestamp": "2026-04-09T07:41:52.524Z",
+      "timestamp": "2026-04-09T08:02:51.615Z",
       "commit": "98d023529c3f0ad499b28fd4f4eb2ad952369010",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -106,7 +106,7 @@
     },
     {
       "id": "24145642713-1--compose-bench-default-tmax-multi-vector",
-      "timestamp": "2026-04-09T07:41:52.524Z",
+      "timestamp": "2026-04-09T08:02:51.615Z",
       "commit": "98d023529c3f0ad499b28fd4f4eb2ad952369010",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -114,7 +114,7 @@
     },
     {
       "id": "24145642713-1--compose-bench-default-tmax-multi-otelcol",
-      "timestamp": "2026-04-09T07:41:52.524Z",
+      "timestamp": "2026-04-09T08:02:51.615Z",
       "commit": "98d023529c3f0ad499b28fd4f4eb2ad952369010",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -122,7 +122,7 @@
     },
     {
       "id": "24145642713-1--compose-bench-default-tmax-multi-logfwd",
-      "timestamp": "2026-04-09T07:41:52.524Z",
+      "timestamp": "2026-04-09T08:02:51.615Z",
       "commit": "98d023529c3f0ad499b28fd4f4eb2ad952369010",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -130,7 +130,7 @@
     },
     {
       "id": "24145498617-1--compose-bench-default-tmax-single-vector",
-      "timestamp": "2026-04-09T07:41:52.523Z",
+      "timestamp": "2026-04-09T08:02:51.615Z",
       "commit": "e07d8f397122df4c65287dbb1592173d94b5ea73",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -138,7 +138,7 @@
     },
     {
       "id": "24145498617-1--compose-bench-default-tmax-single-otelcol",
-      "timestamp": "2026-04-09T07:41:52.523Z",
+      "timestamp": "2026-04-09T08:02:51.615Z",
       "commit": "e07d8f397122df4c65287dbb1592173d94b5ea73",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -146,7 +146,7 @@
     },
     {
       "id": "24145498617-1--compose-bench-default-tmax-multi-vector",
-      "timestamp": "2026-04-09T07:41:52.523Z",
+      "timestamp": "2026-04-09T08:02:51.615Z",
       "commit": "e07d8f397122df4c65287dbb1592173d94b5ea73",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -154,7 +154,7 @@
     },
     {
       "id": "24145498617-1--compose-bench-default-tmax-multi-otelcol",
-      "timestamp": "2026-04-09T07:41:52.523Z",
+      "timestamp": "2026-04-09T08:02:51.615Z",
       "commit": "e07d8f397122df4c65287dbb1592173d94b5ea73",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -162,7 +162,7 @@
     },
     {
       "id": "24145498617-1--compose-bench-default-tmax-multi-logfwd",
-      "timestamp": "2026-04-09T07:41:52.523Z",
+      "timestamp": "2026-04-09T08:02:51.615Z",
       "commit": "e07d8f397122df4c65287dbb1592173d94b5ea73",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -170,7 +170,7 @@
     },
     {
       "id": "24144401243-1--kind-bench-default-otlp-tmax-single-otelcol",
-      "timestamp": "2026-04-09T07:41:52.523Z",
+      "timestamp": "2026-04-09T08:02:51.615Z",
       "commit": "211d46c749d1509d3937ad07d11c8b72fdb54107",
       "ref": "refs/heads/master",
       "benchmarks": 0,
@@ -178,7 +178,7 @@
     },
     {
       "id": "24144401243-1--kind-bench-default-otlp-tmax-single-logfwd",
-      "timestamp": "2026-04-09T07:41:52.523Z",
+      "timestamp": "2026-04-09T08:02:51.615Z",
       "commit": "211d46c749d1509d3937ad07d11c8b72fdb54107",
       "ref": "refs/heads/master",
       "benchmarks": 0,
@@ -186,7 +186,7 @@
     },
     {
       "id": "24144349044-1--kind-bench-default-file-tmax-multi-otelcol",
-      "timestamp": "2026-04-09T07:41:52.523Z",
+      "timestamp": "2026-04-09T08:02:51.615Z",
       "commit": "211d46c749d1509d3937ad07d11c8b72fdb54107",
       "ref": "refs/heads/master",
       "benchmarks": 0,
@@ -194,7 +194,7 @@
     },
     {
       "id": "24122010683-1--kind-bench-smoke-otlp-tmax-single-otelcol",
-      "timestamp": "2026-04-09T07:41:52.523Z",
+      "timestamp": "2026-04-09T08:02:51.615Z",
       "commit": "211d46c749d1509d3937ad07d11c8b72fdb54107",
       "ref": "refs/heads/master",
       "benchmarks": 0,
@@ -202,7 +202,7 @@
     },
     {
       "id": "24122010683-1--kind-bench-smoke-otlp-tmax-single-logfwd",
-      "timestamp": "2026-04-09T07:41:52.523Z",
+      "timestamp": "2026-04-09T08:02:51.615Z",
       "commit": "211d46c749d1509d3937ad07d11c8b72fdb54107",
       "ref": "refs/heads/master",
       "benchmarks": 0,
@@ -210,7 +210,7 @@
     },
     {
       "id": "24122010683-1--kind-bench-smoke-otlp-tmax-multi-otelcol",
-      "timestamp": "2026-04-09T07:41:52.523Z",
+      "timestamp": "2026-04-09T08:02:51.615Z",
       "commit": "211d46c749d1509d3937ad07d11c8b72fdb54107",
       "ref": "refs/heads/master",
       "benchmarks": 0,
@@ -218,7 +218,7 @@
     },
     {
       "id": "24122010683-1--kind-bench-smoke-otlp-tmax-multi-logfwd",
-      "timestamp": "2026-04-09T07:41:52.523Z",
+      "timestamp": "2026-04-09T08:02:51.615Z",
       "commit": "211d46c749d1509d3937ad07d11c8b72fdb54107",
       "ref": "refs/heads/master",
       "benchmarks": 0,
@@ -226,7 +226,7 @@
     },
     {
       "id": "24111535469-1--kind-bench-smoke-file-profile-smoke-single-fluent-bit",
-      "timestamp": "2026-04-09T07:41:52.523Z",
+      "timestamp": "2026-04-09T08:02:51.615Z",
       "commit": "2b1fcaf8f24d906c29db6f300042811468451186",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -234,7 +234,7 @@
     },
     {
       "id": "24111336101-1--kind-bench-smoke-file-profile-smoke-single-fluent-bit",
-      "timestamp": "2026-04-09T07:41:52.523Z",
+      "timestamp": "2026-04-09T08:02:51.615Z",
       "commit": "2e5a8e342b95d109f04e2ab02634f6cd6537324a",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -242,7 +242,7 @@
     },
     {
       "id": "24110859427-1--kind-bench-smoke-otlp-t1m-single-logfwd",
-      "timestamp": "2026-04-09T07:41:52.523Z",
+      "timestamp": "2026-04-09T08:02:51.615Z",
       "commit": "7b844301676ff2219a1a762aea12f952bb77661a",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -250,7 +250,7 @@
     },
     {
       "id": "24109049871-1--kind-bench-smoke-file-t1m-single-logfwd",
-      "timestamp": "2026-04-09T07:41:52.523Z",
+      "timestamp": "2026-04-09T08:02:51.615Z",
       "commit": "f2f1bcbb69418c46bb9c21bb64b7925d3299e92e",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -258,7 +258,7 @@
     },
     {
       "id": "24109049871-1--kind-bench-smoke-file-t100k-single-logfwd",
-      "timestamp": "2026-04-09T07:41:52.523Z",
+      "timestamp": "2026-04-09T08:02:51.615Z",
       "commit": "f2f1bcbb69418c46bb9c21bb64b7925d3299e92e",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -266,7 +266,7 @@
     },
     {
       "id": "24108861801-1--kind-bench-smoke-file-t1m-single-logfwd",
-      "timestamp": "2026-04-09T07:41:52.523Z",
+      "timestamp": "2026-04-09T08:02:51.615Z",
       "commit": "946a8ae74fe68e40b9a28020e34842e39071191d",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -274,7 +274,7 @@
     },
     {
       "id": "24108861801-1--kind-bench-smoke-file-t100k-single-logfwd",
-      "timestamp": "2026-04-09T07:41:52.523Z",
+      "timestamp": "2026-04-09T08:02:51.615Z",
       "commit": "946a8ae74fe68e40b9a28020e34842e39071191d",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -282,7 +282,7 @@
     },
     {
       "id": "24106177640-1--kind-bench-smoke-file-profile-smoke-single-vector",
-      "timestamp": "2026-04-09T07:41:52.523Z",
+      "timestamp": "2026-04-09T08:02:51.615Z",
       "commit": "2575fa3bf51b3715d692423bd71961f1494504a3",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -290,7 +290,7 @@
     },
     {
       "id": "24097782241-1--kind-bench-smoke-otlp-t1m-single-otelcol",
-      "timestamp": "2026-04-09T07:41:52.523Z",
+      "timestamp": "2026-04-09T08:02:51.615Z",
       "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -298,7 +298,7 @@
     },
     {
       "id": "24097782241-1--kind-bench-smoke-otlp-t100k-single-otelcol",
-      "timestamp": "2026-04-09T07:41:52.523Z",
+      "timestamp": "2026-04-09T08:02:51.615Z",
       "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -306,7 +306,7 @@
     },
     {
       "id": "24092902509-1--kind-bench-smoke-tmax-single-vector",
-      "timestamp": "2026-04-09T07:41:52.523Z",
+      "timestamp": "2026-04-09T08:02:51.614Z",
       "commit": "8728b2520567fe55f8544ee9827159c2bc067f26",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -314,7 +314,7 @@
     },
     {
       "id": "24092902509-1--kind-bench-smoke-tmax-single-otelcol",
-      "timestamp": "2026-04-09T07:41:52.522Z",
+      "timestamp": "2026-04-09T08:02:51.614Z",
       "commit": "8728b2520567fe55f8544ee9827159c2bc067f26",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -322,7 +322,7 @@
     },
     {
       "id": "24092902509-1--kind-bench-smoke-tmax-multi-vector",
-      "timestamp": "2026-04-09T07:41:52.522Z",
+      "timestamp": "2026-04-09T08:02:51.614Z",
       "commit": "8728b2520567fe55f8544ee9827159c2bc067f26",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -330,7 +330,7 @@
     },
     {
       "id": "24092480398-1--kind-bench-smoke-profile-smoke-single-vector",
-      "timestamp": "2026-04-09T07:41:52.522Z",
+      "timestamp": "2026-04-09T08:02:51.614Z",
       "commit": "e353482c67c2e71ff4deb7fd37212264e976922d",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -338,7 +338,7 @@
     },
     {
       "id": "24092480398-1--kind-bench-smoke-profile-smoke-multi-vector",
-      "timestamp": "2026-04-09T07:41:52.522Z",
+      "timestamp": "2026-04-09T08:02:51.614Z",
       "commit": "e353482c67c2e71ff4deb7fd37212264e976922d",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -346,7 +346,7 @@
     },
     {
       "id": "24090514698-1--kind-bench-smoke-t100k-single-logfwd",
-      "timestamp": "2026-04-09T07:41:52.522Z",
+      "timestamp": "2026-04-09T08:02:51.614Z",
       "commit": "795369e4a4d5032483d8585a80808ebe391b6dd0",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -354,7 +354,7 @@
     },
     {
       "id": "24089288411-1--kind-bench-smoke-target-max-single-logfwd",
-      "timestamp": "2026-04-09T07:41:52.522Z",
+      "timestamp": "2026-04-09T08:02:51.614Z",
       "commit": "689cb2943152294233f12fc73eadb7ee55feced7",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -362,7 +362,7 @@
     },
     {
       "id": "24089087310-1--kind-bench-smoke-target-max-single-logfwd",
-      "timestamp": "2026-04-09T07:41:52.522Z",
+      "timestamp": "2026-04-09T08:02:51.614Z",
       "commit": "80c09d05001fb974dfbda389497988207179023e",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -370,7 +370,7 @@
     },
     {
       "id": "24088457868-1--kind-bench-smoke-target-max-single-logfwd",
-      "timestamp": "2026-04-09T07:41:52.522Z",
+      "timestamp": "2026-04-09T08:02:51.614Z",
       "commit": "baa4422026b45b2f97a6a380bf200c1d0c55b3da",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -378,7 +378,7 @@
     },
     {
       "id": "24088165741-1--kind-bench-smoke-target-max-single-logfwd",
-      "timestamp": "2026-04-09T07:41:52.522Z",
+      "timestamp": "2026-04-09T08:02:51.614Z",
       "commit": "c9277487896b5a0510f17051418961868ff70cd6",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
