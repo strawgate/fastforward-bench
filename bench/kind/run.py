@@ -97,12 +97,12 @@ class ResourcePlan:
 CPU_PROFILES: dict[str, CpuProfile] = {
     "single": CpuProfile(
         name="single",
-        cluster_cpu_cores=3.0,
-        collector_cpu_mcpu_min=900,
+        cluster_cpu_cores=1.0,
+        collector_cpu_mcpu_min=500,
         collector_cpu_mcpu_target=900,
-        emitter_cpu_mcpu_per_pod=1,
-        sink_cpu_mcpu=850,
-        capture_reader_cpu_mcpu=50,
+        emitter_cpu_mcpu_per_pod=60,
+        sink_cpu_mcpu=100,
+        capture_reader_cpu_mcpu=20,
         collector_memory_limit="512Mi",
         emitter_memory_limit="96Mi",
         sink_memory_limit="256Mi",
@@ -110,12 +110,12 @@ CPU_PROFILES: dict[str, CpuProfile] = {
     ),
     "multi": CpuProfile(
         name="multi",
-        cluster_cpu_cores=4.0,
-        collector_cpu_mcpu_min=1800,
+        cluster_cpu_cores=2.0,
+        collector_cpu_mcpu_min=1200,
         collector_cpu_mcpu_target=1800,
-        emitter_cpu_mcpu_per_pod=1,
-        sink_cpu_mcpu=850,
-        capture_reader_cpu_mcpu=50,
+        emitter_cpu_mcpu_per_pod=60,
+        sink_cpu_mcpu=120,
+        capture_reader_cpu_mcpu=20,
         collector_memory_limit="1Gi",
         emitter_memory_limit="96Mi",
         sink_memory_limit="256Mi",
@@ -225,20 +225,44 @@ def build_resource_plan(
     node_budget_mcpu = int(cpu_profile.cluster_cpu_cores * 1000)
     sink_mcpu = cpu_profile.sink_cpu_mcpu
     capture_reader_mcpu = cpu_profile.capture_reader_cpu_mcpu
-    reserved_mcpu = sink_mcpu + capture_reader_mcpu
+    collector_mcpu_min = cpu_profile.collector_cpu_mcpu_min
+    collector_mcpu_target = cpu_profile.collector_cpu_mcpu_target
 
-    # Keep generator/sink near 1 core class while leaving scheduler headroom for
-    # node/system overhead on hosted runners.
-    emitter_total_budget_mcpu = 900
-    emitter_mcpu = max(cpu_profile.emitter_cpu_mcpu_per_pod, emitter_total_budget_mcpu // emitter_pods)
+    capacity_probe = eps_per_pod >= 10_000 or unbounded_generator
+    if capacity_probe:
+        # For ladder/max capacity probes, lift the benchmark envelope so sink and
+        # generator are not the first bottleneck. Keep smoke profile lightweight.
+        if cpu_profile.name == "single":
+            node_budget_mcpu = 3000
+            sink_mcpu = 850
+            capture_reader_mcpu = 50
+            collector_mcpu_min = 900
+            collector_mcpu_target = 900
+        else:
+            node_budget_mcpu = 4000
+            sink_mcpu = 850
+            capture_reader_mcpu = 50
+            collector_mcpu_min = 1800
+            collector_mcpu_target = 1800
+
+    reserved_mcpu = sink_mcpu + capture_reader_mcpu
+    if capacity_probe:
+        emitter_total_budget_mcpu = 900
+        emitter_mcpu = max(cpu_profile.emitter_cpu_mcpu_per_pod, emitter_total_budget_mcpu // emitter_pods)
+    else:
+        emitter_mcpu = cpu_profile.emitter_cpu_mcpu_per_pod
+        if eps_per_pod >= 100_000:
+            emitter_mcpu = max(emitter_mcpu, 200)
+        if unbounded_generator:
+            emitter_mcpu = max(emitter_mcpu, 200)
     collector_mcpu = node_budget_mcpu - reserved_mcpu - (emitter_mcpu * emitter_pods)
 
-    if collector_mcpu < cpu_profile.collector_cpu_mcpu_min:
-        emitter_budget = max(1, (node_budget_mcpu - reserved_mcpu - cpu_profile.collector_cpu_mcpu_min) // emitter_pods)
+    if collector_mcpu < collector_mcpu_min:
+        emitter_budget = max(1, (node_budget_mcpu - reserved_mcpu - collector_mcpu_min) // emitter_pods)
         emitter_mcpu = min(emitter_mcpu, emitter_budget)
         collector_mcpu = node_budget_mcpu - reserved_mcpu - (emitter_mcpu * emitter_pods)
 
-    collector_mcpu = min(collector_mcpu, cpu_profile.collector_cpu_mcpu_target)
+    collector_mcpu = min(collector_mcpu, collector_mcpu_target)
     if collector_mcpu < 100:
         raise ValueError(
             f"cpu profile '{cpu_profile.name}' leaves only {collector_mcpu}m for collector with {emitter_pods} emitter pods"
