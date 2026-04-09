@@ -84,6 +84,7 @@ class CpuProfile:
 @dataclass(frozen=True)
 class ResourcePlan:
     cpu_profile: CpuProfile
+    cluster_cpu_cores: float
     collector_cpu: str
     emitter_cpu: str
     sink_cpu: str
@@ -275,6 +276,7 @@ def build_resource_plan(
 
     return ResourcePlan(
         cpu_profile=cpu_profile,
+        cluster_cpu_cores=node_budget_mcpu / 1000.0,
         collector_cpu=format_cpu_quantity(collector_mcpu),
         emitter_cpu=format_cpu_quantity(emitter_mcpu),
         sink_cpu=format_cpu_quantity(sink_mcpu),
@@ -1007,7 +1009,7 @@ def main() -> int:
         protocol=adapter.sink_transport if args.protocol == "otlp_http" else args.protocol,
         ingest_mode=args.ingest_mode,
         cpu_profile=args.cpu_profile,
-        cluster_cpu_limit_cores=cpu_profile.cluster_cpu_cores,
+        cluster_cpu_limit_cores=resource_plan.cluster_cpu_cores,
         pods=profile.pods,
         target_eps_per_pod=profile.eps_per_pod,
         total_target_eps=profile.total_target_eps,
@@ -1066,7 +1068,7 @@ def main() -> int:
             event="start",
         )
         create_kind_cluster(args.cluster_name)
-        set_kind_control_plane_cpu_limit(args.cluster_name, cpu_profile.cluster_cpu_cores)
+        set_kind_control_plane_cpu_limit(args.cluster_name, resource_plan.cluster_cpu_cores)
         result.cluster_ready = True
         load_image_into_kind(args.cluster_name, args.memagent_image)
 
