@@ -2,5 +2,5 @@
   "schemaVersion": 1,
   "label": "sink cpu cores p95",
   "message": "0 cores",
-  "color": "brightgreen"
+  "color": "red"
 }

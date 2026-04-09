@@ -2,21 +2,21 @@
   {
     "ref": "refs/heads/codex/bench-compose-smoke",
     "latestRunId": "24146309842-1--compose-bench-smoke-tmax-single-vector",
-    "latestTimestamp": "2026-04-09T06:18:03.399Z",
+    "latestTimestamp": "2026-04-09T07:41:52.524Z",
     "latestCommit": "ab9a65b8cef21a8ec61f4d0df6249b21d46c629c",
     "runCount": 21
   },
   {
     "ref": "refs/heads/master",
     "latestRunId": "24144401243-1--kind-bench-default-otlp-tmax-single-otelcol",
-    "latestTimestamp": "2026-04-09T06:18:03.398Z",
+    "latestTimestamp": "2026-04-09T07:41:52.523Z",
     "latestCommit": "211d46c749d1509d3937ad07d11c8b72fdb54107",
     "runCount": 9
   },
   {
     "ref": "refs/heads/codex/eps-target-sweep",
     "latestRunId": "24111535469-1--kind-bench-smoke-file-profile-smoke-single-fluent-bit",
-    "latestTimestamp": "2026-04-09T06:18:03.398Z",
+    "latestTimestamp": "2026-04-09T07:41:52.523Z",
     "latestCommit": "2b1fcaf8f24d906c29db6f300042811468451186",
     "runCount": 20
   }
