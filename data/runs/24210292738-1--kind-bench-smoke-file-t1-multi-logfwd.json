@@ -1,0 +1,2364 @@
+{
+  "resourceMetrics": [
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "benchkit.run_id",
+            "value": {
+              "stringValue": "24210292738-1--kind-bench-smoke-file-t1-multi-logfwd"
+            }
+          },
+          {
+            "key": "benchkit.kind",
+            "value": {
+              "stringValue": "hybrid"
+            }
+          },
+          {
+            "key": "benchkit.source_format",
+            "value": {
+              "stringValue": "otlp"
+            }
+          },
+          {
+            "key": "benchkit.ref",
+            "value": {
+              "stringValue": "refs/heads/codex/kind-saturation-oracle-relax"
+            }
+          },
+          {
+            "key": "benchkit.commit",
+            "value": {
+              "stringValue": "d45dcb4ad8de16f753da8671a77d6450b88df66e"
+            }
+          },
+          {
+            "key": "benchkit.workflow",
+            "value": {
+              "stringValue": "Bench / kind smoke"
+            }
+          },
+          {
+            "key": "benchkit.job",
+            "value": {
+              "stringValue": "kind-bench-smoke"
+            }
+          },
+          {
+            "key": "benchkit.run_attempt",
+            "value": {
+              "stringValue": "1"
+            }
+          },
+          {
+            "key": "benchkit.runner",
+            "value": {
+              "stringValue": "Linux/X64"
+            }
+          },
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "memagent-e2e.kind-bench"
+            }
+          }
+        ]
+      },
+      "scopeMetrics": [
+        {
+          "metrics": [
+            {
+              "name": "sink_lines_total",
+              "unit": "events",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1775764462000000000",
+                    "attributes": [
+                      {
+                        "key": "benchkit.scenario",
+                        "value": {
+                          "stringValue": "kind/smoke/baseline-pass-through/file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.series",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.role",
+                        "value": {
+                          "stringValue": "outcome"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.direction",
+                        "value": {
+                          "stringValue": "bigger_is_better"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster",
+                        "value": {
+                          "stringValue": "kind-single-node"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster_cpu_limit_cores",
+                        "value": {
+                          "stringValue": "2.0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cpu_profile",
+                        "value": {
+                          "stringValue": "multi"
+                        }
+                      },
+                      {
+                        "key": "benchkit.impl",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.ingest_mode",
+                        "value": {
+                          "stringValue": "file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.namespace",
+                        "value": {
+                          "stringValue": "memagent-bench"
+                        }
+                      },
+                      {
+                        "key": "benchkit.pods",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.profile",
+                        "value": {
+                          "stringValue": "smoke"
+                        }
+                      },
+                      {
+                        "key": "benchkit.protocol",
+                        "value": {
+                          "stringValue": "otlp_http"
+                        }
+                      },
+                      {
+                        "key": "benchkit.target_eps_per_pod",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.total_target_eps",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      }
+                    ],
+                    "asInt": "0"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "emitter_reported_events_total",
+              "unit": "events",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1775764462000000000",
+                    "attributes": [
+                      {
+                        "key": "benchkit.scenario",
+                        "value": {
+                          "stringValue": "kind/smoke/baseline-pass-through/file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.series",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.role",
+                        "value": {
+                          "stringValue": "diagnostic"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.direction",
+                        "value": {
+                          "stringValue": "bigger_is_better"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster",
+                        "value": {
+                          "stringValue": "kind-single-node"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster_cpu_limit_cores",
+                        "value": {
+                          "stringValue": "2.0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cpu_profile",
+                        "value": {
+                          "stringValue": "multi"
+                        }
+                      },
+                      {
+                        "key": "benchkit.impl",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.ingest_mode",
+                        "value": {
+                          "stringValue": "file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.namespace",
+                        "value": {
+                          "stringValue": "memagent-bench"
+                        }
+                      },
+                      {
+                        "key": "benchkit.pods",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.profile",
+                        "value": {
+                          "stringValue": "smoke"
+                        }
+                      },
+                      {
+                        "key": "benchkit.protocol",
+                        "value": {
+                          "stringValue": "otlp_http"
+                        }
+                      },
+                      {
+                        "key": "benchkit.target_eps_per_pod",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.total_target_eps",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      }
+                    ],
+                    "asInt": "1024"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "sink_reported_events_total",
+              "unit": "events",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1775764462000000000",
+                    "attributes": [
+                      {
+                        "key": "benchkit.scenario",
+                        "value": {
+                          "stringValue": "kind/smoke/baseline-pass-through/file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.series",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.role",
+                        "value": {
+                          "stringValue": "diagnostic"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.direction",
+                        "value": {
+                          "stringValue": "bigger_is_better"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster",
+                        "value": {
+                          "stringValue": "kind-single-node"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster_cpu_limit_cores",
+                        "value": {
+                          "stringValue": "2.0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cpu_profile",
+                        "value": {
+                          "stringValue": "multi"
+                        }
+                      },
+                      {
+                        "key": "benchkit.impl",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.ingest_mode",
+                        "value": {
+                          "stringValue": "file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.namespace",
+                        "value": {
+                          "stringValue": "memagent-bench"
+                        }
+                      },
+                      {
+                        "key": "benchkit.pods",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.profile",
+                        "value": {
+                          "stringValue": "smoke"
+                        }
+                      },
+                      {
+                        "key": "benchkit.protocol",
+                        "value": {
+                          "stringValue": "otlp_http"
+                        }
+                      },
+                      {
+                        "key": "benchkit.target_eps_per_pod",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.total_target_eps",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      }
+                    ],
+                    "asInt": "1024"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "captured_rows_total",
+              "unit": "events",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1775764462000000000",
+                    "attributes": [
+                      {
+                        "key": "benchkit.scenario",
+                        "value": {
+                          "stringValue": "kind/smoke/baseline-pass-through/file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.series",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.role",
+                        "value": {
+                          "stringValue": "outcome"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.direction",
+                        "value": {
+                          "stringValue": "bigger_is_better"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster",
+                        "value": {
+                          "stringValue": "kind-single-node"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster_cpu_limit_cores",
+                        "value": {
+                          "stringValue": "2.0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cpu_profile",
+                        "value": {
+                          "stringValue": "multi"
+                        }
+                      },
+                      {
+                        "key": "benchkit.impl",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.ingest_mode",
+                        "value": {
+                          "stringValue": "file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.namespace",
+                        "value": {
+                          "stringValue": "memagent-bench"
+                        }
+                      },
+                      {
+                        "key": "benchkit.pods",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.profile",
+                        "value": {
+                          "stringValue": "smoke"
+                        }
+                      },
+                      {
+                        "key": "benchkit.protocol",
+                        "value": {
+                          "stringValue": "otlp_http"
+                        }
+                      },
+                      {
+                        "key": "benchkit.target_eps_per_pod",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.total_target_eps",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      }
+                    ],
+                    "asInt": "1024"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "source_rows_total",
+              "unit": "events",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1775764462000000000",
+                    "attributes": [
+                      {
+                        "key": "benchkit.scenario",
+                        "value": {
+                          "stringValue": "kind/smoke/baseline-pass-through/file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.series",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.role",
+                        "value": {
+                          "stringValue": "diagnostic"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.direction",
+                        "value": {
+                          "stringValue": "bigger_is_better"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster",
+                        "value": {
+                          "stringValue": "kind-single-node"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster_cpu_limit_cores",
+                        "value": {
+                          "stringValue": "2.0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cpu_profile",
+                        "value": {
+                          "stringValue": "multi"
+                        }
+                      },
+                      {
+                        "key": "benchkit.impl",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.ingest_mode",
+                        "value": {
+                          "stringValue": "file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.namespace",
+                        "value": {
+                          "stringValue": "memagent-bench"
+                        }
+                      },
+                      {
+                        "key": "benchkit.pods",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.profile",
+                        "value": {
+                          "stringValue": "smoke"
+                        }
+                      },
+                      {
+                        "key": "benchkit.protocol",
+                        "value": {
+                          "stringValue": "otlp_http"
+                        }
+                      },
+                      {
+                        "key": "benchkit.target_eps_per_pod",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.total_target_eps",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      }
+                    ],
+                    "asInt": "1024"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "missing_source_count",
+              "unit": "sources",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1775764462000000000",
+                    "attributes": [
+                      {
+                        "key": "benchkit.scenario",
+                        "value": {
+                          "stringValue": "kind/smoke/baseline-pass-through/file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.series",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.role",
+                        "value": {
+                          "stringValue": "outcome"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.direction",
+                        "value": {
+                          "stringValue": "smaller_is_better"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster",
+                        "value": {
+                          "stringValue": "kind-single-node"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster_cpu_limit_cores",
+                        "value": {
+                          "stringValue": "2.0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cpu_profile",
+                        "value": {
+                          "stringValue": "multi"
+                        }
+                      },
+                      {
+                        "key": "benchkit.impl",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.ingest_mode",
+                        "value": {
+                          "stringValue": "file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.namespace",
+                        "value": {
+                          "stringValue": "memagent-bench"
+                        }
+                      },
+                      {
+                        "key": "benchkit.pods",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.profile",
+                        "value": {
+                          "stringValue": "smoke"
+                        }
+                      },
+                      {
+                        "key": "benchkit.protocol",
+                        "value": {
+                          "stringValue": "otlp_http"
+                        }
+                      },
+                      {
+                        "key": "benchkit.target_eps_per_pod",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.total_target_eps",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      }
+                    ],
+                    "asInt": "0"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "missing_event_count",
+              "unit": "events",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1775764462000000000",
+                    "attributes": [
+                      {
+                        "key": "benchkit.scenario",
+                        "value": {
+                          "stringValue": "kind/smoke/baseline-pass-through/file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.series",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.role",
+                        "value": {
+                          "stringValue": "outcome"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.direction",
+                        "value": {
+                          "stringValue": "smaller_is_better"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster",
+                        "value": {
+                          "stringValue": "kind-single-node"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster_cpu_limit_cores",
+                        "value": {
+                          "stringValue": "2.0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cpu_profile",
+                        "value": {
+                          "stringValue": "multi"
+                        }
+                      },
+                      {
+                        "key": "benchkit.impl",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.ingest_mode",
+                        "value": {
+                          "stringValue": "file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.namespace",
+                        "value": {
+                          "stringValue": "memagent-bench"
+                        }
+                      },
+                      {
+                        "key": "benchkit.pods",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.profile",
+                        "value": {
+                          "stringValue": "smoke"
+                        }
+                      },
+                      {
+                        "key": "benchkit.protocol",
+                        "value": {
+                          "stringValue": "otlp_http"
+                        }
+                      },
+                      {
+                        "key": "benchkit.target_eps_per_pod",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.total_target_eps",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      }
+                    ],
+                    "asInt": "0"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "unexpected_event_count",
+              "unit": "events",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1775764462000000000",
+                    "attributes": [
+                      {
+                        "key": "benchkit.scenario",
+                        "value": {
+                          "stringValue": "kind/smoke/baseline-pass-through/file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.series",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.role",
+                        "value": {
+                          "stringValue": "outcome"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.direction",
+                        "value": {
+                          "stringValue": "smaller_is_better"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster",
+                        "value": {
+                          "stringValue": "kind-single-node"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster_cpu_limit_cores",
+                        "value": {
+                          "stringValue": "2.0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cpu_profile",
+                        "value": {
+                          "stringValue": "multi"
+                        }
+                      },
+                      {
+                        "key": "benchkit.impl",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.ingest_mode",
+                        "value": {
+                          "stringValue": "file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.namespace",
+                        "value": {
+                          "stringValue": "memagent-bench"
+                        }
+                      },
+                      {
+                        "key": "benchkit.pods",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.profile",
+                        "value": {
+                          "stringValue": "smoke"
+                        }
+                      },
+                      {
+                        "key": "benchkit.protocol",
+                        "value": {
+                          "stringValue": "otlp_http"
+                        }
+                      },
+                      {
+                        "key": "benchkit.target_eps_per_pod",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.total_target_eps",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      }
+                    ],
+                    "asInt": "0"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "sink_lines_per_sec_avg",
+              "unit": "events/sec",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1775764462000000000",
+                    "attributes": [
+                      {
+                        "key": "benchkit.scenario",
+                        "value": {
+                          "stringValue": "kind/smoke/baseline-pass-through/file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.series",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.role",
+                        "value": {
+                          "stringValue": "outcome"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.direction",
+                        "value": {
+                          "stringValue": "bigger_is_better"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster",
+                        "value": {
+                          "stringValue": "kind-single-node"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster_cpu_limit_cores",
+                        "value": {
+                          "stringValue": "2.0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cpu_profile",
+                        "value": {
+                          "stringValue": "multi"
+                        }
+                      },
+                      {
+                        "key": "benchkit.impl",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.ingest_mode",
+                        "value": {
+                          "stringValue": "file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.namespace",
+                        "value": {
+                          "stringValue": "memagent-bench"
+                        }
+                      },
+                      {
+                        "key": "benchkit.pods",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.profile",
+                        "value": {
+                          "stringValue": "smoke"
+                        }
+                      },
+                      {
+                        "key": "benchkit.protocol",
+                        "value": {
+                          "stringValue": "otlp_http"
+                        }
+                      },
+                      {
+                        "key": "benchkit.target_eps_per_pod",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.total_target_eps",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      }
+                    ],
+                    "asInt": "0"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "sink_lines_per_sec_p50",
+              "unit": "events/sec",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1775764462000000000",
+                    "attributes": [
+                      {
+                        "key": "benchkit.scenario",
+                        "value": {
+                          "stringValue": "kind/smoke/baseline-pass-through/file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.series",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.role",
+                        "value": {
+                          "stringValue": "outcome"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.direction",
+                        "value": {
+                          "stringValue": "bigger_is_better"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster",
+                        "value": {
+                          "stringValue": "kind-single-node"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster_cpu_limit_cores",
+                        "value": {
+                          "stringValue": "2.0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cpu_profile",
+                        "value": {
+                          "stringValue": "multi"
+                        }
+                      },
+                      {
+                        "key": "benchkit.impl",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.ingest_mode",
+                        "value": {
+                          "stringValue": "file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.namespace",
+                        "value": {
+                          "stringValue": "memagent-bench"
+                        }
+                      },
+                      {
+                        "key": "benchkit.pods",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.profile",
+                        "value": {
+                          "stringValue": "smoke"
+                        }
+                      },
+                      {
+                        "key": "benchkit.protocol",
+                        "value": {
+                          "stringValue": "otlp_http"
+                        }
+                      },
+                      {
+                        "key": "benchkit.target_eps_per_pod",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.total_target_eps",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      }
+                    ],
+                    "asInt": "0"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "sink_lines_per_sec_p95",
+              "unit": "events/sec",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1775764462000000000",
+                    "attributes": [
+                      {
+                        "key": "benchkit.scenario",
+                        "value": {
+                          "stringValue": "kind/smoke/baseline-pass-through/file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.series",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.role",
+                        "value": {
+                          "stringValue": "outcome"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.direction",
+                        "value": {
+                          "stringValue": "bigger_is_better"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster",
+                        "value": {
+                          "stringValue": "kind-single-node"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster_cpu_limit_cores",
+                        "value": {
+                          "stringValue": "2.0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cpu_profile",
+                        "value": {
+                          "stringValue": "multi"
+                        }
+                      },
+                      {
+                        "key": "benchkit.impl",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.ingest_mode",
+                        "value": {
+                          "stringValue": "file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.namespace",
+                        "value": {
+                          "stringValue": "memagent-bench"
+                        }
+                      },
+                      {
+                        "key": "benchkit.pods",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.profile",
+                        "value": {
+                          "stringValue": "smoke"
+                        }
+                      },
+                      {
+                        "key": "benchkit.protocol",
+                        "value": {
+                          "stringValue": "otlp_http"
+                        }
+                      },
+                      {
+                        "key": "benchkit.target_eps_per_pod",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.total_target_eps",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      }
+                    ],
+                    "asInt": "0"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "sink_lines_per_sec_p99",
+              "unit": "events/sec",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1775764462000000000",
+                    "attributes": [
+                      {
+                        "key": "benchkit.scenario",
+                        "value": {
+                          "stringValue": "kind/smoke/baseline-pass-through/file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.series",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.role",
+                        "value": {
+                          "stringValue": "outcome"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.direction",
+                        "value": {
+                          "stringValue": "bigger_is_better"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster",
+                        "value": {
+                          "stringValue": "kind-single-node"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster_cpu_limit_cores",
+                        "value": {
+                          "stringValue": "2.0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cpu_profile",
+                        "value": {
+                          "stringValue": "multi"
+                        }
+                      },
+                      {
+                        "key": "benchkit.impl",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.ingest_mode",
+                        "value": {
+                          "stringValue": "file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.namespace",
+                        "value": {
+                          "stringValue": "memagent-bench"
+                        }
+                      },
+                      {
+                        "key": "benchkit.pods",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.profile",
+                        "value": {
+                          "stringValue": "smoke"
+                        }
+                      },
+                      {
+                        "key": "benchkit.protocol",
+                        "value": {
+                          "stringValue": "otlp_http"
+                        }
+                      },
+                      {
+                        "key": "benchkit.target_eps_per_pod",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.total_target_eps",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      }
+                    ],
+                    "asInt": "0"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "drop_estimate",
+              "unit": "events",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1775764462000000000",
+                    "attributes": [
+                      {
+                        "key": "benchkit.scenario",
+                        "value": {
+                          "stringValue": "kind/smoke/baseline-pass-through/file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.series",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.role",
+                        "value": {
+                          "stringValue": "outcome"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.direction",
+                        "value": {
+                          "stringValue": "smaller_is_better"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster",
+                        "value": {
+                          "stringValue": "kind-single-node"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster_cpu_limit_cores",
+                        "value": {
+                          "stringValue": "2.0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cpu_profile",
+                        "value": {
+                          "stringValue": "multi"
+                        }
+                      },
+                      {
+                        "key": "benchkit.impl",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.ingest_mode",
+                        "value": {
+                          "stringValue": "file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.namespace",
+                        "value": {
+                          "stringValue": "memagent-bench"
+                        }
+                      },
+                      {
+                        "key": "benchkit.pods",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.profile",
+                        "value": {
+                          "stringValue": "smoke"
+                        }
+                      },
+                      {
+                        "key": "benchkit.protocol",
+                        "value": {
+                          "stringValue": "otlp_http"
+                        }
+                      },
+                      {
+                        "key": "benchkit.target_eps_per_pod",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.total_target_eps",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      }
+                    ],
+                    "asInt": "0"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "dup_estimate",
+              "unit": "events",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1775764462000000000",
+                    "attributes": [
+                      {
+                        "key": "benchkit.scenario",
+                        "value": {
+                          "stringValue": "kind/smoke/baseline-pass-through/file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.series",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.role",
+                        "value": {
+                          "stringValue": "outcome"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.direction",
+                        "value": {
+                          "stringValue": "smaller_is_better"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster",
+                        "value": {
+                          "stringValue": "kind-single-node"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster_cpu_limit_cores",
+                        "value": {
+                          "stringValue": "2.0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cpu_profile",
+                        "value": {
+                          "stringValue": "multi"
+                        }
+                      },
+                      {
+                        "key": "benchkit.impl",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.ingest_mode",
+                        "value": {
+                          "stringValue": "file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.namespace",
+                        "value": {
+                          "stringValue": "memagent-bench"
+                        }
+                      },
+                      {
+                        "key": "benchkit.pods",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.profile",
+                        "value": {
+                          "stringValue": "smoke"
+                        }
+                      },
+                      {
+                        "key": "benchkit.protocol",
+                        "value": {
+                          "stringValue": "otlp_http"
+                        }
+                      },
+                      {
+                        "key": "benchkit.target_eps_per_pod",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.total_target_eps",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      }
+                    ],
+                    "asInt": "0"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "sink_cpu_cores_avg",
+              "unit": "cores",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1775764462000000000",
+                    "attributes": [
+                      {
+                        "key": "benchkit.scenario",
+                        "value": {
+                          "stringValue": "kind/smoke/baseline-pass-through/file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.series",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.role",
+                        "value": {
+                          "stringValue": "diagnostic"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.direction",
+                        "value": {
+                          "stringValue": "smaller_is_better"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster",
+                        "value": {
+                          "stringValue": "kind-single-node"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster_cpu_limit_cores",
+                        "value": {
+                          "stringValue": "2.0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cpu_profile",
+                        "value": {
+                          "stringValue": "multi"
+                        }
+                      },
+                      {
+                        "key": "benchkit.impl",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.ingest_mode",
+                        "value": {
+                          "stringValue": "file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.namespace",
+                        "value": {
+                          "stringValue": "memagent-bench"
+                        }
+                      },
+                      {
+                        "key": "benchkit.pods",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.profile",
+                        "value": {
+                          "stringValue": "smoke"
+                        }
+                      },
+                      {
+                        "key": "benchkit.protocol",
+                        "value": {
+                          "stringValue": "otlp_http"
+                        }
+                      },
+                      {
+                        "key": "benchkit.target_eps_per_pod",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.total_target_eps",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      }
+                    ],
+                    "asDouble": 0.002780860618814994
+                  }
+                ]
+              }
+            },
+            {
+              "name": "sink_cpu_cores_p95",
+              "unit": "cores",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1775764462000000000",
+                    "attributes": [
+                      {
+                        "key": "benchkit.scenario",
+                        "value": {
+                          "stringValue": "kind/smoke/baseline-pass-through/file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.series",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.role",
+                        "value": {
+                          "stringValue": "diagnostic"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.direction",
+                        "value": {
+                          "stringValue": "smaller_is_better"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster",
+                        "value": {
+                          "stringValue": "kind-single-node"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster_cpu_limit_cores",
+                        "value": {
+                          "stringValue": "2.0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cpu_profile",
+                        "value": {
+                          "stringValue": "multi"
+                        }
+                      },
+                      {
+                        "key": "benchkit.impl",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.ingest_mode",
+                        "value": {
+                          "stringValue": "file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.namespace",
+                        "value": {
+                          "stringValue": "memagent-bench"
+                        }
+                      },
+                      {
+                        "key": "benchkit.pods",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.profile",
+                        "value": {
+                          "stringValue": "smoke"
+                        }
+                      },
+                      {
+                        "key": "benchkit.protocol",
+                        "value": {
+                          "stringValue": "otlp_http"
+                        }
+                      },
+                      {
+                        "key": "benchkit.target_eps_per_pod",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.total_target_eps",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      }
+                    ],
+                    "asDouble": 0.0032789319701413255
+                  }
+                ]
+              }
+            },
+            {
+              "name": "sink_rss_mb_avg",
+              "unit": "MB",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1775764462000000000",
+                    "attributes": [
+                      {
+                        "key": "benchkit.scenario",
+                        "value": {
+                          "stringValue": "kind/smoke/baseline-pass-through/file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.series",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.role",
+                        "value": {
+                          "stringValue": "diagnostic"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.direction",
+                        "value": {
+                          "stringValue": "smaller_is_better"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster",
+                        "value": {
+                          "stringValue": "kind-single-node"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster_cpu_limit_cores",
+                        "value": {
+                          "stringValue": "2.0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cpu_profile",
+                        "value": {
+                          "stringValue": "multi"
+                        }
+                      },
+                      {
+                        "key": "benchkit.impl",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.ingest_mode",
+                        "value": {
+                          "stringValue": "file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.namespace",
+                        "value": {
+                          "stringValue": "memagent-bench"
+                        }
+                      },
+                      {
+                        "key": "benchkit.pods",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.profile",
+                        "value": {
+                          "stringValue": "smoke"
+                        }
+                      },
+                      {
+                        "key": "benchkit.protocol",
+                        "value": {
+                          "stringValue": "otlp_http"
+                        }
+                      },
+                      {
+                        "key": "benchkit.target_eps_per_pod",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.total_target_eps",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      }
+                    ],
+                    "asDouble": 115.9765625
+                  }
+                ]
+              }
+            },
+            {
+              "name": "sink_rss_mb_p95",
+              "unit": "MB",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1775764462000000000",
+                    "attributes": [
+                      {
+                        "key": "benchkit.scenario",
+                        "value": {
+                          "stringValue": "kind/smoke/baseline-pass-through/file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.series",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.role",
+                        "value": {
+                          "stringValue": "diagnostic"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.direction",
+                        "value": {
+                          "stringValue": "smaller_is_better"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster",
+                        "value": {
+                          "stringValue": "kind-single-node"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster_cpu_limit_cores",
+                        "value": {
+                          "stringValue": "2.0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cpu_profile",
+                        "value": {
+                          "stringValue": "multi"
+                        }
+                      },
+                      {
+                        "key": "benchkit.impl",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.ingest_mode",
+                        "value": {
+                          "stringValue": "file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.namespace",
+                        "value": {
+                          "stringValue": "memagent-bench"
+                        }
+                      },
+                      {
+                        "key": "benchkit.pods",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.profile",
+                        "value": {
+                          "stringValue": "smoke"
+                        }
+                      },
+                      {
+                        "key": "benchkit.protocol",
+                        "value": {
+                          "stringValue": "otlp_http"
+                        }
+                      },
+                      {
+                        "key": "benchkit.target_eps_per_pod",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.total_target_eps",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      }
+                    ],
+                    "asDouble": 116.0546875
+                  }
+                ]
+              }
+            },
+            {
+              "name": "collector_cpu_cores_avg",
+              "unit": "cores",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1775764462000000000",
+                    "attributes": [
+                      {
+                        "key": "benchkit.scenario",
+                        "value": {
+                          "stringValue": "kind/smoke/baseline-pass-through/file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.series",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.role",
+                        "value": {
+                          "stringValue": "diagnostic"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.direction",
+                        "value": {
+                          "stringValue": "smaller_is_better"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster",
+                        "value": {
+                          "stringValue": "kind-single-node"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster_cpu_limit_cores",
+                        "value": {
+                          "stringValue": "2.0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cpu_profile",
+                        "value": {
+                          "stringValue": "multi"
+                        }
+                      },
+                      {
+                        "key": "benchkit.impl",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.ingest_mode",
+                        "value": {
+                          "stringValue": "file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.namespace",
+                        "value": {
+                          "stringValue": "memagent-bench"
+                        }
+                      },
+                      {
+                        "key": "benchkit.pods",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.profile",
+                        "value": {
+                          "stringValue": "smoke"
+                        }
+                      },
+                      {
+                        "key": "benchkit.protocol",
+                        "value": {
+                          "stringValue": "otlp_http"
+                        }
+                      },
+                      {
+                        "key": "benchkit.target_eps_per_pod",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.total_target_eps",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      }
+                    ],
+                    "asDouble": 0.007416648737396707
+                  }
+                ]
+              }
+            },
+            {
+              "name": "collector_cpu_cores_p95",
+              "unit": "cores",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1775764462000000000",
+                    "attributes": [
+                      {
+                        "key": "benchkit.scenario",
+                        "value": {
+                          "stringValue": "kind/smoke/baseline-pass-through/file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.series",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.role",
+                        "value": {
+                          "stringValue": "diagnostic"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.direction",
+                        "value": {
+                          "stringValue": "smaller_is_better"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster",
+                        "value": {
+                          "stringValue": "kind-single-node"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster_cpu_limit_cores",
+                        "value": {
+                          "stringValue": "2.0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cpu_profile",
+                        "value": {
+                          "stringValue": "multi"
+                        }
+                      },
+                      {
+                        "key": "benchkit.impl",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.ingest_mode",
+                        "value": {
+                          "stringValue": "file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.namespace",
+                        "value": {
+                          "stringValue": "memagent-bench"
+                        }
+                      },
+                      {
+                        "key": "benchkit.pods",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.profile",
+                        "value": {
+                          "stringValue": "smoke"
+                        }
+                      },
+                      {
+                        "key": "benchkit.protocol",
+                        "value": {
+                          "stringValue": "otlp_http"
+                        }
+                      },
+                      {
+                        "key": "benchkit.target_eps_per_pod",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.total_target_eps",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      }
+                    ],
+                    "asDouble": 0.008246297468112007
+                  }
+                ]
+              }
+            },
+            {
+              "name": "collector_rss_mb_avg",
+              "unit": "MB",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1775764462000000000",
+                    "attributes": [
+                      {
+                        "key": "benchkit.scenario",
+                        "value": {
+                          "stringValue": "kind/smoke/baseline-pass-through/file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.series",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.role",
+                        "value": {
+                          "stringValue": "diagnostic"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.direction",
+                        "value": {
+                          "stringValue": "smaller_is_better"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster",
+                        "value": {
+                          "stringValue": "kind-single-node"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster_cpu_limit_cores",
+                        "value": {
+                          "stringValue": "2.0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cpu_profile",
+                        "value": {
+                          "stringValue": "multi"
+                        }
+                      },
+                      {
+                        "key": "benchkit.impl",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.ingest_mode",
+                        "value": {
+                          "stringValue": "file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.namespace",
+                        "value": {
+                          "stringValue": "memagent-bench"
+                        }
+                      },
+                      {
+                        "key": "benchkit.pods",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.profile",
+                        "value": {
+                          "stringValue": "smoke"
+                        }
+                      },
+                      {
+                        "key": "benchkit.protocol",
+                        "value": {
+                          "stringValue": "otlp_http"
+                        }
+                      },
+                      {
+                        "key": "benchkit.target_eps_per_pod",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.total_target_eps",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      }
+                    ],
+                    "asDouble": 109.48828125
+                  }
+                ]
+              }
+            },
+            {
+              "name": "collector_rss_mb_p95",
+              "unit": "MB",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "timeUnixNano": "1775764462000000000",
+                    "attributes": [
+                      {
+                        "key": "benchkit.scenario",
+                        "value": {
+                          "stringValue": "kind/smoke/baseline-pass-through/file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.series",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.role",
+                        "value": {
+                          "stringValue": "diagnostic"
+                        }
+                      },
+                      {
+                        "key": "benchkit.metric.direction",
+                        "value": {
+                          "stringValue": "smaller_is_better"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster",
+                        "value": {
+                          "stringValue": "kind-single-node"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cluster_cpu_limit_cores",
+                        "value": {
+                          "stringValue": "2.0"
+                        }
+                      },
+                      {
+                        "key": "benchkit.cpu_profile",
+                        "value": {
+                          "stringValue": "multi"
+                        }
+                      },
+                      {
+                        "key": "benchkit.impl",
+                        "value": {
+                          "stringValue": "logfwd"
+                        }
+                      },
+                      {
+                        "key": "benchkit.ingest_mode",
+                        "value": {
+                          "stringValue": "file"
+                        }
+                      },
+                      {
+                        "key": "benchkit.namespace",
+                        "value": {
+                          "stringValue": "memagent-bench"
+                        }
+                      },
+                      {
+                        "key": "benchkit.pods",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.profile",
+                        "value": {
+                          "stringValue": "smoke"
+                        }
+                      },
+                      {
+                        "key": "benchkit.protocol",
+                        "value": {
+                          "stringValue": "otlp_http"
+                        }
+                      },
+                      {
+                        "key": "benchkit.target_eps_per_pod",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "benchkit.total_target_eps",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      }
+                    ],
+                    "asDouble": 109.48828125
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
