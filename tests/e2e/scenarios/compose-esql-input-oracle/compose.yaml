@@ -1,0 +1,35 @@
+services:
+  capture:
+    image: python:3.12-alpine
+    command: ["python", "/workspace/tests/e2e/lib/capture_tcp.py", "--port", "9000", "--output-dir", "/artifacts"]
+    volumes:
+      - ${REPO_ROOT:?}:/workspace:ro
+      - ${E2E_RESULTS_DIR:?}:/artifacts
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; s = socket.create_connection(('127.0.0.1', 9000), 1); s.close()"]
+      interval: 2s
+      timeout: 2s
+      retries: 20
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.3
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      xpack.security.http.ssl.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+
+  memagent:
+    image: logfwd:e2e
+    command: ["--config", "/scenario/memagent.yaml"]
+    depends_on:
+      capture:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_started
+    volumes:
+      - ./memagent.yaml:/scenario/memagent.yaml:ro
+
+  workload:
+    image: curlimages/curl:8.12.1
+    command: ["sh", "-lc", "sleep 3600"]
