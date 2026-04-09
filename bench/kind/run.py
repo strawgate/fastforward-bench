@@ -412,6 +412,27 @@ def sink_reported_events_total(
     return int(sink_reported_stats.get("output_lines", 0) or 0)
 
 
+def sink_reached_emitter_snapshot(
+    sink_reported_stats: dict[str, object],
+    *,
+    emitter_reported_stats: list[dict[str, object]],
+) -> bool:
+    sink_max_by_pod = sink_reported_stats.get("benchmark_max_seq_by_pod")
+    if not isinstance(sink_max_by_pod, dict):
+        return False
+
+    for stat in emitter_reported_stats:
+        pod_name = stat.get("pod_name")
+        output_lines = stat.get("output_lines")
+        if not isinstance(pod_name, str) or not isinstance(output_lines, int):
+            continue
+        sink_max = sink_max_by_pod.get(pod_name)
+        if not isinstance(sink_max, int) or sink_max < output_lines:
+            return False
+
+    return True
+
+
 def wait_for_sink_catch_up(
     *,
     namespace: str,
@@ -419,6 +440,7 @@ def wait_for_sink_catch_up(
     sink_stats_kind: str,
     sink_stats_port: int,
     target_events_total: int | None,
+    emitter_reported_stats: list[dict[str, object]] | None = None,
     timeout_sec: int,
     poll_sec: float = 1.0,
 ) -> dict[str, object]:
@@ -441,7 +463,16 @@ def wait_for_sink_catch_up(
         if target_events_total is None:
             return last_stats
 
-        if sink_reported_events_total(last_stats, sink_stats_kind=sink_stats_kind) >= target_events_total:
+        if sink_stats_kind == "capture_reader" and emitter_reported_stats:
+            # For NDJSON capture, global totals can mask per-pod lag
+            # (one stream advances while another is behind). Require
+            # per-pod sequence coverage against the emitter snapshot.
+            if sink_reached_emitter_snapshot(
+                last_stats,
+                emitter_reported_stats=emitter_reported_stats,
+            ):
+                return last_stats
+        elif sink_reported_events_total(last_stats, sink_stats_kind=sink_stats_kind) >= target_events_total:
             return last_stats
 
         if time.time() >= deadline:
@@ -632,6 +663,7 @@ def run_smoke_phase(
         sink_stats_kind=sink_stats_kind,
         sink_stats_port=sink_stats_port,
         target_events_total=emitter_reported_total,
+        emitter_reported_stats=emitter_reported_stats,
         timeout_sec=drain_timeout_sec,
     )
     result.sink_reported_events_total = sink_reported_events_total(
