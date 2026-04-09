@@ -2,5 +2,5 @@
   "schemaVersion": 1,
   "label": "dup estimate",
   "message": "0 events",
-  "color": "blue"
+  "color": "red"
 }

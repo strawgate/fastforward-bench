@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
   "label": "sink rss mb p95",
-  "message": "120.99 MB",
-  "color": "red"
+  "message": "0 MB",
+  "color": "brightgreen"
 }
