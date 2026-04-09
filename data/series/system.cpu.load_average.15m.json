@@ -5,13 +5,6 @@
     "": {
       "points": [
         {
-          "timestamp": "2026-04-08T19:29:19.000Z",
-          "value": 0.19,
-          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
-          "run_id": "24154075042-1--compose-bench-smoke-file-t100-multi-vector",
-          "range": 0.02
-        },
-        {
           "timestamp": "2026-04-08T19:29:28.000Z",
           "value": 0.11,
           "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",

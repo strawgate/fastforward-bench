@@ -9,13 +9,6 @@
       },
       "points": [
         {
-          "timestamp": "2026-04-08T19:29:19.000Z",
-          "value": 6.88,
-          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
-          "run_id": "24154075042-1--compose-bench-smoke-file-t100-multi-vector",
-          "range": 1.28
-        },
-        {
           "timestamp": "2026-04-08T19:29:28.000Z",
           "value": 17.53,
           "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
@@ -30,13 +23,6 @@
         "state": "system"
       },
       "points": [
-        {
-          "timestamp": "2026-04-08T19:29:19.000Z",
-          "value": 4.19,
-          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
-          "run_id": "24154075042-1--compose-bench-smoke-file-t100-multi-vector",
-          "range": 1.06
-        },
         {
           "timestamp": "2026-04-08T19:29:28.000Z",
           "value": 6.46,
@@ -53,13 +39,6 @@
       },
       "points": [
         {
-          "timestamp": "2026-04-08T19:29:19.000Z",
-          "value": 45.48,
-          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
-          "run_id": "24154075042-1--compose-bench-smoke-file-t100-multi-vector",
-          "range": 37.28
-        },
-        {
           "timestamp": "2026-04-08T19:29:28.000Z",
           "value": 97.06,
           "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
@@ -74,13 +53,6 @@
         "state": "interrupt"
       },
       "points": [
-        {
-          "timestamp": "2026-04-08T19:29:19.000Z",
-          "value": 0,
-          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
-          "run_id": "24154075042-1--compose-bench-smoke-file-t100-multi-vector",
-          "range": 0
-        },
         {
           "timestamp": "2026-04-08T19:29:28.000Z",
           "value": 0,
@@ -97,13 +69,6 @@
       },
       "points": [
         {
-          "timestamp": "2026-04-08T19:29:19.000Z",
-          "value": 0,
-          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
-          "run_id": "24154075042-1--compose-bench-smoke-file-t100-multi-vector",
-          "range": 0
-        },
-        {
           "timestamp": "2026-04-08T19:29:28.000Z",
           "value": 0,
           "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
@@ -118,13 +83,6 @@
         "state": "softirq"
       },
       "points": [
-        {
-          "timestamp": "2026-04-08T19:29:19.000Z",
-          "value": 0.04,
-          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
-          "run_id": "24154075042-1--compose-bench-smoke-file-t100-multi-vector",
-          "range": 0.01
-        },
         {
           "timestamp": "2026-04-08T19:29:28.000Z",
           "value": 0.37,
@@ -141,13 +99,6 @@
       },
       "points": [
         {
-          "timestamp": "2026-04-08T19:29:19.000Z",
-          "value": 0,
-          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
-          "run_id": "24154075042-1--compose-bench-smoke-file-t100-multi-vector",
-          "range": 0
-        },
-        {
           "timestamp": "2026-04-08T19:29:28.000Z",
           "value": 0,
           "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
@@ -162,13 +113,6 @@
         "state": "wait"
       },
       "points": [
-        {
-          "timestamp": "2026-04-08T19:29:19.000Z",
-          "value": 3.12,
-          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
-          "run_id": "24154075042-1--compose-bench-smoke-file-t100-multi-vector",
-          "range": 0.6
-        },
         {
           "timestamp": "2026-04-08T19:29:28.000Z",
           "value": 10.78,
@@ -185,13 +129,6 @@
       },
       "points": [
         {
-          "timestamp": "2026-04-08T19:29:19.000Z",
-          "value": 4.54,
-          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
-          "run_id": "24154075042-1--compose-bench-smoke-file-t100-multi-vector",
-          "range": 1
-        },
-        {
           "timestamp": "2026-04-08T19:29:28.000Z",
           "value": 13.13,
           "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
@@ -206,13 +143,6 @@
         "state": "system"
       },
       "points": [
-        {
-          "timestamp": "2026-04-08T19:29:19.000Z",
-          "value": 3.68,
-          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
-          "run_id": "24154075042-1--compose-bench-smoke-file-t100-multi-vector",
-          "range": 0.78
-        },
         {
           "timestamp": "2026-04-08T19:29:28.000Z",
           "value": 5.97,
@@ -229,13 +159,6 @@
       },
       "points": [
         {
-          "timestamp": "2026-04-08T19:29:19.000Z",
-          "value": 47.86,
-          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
-          "run_id": "24154075042-1--compose-bench-smoke-file-t100-multi-vector",
-          "range": 37.8
-        },
-        {
           "timestamp": "2026-04-08T19:29:28.000Z",
           "value": 99.27,
           "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
@@ -250,13 +173,6 @@
         "state": "interrupt"
       },
       "points": [
-        {
-          "timestamp": "2026-04-08T19:29:19.000Z",
-          "value": 0,
-          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
-          "run_id": "24154075042-1--compose-bench-smoke-file-t100-multi-vector",
-          "range": 0
-        },
         {
           "timestamp": "2026-04-08T19:29:28.000Z",
           "value": 0,
@@ -273,13 +189,6 @@
       },
       "points": [
         {
-          "timestamp": "2026-04-08T19:29:19.000Z",
-          "value": 0,
-          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
-          "run_id": "24154075042-1--compose-bench-smoke-file-t100-multi-vector",
-          "range": 0
-        },
-        {
           "timestamp": "2026-04-08T19:29:28.000Z",
           "value": 0,
           "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
@@ -294,13 +203,6 @@
         "state": "softirq"
       },
       "points": [
-        {
-          "timestamp": "2026-04-08T19:29:19.000Z",
-          "value": 0.31,
-          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
-          "run_id": "24154075042-1--compose-bench-smoke-file-t100-multi-vector",
-          "range": 0.05
-        },
         {
           "timestamp": "2026-04-08T19:29:28.000Z",
           "value": 1.48,
@@ -317,13 +219,6 @@
       },
       "points": [
         {
-          "timestamp": "2026-04-08T19:29:19.000Z",
-          "value": 0,
-          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
-          "run_id": "24154075042-1--compose-bench-smoke-file-t100-multi-vector",
-          "range": 0
-        },
-        {
           "timestamp": "2026-04-08T19:29:28.000Z",
           "value": 0,
           "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
@@ -338,13 +233,6 @@
         "state": "wait"
       },
       "points": [
-        {
-          "timestamp": "2026-04-08T19:29:19.000Z",
-          "value": 3.11,
-          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
-          "run_id": "24154075042-1--compose-bench-smoke-file-t100-multi-vector",
-          "range": 0.53
-        },
         {
           "timestamp": "2026-04-08T19:29:28.000Z",
           "value": 12.99,
@@ -361,13 +249,6 @@
       },
       "points": [
         {
-          "timestamp": "2026-04-08T19:29:19.000Z",
-          "value": 8.14,
-          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
-          "run_id": "24154075042-1--compose-bench-smoke-file-t100-multi-vector",
-          "range": 1.25
-        },
-        {
           "timestamp": "2026-04-08T19:29:28.000Z",
           "value": 15.68,
           "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
@@ -382,13 +263,6 @@
         "state": "system"
       },
       "points": [
-        {
-          "timestamp": "2026-04-08T19:29:19.000Z",
-          "value": 4.06,
-          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
-          "run_id": "24154075042-1--compose-bench-smoke-file-t100-multi-vector",
-          "range": 1.04
-        },
         {
           "timestamp": "2026-04-08T19:29:28.000Z",
           "value": 5.98,
@@ -405,13 +279,6 @@
       },
       "points": [
         {
-          "timestamp": "2026-04-08T19:29:19.000Z",
-          "value": 43.96,
-          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
-          "run_id": "24154075042-1--compose-bench-smoke-file-t100-multi-vector",
-          "range": 37.46
-        },
-        {
           "timestamp": "2026-04-08T19:29:28.000Z",
           "value": 98.75,
           "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
@@ -426,13 +293,6 @@
         "state": "interrupt"
       },
       "points": [
-        {
-          "timestamp": "2026-04-08T19:29:19.000Z",
-          "value": 0,
-          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
-          "run_id": "24154075042-1--compose-bench-smoke-file-t100-multi-vector",
-          "range": 0
-        },
         {
           "timestamp": "2026-04-08T19:29:28.000Z",
           "value": 0,
@@ -449,13 +309,6 @@
       },
       "points": [
         {
-          "timestamp": "2026-04-08T19:29:19.000Z",
-          "value": 0,
-          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
-          "run_id": "24154075042-1--compose-bench-smoke-file-t100-multi-vector",
-          "range": 0
-        },
-        {
           "timestamp": "2026-04-08T19:29:28.000Z",
           "value": 0.01,
           "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
@@ -470,13 +323,6 @@
         "state": "softirq"
       },
       "points": [
-        {
-          "timestamp": "2026-04-08T19:29:19.000Z",
-          "value": 0.08,
-          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
-          "run_id": "24154075042-1--compose-bench-smoke-file-t100-multi-vector",
-          "range": 0.01
-        },
         {
           "timestamp": "2026-04-08T19:29:28.000Z",
           "value": 0.25,
@@ -493,13 +339,6 @@
       },
       "points": [
         {
-          "timestamp": "2026-04-08T19:29:19.000Z",
-          "value": 0,
-          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
-          "run_id": "24154075042-1--compose-bench-smoke-file-t100-multi-vector",
-          "range": 0
-        },
-        {
           "timestamp": "2026-04-08T19:29:28.000Z",
           "value": 0,
           "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
@@ -514,13 +353,6 @@
         "state": "wait"
       },
       "points": [
-        {
-          "timestamp": "2026-04-08T19:29:19.000Z",
-          "value": 2.74,
-          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
-          "run_id": "24154075042-1--compose-bench-smoke-file-t100-multi-vector",
-          "range": 0.43
-        },
         {
           "timestamp": "2026-04-08T19:29:28.000Z",
           "value": 10.56,
@@ -537,13 +369,6 @@
       },
       "points": [
         {
-          "timestamp": "2026-04-08T19:29:19.000Z",
-          "value": 9.22,
-          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
-          "run_id": "24154075042-1--compose-bench-smoke-file-t100-multi-vector",
-          "range": 1.2
-        },
-        {
           "timestamp": "2026-04-08T19:29:28.000Z",
           "value": 14.38,
           "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
@@ -558,13 +383,6 @@
         "state": "system"
       },
       "points": [
-        {
-          "timestamp": "2026-04-08T19:29:19.000Z",
-          "value": 4.07,
-          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
-          "run_id": "24154075042-1--compose-bench-smoke-file-t100-multi-vector",
-          "range": 0.99
-        },
         {
           "timestamp": "2026-04-08T19:29:28.000Z",
           "value": 5.51,
@@ -581,13 +399,6 @@
       },
       "points": [
         {
-          "timestamp": "2026-04-08T19:29:19.000Z",
-          "value": 45.04,
-          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
-          "run_id": "24154075042-1--compose-bench-smoke-file-t100-multi-vector",
-          "range": 37.45
-        },
-        {
           "timestamp": "2026-04-08T19:29:28.000Z",
           "value": 104.53,
           "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
@@ -602,13 +413,6 @@
         "state": "interrupt"
       },
       "points": [
-        {
-          "timestamp": "2026-04-08T19:29:19.000Z",
-          "value": 0,
-          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
-          "run_id": "24154075042-1--compose-bench-smoke-file-t100-multi-vector",
-          "range": 0
-        },
         {
           "timestamp": "2026-04-08T19:29:28.000Z",
           "value": 0,
@@ -625,13 +429,6 @@
       },
       "points": [
         {
-          "timestamp": "2026-04-08T19:29:19.000Z",
-          "value": 0.01,
-          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
-          "run_id": "24154075042-1--compose-bench-smoke-file-t100-multi-vector",
-          "range": 0
-        },
-        {
           "timestamp": "2026-04-08T19:29:28.000Z",
           "value": 0,
           "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
@@ -646,13 +443,6 @@
         "state": "softirq"
       },
       "points": [
-        {
-          "timestamp": "2026-04-08T19:29:19.000Z",
-          "value": 0.05,
-          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
-          "run_id": "24154075042-1--compose-bench-smoke-file-t100-multi-vector",
-          "range": 0.03
-        },
         {
           "timestamp": "2026-04-08T19:29:28.000Z",
           "value": 0.2,
@@ -669,13 +459,6 @@
       },
       "points": [
         {
-          "timestamp": "2026-04-08T19:29:19.000Z",
-          "value": 0,
-          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
-          "run_id": "24154075042-1--compose-bench-smoke-file-t100-multi-vector",
-          "range": 0
-        },
-        {
           "timestamp": "2026-04-08T19:29:28.000Z",
           "value": 0,
           "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
@@ -690,13 +473,6 @@
         "state": "wait"
       },
       "points": [
-        {
-          "timestamp": "2026-04-08T19:29:19.000Z",
-          "value": 1.77,
-          "commit": "b41774a6787f96cbb1ba5829948921784326dcc8",
-          "run_id": "24154075042-1--compose-bench-smoke-file-t100-multi-vector",
-          "range": 0.68
-        },
         {
           "timestamp": "2026-04-08T19:29:28.000Z",
           "value": 7.16,
