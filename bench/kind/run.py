@@ -86,6 +86,7 @@ class ResourcePlan:
     cpu_profile: CpuProfile
     cluster_cpu_cores: float
     collector_cpu: str
+    emitter_cpu_request: str
     emitter_cpu: str
     sink_cpu: str
     capture_reader_cpu: str
@@ -272,6 +273,12 @@ def build_resource_plan(
             f"cpu profile '{cpu_profile.name}' leaves only {collector_mcpu}m for collector with {emitter_pods} emitter pods"
         )
 
+    emitter_request_mcpu = emitter_mcpu
+    if capacity_probe and cpu_profile.name == "multi":
+        # Keep max-mode emitter schedulable on 4-core runners while preserving
+        # burst headroom under the configured CPU limit.
+        emitter_request_mcpu = min(emitter_mcpu, 300)
+
     # Keep generator and sink memory fixed at 1Gi for benchmark stability.
     # This avoids memory-limit artifacts while we tune throughput behavior.
     emitter_memory_limit = "1Gi"
@@ -281,6 +288,7 @@ def build_resource_plan(
         cpu_profile=cpu_profile,
         cluster_cpu_cores=node_budget_mcpu / 1000.0,
         collector_cpu=format_cpu_quantity(collector_mcpu),
+        emitter_cpu_request=format_cpu_quantity(emitter_request_mcpu),
         emitter_cpu=format_cpu_quantity(emitter_mcpu),
         sink_cpu=format_cpu_quantity(sink_mcpu),
         capture_reader_cpu=format_cpu_quantity(capture_reader_mcpu),
@@ -553,7 +561,7 @@ def render_manifests(
         "COLLECTOR_CPU_LIMIT": resource_plan.collector_cpu,
         "COLLECTOR_MEMORY_REQUEST": resource_plan.collector_memory,
         "COLLECTOR_MEMORY_LIMIT": resource_plan.collector_memory,
-        "EMITTER_CPU_REQUEST": resource_plan.emitter_cpu,
+        "EMITTER_CPU_REQUEST": resource_plan.emitter_cpu_request,
         "EMITTER_CPU_LIMIT": resource_plan.emitter_cpu,
         "EMITTER_MEMORY_REQUEST": resource_plan.emitter_memory,
         "EMITTER_MEMORY_LIMIT": resource_plan.emitter_memory,
