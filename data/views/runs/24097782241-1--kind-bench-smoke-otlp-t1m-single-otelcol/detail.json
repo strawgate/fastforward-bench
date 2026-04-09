@@ -1,7 +1,7 @@
 {
   "run": {
     "id": "24097782241-1--kind-bench-smoke-otlp-t1m-single-otelcol",
-    "timestamp": "2026-04-09T17:49:31.037Z",
+    "timestamp": "2026-04-09T17:56:55.379Z",
     "commit": "3262ca93b44836352aff62a7e1f643c75e1eefdb",
     "ref": "refs/heads/codex/eps-target-sweep",
     "benchmarks": 0,
