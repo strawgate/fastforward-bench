@@ -223,7 +223,19 @@ def build_resource_plan(
         raise ValueError("emitter pod count must be > 0")
 
     node_budget_mcpu = int(cpu_profile.cluster_cpu_cores * 1000)
-    reserved_mcpu = cpu_profile.sink_cpu_mcpu + cpu_profile.capture_reader_cpu_mcpu
+    sink_mcpu = cpu_profile.sink_cpu_mcpu
+    capture_reader_mcpu = cpu_profile.capture_reader_cpu_mcpu
+    if eps_per_pod >= 10_000 or unbounded_generator:
+        # Capacity probes should avoid a synthetic sink bottleneck.
+        # Keep single-core mode constrained, but rebalance budget from emitter to sink.
+        if cpu_profile.name == "single":
+            sink_mcpu = max(sink_mcpu, 250)
+            capture_reader_mcpu = max(capture_reader_mcpu, 50)
+        else:
+            sink_mcpu = max(sink_mcpu, 300)
+            capture_reader_mcpu = max(capture_reader_mcpu, 80)
+
+    reserved_mcpu = sink_mcpu + capture_reader_mcpu
     emitter_mcpu = cpu_profile.emitter_cpu_mcpu_per_pod
     if eps_per_pod >= 100_000:
         emitter_mcpu = max(emitter_mcpu, 200)
@@ -251,8 +263,8 @@ def build_resource_plan(
         cpu_profile=cpu_profile,
         collector_cpu=format_cpu_quantity(collector_mcpu),
         emitter_cpu=format_cpu_quantity(emitter_mcpu),
-        sink_cpu=format_cpu_quantity(cpu_profile.sink_cpu_mcpu),
-        capture_reader_cpu=format_cpu_quantity(cpu_profile.capture_reader_cpu_mcpu),
+        sink_cpu=format_cpu_quantity(sink_mcpu),
+        capture_reader_cpu=format_cpu_quantity(capture_reader_mcpu),
         collector_memory=cpu_profile.collector_memory_limit,
         emitter_memory=emitter_memory_limit,
         sink_memory=sink_memory_limit,
@@ -383,12 +395,32 @@ def filter_rows_to_emitter_snapshot(
     rows: list[dict[str, object]],
     emitter_reported_stats: list[dict[str, object]],
 ) -> list[dict[str, object]]:
+    seq_bounds_by_pod: dict[str, tuple[int, int]] = {}
+    for row in rows:
+        pod_name = row.get("pod_name")
+        seq = row.get("seq")
+        if not isinstance(pod_name, str) or not isinstance(seq, int):
+            continue
+        bounds = seq_bounds_by_pod.get(pod_name)
+        if bounds is None:
+            seq_bounds_by_pod[pod_name] = (seq, seq)
+            continue
+        min_seq, max_seq = bounds
+        seq_bounds_by_pod[pod_name] = (min(min_seq, seq), max(max_seq, seq))
+
     cutoff_by_pod: dict[str, int] = {}
     for stat in emitter_reported_stats:
         pod_name = stat.get("pod_name")
         output_lines = stat.get("output_lines")
         if isinstance(pod_name, str) and isinstance(output_lines, int):
-            cutoff_by_pod[pod_name] = output_lines
+            bounds = seq_bounds_by_pod.get(pod_name)
+            if bounds is None:
+                continue
+            min_seq, _max_seq = bounds
+            # `output_lines` is a count, not an absolute sequence number.
+            # Sequence values can begin well above 1, so anchor the cutoff to
+            # the first observed sequence for this benchmark snapshot.
+            cutoff_by_pod[pod_name] = min_seq + max(0, output_lines - 1)
 
     filtered: list[dict[str, object]] = []
     for row in rows:
