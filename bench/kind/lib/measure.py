@@ -424,7 +424,12 @@ def collect_bench_samples(
                         cpu_total_ms=prev.cpu_total_ms,
                     )
                 else:
-                    raise
+                    sink_sample = StatsSample(
+                        timestamp=time.time(),
+                        output_lines=0,
+                        rss_bytes=0,
+                        cpu_total_ms=0,
+                    )
             sink_samples.append(sink_sample)
 
             try:
@@ -439,7 +444,12 @@ def collect_bench_samples(
                         cpu_total_ms=prev.cpu_total_ms,
                     )
                 else:
-                    raise
+                    collector_sample = StatsSample(
+                        timestamp=time.time(),
+                        output_lines=0,
+                        rss_bytes=0,
+                        cpu_total_ms=0,
+                    )
             collector_samples.append(collector_sample)
             if time.time() >= deadline:
                 break
