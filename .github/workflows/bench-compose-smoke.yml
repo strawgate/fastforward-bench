@@ -430,9 +430,10 @@ jobs:
               echo "labels=live-suite-report,report:bench,report:bench-compose,report:bench-compose-nightly-eps"
             } >>"$GITHUB_OUTPUT"
           else
+            target_set="${{ needs.plan.outputs.target_set }}"
             {
-              echo "title_base=Bench Compose Competitive Benchmarks Report"
-              echo "suite_key=bench-compose-competitive"
+              echo "title_base=Bench Compose Competitive Benchmarks Report (${target_set})"
+              echo "suite_key=bench-compose-competitive-${target_set}"
               echo "labels=live-suite-report,report:bench,report:bench-compose,report:bench-compose-competitive"
             } >>"$GITHUB_OUTPUT"
           fi
