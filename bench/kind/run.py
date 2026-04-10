@@ -306,11 +306,10 @@ def adjust_resource_plan_for_adapter(
     ingest_mode: str,
     profile: Profile,
 ) -> ResourcePlan:
-    # OTel collector can OOM in unbounded OTLP mode before readiness settles.
-    # Give max-throughput OTLP lanes more headroom so the lane reports throughput
-    # instead of failing during startup.
-    if adapter.name == "otelcol" and ingest_mode == "otlp" and profile.eps_per_pod == 0:
-        return replace(resource_plan, collector_memory="2Gi")
+    # Keep lane resources identical across collectors. For max-throughput OTLP
+    # runs, use a common collector memory envelope to reduce restart noise.
+    if ingest_mode == "otlp" and profile.eps_per_pod == 0:
+        return replace(resource_plan, collector_memory="3Gi")
     return resource_plan
 
 
@@ -350,6 +349,42 @@ def append_artifact_note(results_dir: Path, filename: str, message: str) -> None
     path = artifacts_dir / filename
     with path.open("a", encoding="utf-8") as handle:
         handle.write(message.rstrip() + "\n")
+
+
+def collector_runtime_snapshot(namespace: str, pod_name: str) -> tuple[int, set[str]]:
+    completed = subprocess.run(
+        ["kubectl", "-n", namespace, "get", "pod", pod_name, "-o", "json"],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if completed.returncode != 0:
+        return 0, set()
+    try:
+        payload = json.loads(completed.stdout)
+    except json.JSONDecodeError:
+        return 0, set()
+
+    container_statuses = payload.get("status", {}).get("containerStatuses", [])
+    if not isinstance(container_statuses, list) or not container_statuses:
+        return 0, set()
+    status = container_statuses[0]
+    if not isinstance(status, dict):
+        return 0, set()
+
+    restart_count = int(status.get("restartCount", 0) or 0)
+    reasons: set[str] = set()
+    for state_key in ("state", "lastState"):
+        state = status.get(state_key)
+        if not isinstance(state, dict):
+            continue
+        terminated = state.get("terminated")
+        if not isinstance(terminated, dict):
+            continue
+        reason = terminated.get("reason")
+        if isinstance(reason, str) and reason:
+            reasons.add(reason)
+    return restart_count, reasons
 
 
 def emit_phase_signal(
@@ -697,6 +732,7 @@ def run_smoke_phase(
     apply_manifest(manifests["emitter_statefulset"])
     emitter_rollout_timeout = max(120, profile.pods * 12)
     rollout_status(args.namespace, "statefulset", "log-emitter", timeout_sec=emitter_rollout_timeout)
+    collector_restart_before, collector_reasons_before = collector_runtime_snapshot(args.namespace, collector_pod)
 
     emit_phase_signal(
         args=args,
@@ -735,6 +771,10 @@ def run_smoke_phase(
     )
     write_samples(results_dir / "sink-samples.json", sink_samples)
     write_samples(results_dir / "collector-samples.json", collector_samples)
+    collector_pod_after = get_first_pod_name(args.namespace, adapter.pod_selector)
+    if collector_pod_after is None:
+        collector_pod_after = collector_pod
+    collector_restart_after, collector_reasons_after = collector_runtime_snapshot(args.namespace, collector_pod_after)
 
     if profile.cooldown_sec > 0:
         emit_phase_signal(
@@ -778,6 +818,44 @@ def run_smoke_phase(
 
     artifacts_dir = results_dir / "artifacts"
     artifacts_dir.mkdir(parents=True, exist_ok=True)
+    collector_restarts_during_measure = max(0, collector_restart_after - collector_restart_before)
+    collector_pod_replaced = collector_pod_after != collector_pod
+    collector_new_termination_reasons = sorted(collector_reasons_after - collector_reasons_before)
+    write_json(
+        artifacts_dir / "collector-runtime.json",
+        {
+            "collector_pod_before": collector_pod,
+            "collector_pod_after": collector_pod_after,
+            "restart_count_before": collector_restart_before,
+            "restart_count_after": collector_restart_after,
+            "restart_count_delta": collector_restarts_during_measure,
+            "termination_reasons_before": sorted(collector_reasons_before),
+            "termination_reasons_after": sorted(collector_reasons_after),
+            "termination_reasons_new": collector_new_termination_reasons,
+            "pod_replaced": collector_pod_replaced,
+        },
+    )
+
+    collector_instability_reasons: list[str] = []
+    if collector_pod_replaced:
+        collector_instability_reasons.append(f"collector pod changed from {collector_pod} to {collector_pod_after}")
+    if collector_restarts_during_measure > 0:
+        collector_instability_reasons.append(
+            f"collector restart_count increased by {collector_restarts_during_measure} "
+            f"(from {collector_restart_before} to {collector_restart_after})"
+        )
+    if collector_restarts_during_measure > 0 and "OOMKilled" in collector_reasons_after:
+        collector_instability_reasons.append("collector was OOMKilled during warmup/measure")
+    collector_instability_note = "; ".join(collector_instability_reasons) if collector_instability_reasons else None
+
+    def finalize(exit_code: int) -> int:
+        if collector_instability_note is None:
+            return exit_code
+        result.status = "fail"
+        prior = result.notes.strip() if isinstance(result.notes, str) else ""
+        prefix = f"collector instability detected: {collector_instability_note}."
+        result.notes = f"{prefix} {prior}".strip() if prior else prefix
+        return 1
 
     emitter_pods = get_pod_names(args.namespace, "app.kubernetes.io/name=log-emitter")
     emitter_reported_total, emitter_reported_stats = collect_emitter_reported_total(args.namespace, emitter_pods)
@@ -872,14 +950,14 @@ def run_smoke_phase(
                 f"sink_reported_events_total={result.sink_reported_events_total}, "
                 f"drop_estimate={result.drop_estimate}."
             )
-            return 0
+            return finalize(0)
 
         result.status = "fail"
         result.notes = (
             "max-throughput benchmark did not observe sink output in unbounded mode; "
             f"sink_lines_total={result.sink_lines_total}, sink_reported_events_total={result.sink_reported_events_total}."
         )
-        return 1
+        return finalize(1)
 
     if saturation_target_mode:
         result.captured_rows_total = None
@@ -925,14 +1003,14 @@ def run_smoke_phase(
                 f"sink_reported_events_total={result.sink_reported_events_total}, "
                 f"drop_estimate={result.drop_estimate}."
             )
-            return 0
+            return finalize(0)
 
         result.status = "fail"
         result.notes = (
             f"smoke benchmark did not observe sink output at saturation target (target_eps_per_pod={profile.eps_per_pod}); "
             f"sink_lines_total={result.sink_lines_total}, sink_reported_events_total={result.sink_reported_events_total}."
         )
-        return 1
+        return finalize(1)
 
     if args.ingest_mode == "otlp":
         result.captured_rows_total = len(sink_rows)
@@ -979,14 +1057,14 @@ def run_smoke_phase(
                 f"sink_reported_events_total={result.sink_reported_events_total}, "
                 f"drop_estimate={result.drop_estimate}."
             )
-            return 0
+            return finalize(0)
 
         result.status = "fail"
         result.notes = (
             f"smoke benchmark did not observe sink output with ingest_mode={args.ingest_mode}; "
             f"sink_lines_total={result.sink_lines_total}, sink_reported_events_total={result.sink_reported_events_total}."
         )
-        return 1
+        return finalize(1)
 
     collect_pod_logs(
         namespace=args.namespace,
@@ -1074,7 +1152,7 @@ def run_smoke_phase(
                 f"captured_rows_total={comparison.sink_row_count}, sink_lines_total={result.sink_lines_total}, "
                 f"sink_reported_events_total={result.sink_reported_events_total}, drop_estimate={result.drop_estimate}."
             )
-            return 0
+            return finalize(0)
 
         if diagnostics_available:
             result.status = "fail"
@@ -1092,7 +1170,7 @@ def run_smoke_phase(
                 f"source_rows_total={comparison.source_row_count}, captured_rows_total={comparison.sink_row_count}, "
                 f"sink_lines_total={result.sink_lines_total}."
             )
-        return 1
+        return finalize(1)
 
     strict_oracle_clean = (
         comparison.missing_source_count == 0
@@ -1109,7 +1187,7 @@ def run_smoke_phase(
             f"missing_events={comparison.missing_event_count}, unexpected_events={comparison.unexpected_event_count}, "
             f"duplicates={comparison.duplicate_event_count}, gaps={comparison.gap_count}."
         )
-        return 0
+        return finalize(0)
 
     result.status = "fail"
     result.notes = (
@@ -1119,7 +1197,7 @@ def run_smoke_phase(
         f"unexpected_events={comparison.unexpected_event_count}, duplicates={comparison.duplicate_event_count}, "
         f"gaps={comparison.gap_count}."
     )
-    return 1
+    return finalize(1)
 
 
 def main() -> int:
