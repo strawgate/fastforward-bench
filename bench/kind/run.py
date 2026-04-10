@@ -613,7 +613,12 @@ def render_manifests(
     benchmark_id: str,
     rendered_dir: Path,
 ) -> dict[str, Path]:
-    generator_batch_size = 64 if profile.eps_per_pod == 0 else 1024
+    if profile.eps_per_pod == 0:
+        generator_batch_size = 64
+    else:
+        # Keep low-rate targets smooth so per-second throughput sampling reflects
+        # the requested EPS instead of front-loading a large first burst.
+        generator_batch_size = max(1, min(1024, profile.eps_per_pod))
     substitutions = {
         "NAMESPACE": args.namespace,
         "MEMAGENT_IMAGE": args.memagent_image,
