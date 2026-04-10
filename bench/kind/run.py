@@ -299,6 +299,21 @@ def build_resource_plan(
     )
 
 
+def adjust_resource_plan_for_adapter(
+    *,
+    resource_plan: ResourcePlan,
+    adapter: CollectorAdapter,
+    ingest_mode: str,
+    profile: Profile,
+) -> ResourcePlan:
+    # OTel collector can OOM in unbounded OTLP mode before readiness settles.
+    # Give max-throughput OTLP lanes more headroom so the lane reports throughput
+    # instead of failing during startup.
+    if adapter.name == "otelcol" and ingest_mode == "otlp" and profile.eps_per_pod == 0:
+        return replace(resource_plan, collector_memory="2Gi")
+    return resource_plan
+
+
 def resolve_profile(
     *,
     profile_name: str,
@@ -1118,6 +1133,12 @@ def main() -> int:
         emitter_pods=profile.pods,
         eps_per_pod=profile.eps_per_pod,
         unbounded_generator=profile.eps_per_pod == 0,
+    )
+    resource_plan = adjust_resource_plan_for_adapter(
+        resource_plan=resource_plan,
+        adapter=adapter,
+        ingest_mode=args.ingest_mode,
+        profile=profile,
     )
     results_dir = resolve_results_dir(args.results_dir)
     rendered_dir = results_dir / "rendered-manifests"
