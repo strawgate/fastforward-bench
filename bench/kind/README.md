@@ -47,8 +47,8 @@ scores yet.
   shaping the benchmark envelope in SQL before writing to stdout.
 - Sink: `logfwd` configured as a dumb capture sink writing JSON lines to a file.
 - Producer counters:
-  - emitters expose `logfwd` diagnostics via `/api/stats`
-  - the sink exposes `logfwd` diagnostics via `/api/stats`
+  - emitters expose `logfwd` diagnostics via `/admin/v1/stats` (with legacy `/api/stats` fallback)
+  - the sink exposes `logfwd` diagnostics via `/admin/v1/stats` (with legacy `/api/stats` fallback)
 - Benchmark artifacts: JSON row, JSONL stream, summary markdown, rendered
   manifests, and `kubectl` debug output.
 - Reporting integration: `benchkit-run.otlp.json` for Octo11y
