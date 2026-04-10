@@ -445,6 +445,7 @@ jobs:
           EXPECTED_WORKLOADS: ${{ needs.plan.outputs.workloads }}
           NON_GATING_COLLECTORS: '["vector"]'
           NON_GATING_EPS_MIN: "10000"
+          SINGLE_CPU_AVG_MAX: "1.05"
         run: |
           python3 - <<'PY'
           import json
@@ -457,6 +458,7 @@ jobs:
           benchmark_count = int(summary.get("benchmark_count", 0))
           failed_count = int(summary.get("failed_count", 0))
           non_gating_eps_min = int(os.environ.get("NON_GATING_EPS_MIN", "10000"))
+          single_cpu_avg_max = float(os.environ.get("SINGLE_CPU_AVG_MAX", "1.05"))
           non_gating_collectors = set(json.loads(os.environ.get("NON_GATING_COLLECTORS", "[]")))
 
           collectors = json.loads(os.environ["EXPECTED_COLLECTORS"])
@@ -553,6 +555,33 @@ jobs:
           if integrity_violations:
             print("integrity violations detected:", file=sys.stderr)
             for violation in integrity_violations[:20]:
+              print(violation, file=sys.stderr)
+            sys.exit(1)
+
+          single_cpu_violations = []
+          for row in summary.get("results", []):
+            if str(row.get("cpu_profile") or "").lower() != "single":
+              continue
+            cpu_avg = row.get("collector_cpu_cores_avg")
+            if cpu_avg is None:
+              continue
+            if float(cpu_avg) > single_cpu_avg_max:
+              single_cpu_violations.append(
+                {
+                  "artifact": row.get("artifact_name"),
+                  "collector": row.get("collector"),
+                  "ingest_mode": row.get("ingest_mode"),
+                  "target_eps": row.get("total_target_eps"),
+                  "collector_cpu_cores_avg": cpu_avg,
+                }
+              )
+
+          if single_cpu_violations:
+            print(
+              f"single CPU envelope violations detected (> {single_cpu_avg_max} cores avg):",
+              file=sys.stderr,
+            )
+            for violation in single_cpu_violations[:20]:
               print(violation, file=sys.stderr)
             sys.exit(1)
           PY
