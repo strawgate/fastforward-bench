@@ -539,6 +539,56 @@ def wait_for_sink_catch_up(
         time.sleep(poll_sec)
 
 
+def wait_for_capture_reader_stability(
+    *,
+    namespace: str,
+    sink_pod: str,
+    sink_stats_port: int,
+    initial_stats: dict[str, object],
+    timeout_sec: float = 3.0,
+    poll_sec: float = 0.25,
+    required_stable_polls: int = 2,
+) -> dict[str, object]:
+    deadline = time.time() + timeout_sec
+    last_stats = initial_stats
+    last_total = int(initial_stats.get("benchmark_rows_total", 0) or 0)
+    last_max_by_pod = initial_stats.get("benchmark_max_seq_by_pod")
+    if not isinstance(last_max_by_pod, dict):
+        last_max_by_pod = {}
+    stable_polls = 0
+
+    while time.time() < deadline:
+        try:
+            current = collect_sink_reported_stats(
+                namespace,
+                sink_pod,
+                sink_stats_kind="capture_reader",
+                sink_stats_port=sink_stats_port,
+            )
+        except Exception:  # noqa: BLE001
+            time.sleep(poll_sec)
+            continue
+
+        current_total = int(current.get("benchmark_rows_total", 0) or 0)
+        current_max_by_pod = current.get("benchmark_max_seq_by_pod")
+        if not isinstance(current_max_by_pod, dict):
+            current_max_by_pod = {}
+
+        if current_total == last_total and current_max_by_pod == last_max_by_pod:
+            stable_polls += 1
+            if stable_polls >= required_stable_polls:
+                return current
+        else:
+            stable_polls = 0
+            last_total = current_total
+            last_max_by_pod = current_max_by_pod
+
+        last_stats = current
+        time.sleep(poll_sec)
+
+    return last_stats
+
+
 def render_manifests(
     *,
     args: argparse.Namespace,
@@ -729,6 +779,16 @@ def run_smoke_phase(
         emitter_reported_stats=emitter_reported_stats,
         timeout_sec=drain_timeout_sec,
     )
+    if sink_stats_kind == "capture_reader":
+        # capture-reader stats can lead file writes by a short interval.
+        # Wait for a couple of stable polls before reading capture.ndjson so
+        # strict source-vs-sink checks do not fail on last-line races.
+        sink_reported_stats = wait_for_capture_reader_stability(
+            namespace=args.namespace,
+            sink_pod=sink_pod,
+            sink_stats_port=sink_stats_port,
+            initial_stats=sink_reported_stats,
+        )
     result.sink_reported_events_total = sink_reported_events_total(
         sink_reported_stats,
         sink_stats_kind=sink_stats_kind,

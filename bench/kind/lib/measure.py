@@ -130,8 +130,102 @@ def _fetch_json_with_retries(
     raise RuntimeError(f"failed to fetch JSON from {path}: {last_exc}") from last_exc
 
 
+def _fetch_json_from_paths(
+    local_port: int,
+    paths: list[str],
+    *,
+    timeout_sec: int = 5,
+    attempts: int = 4,
+) -> tuple[dict[str, object], str]:
+    last_exc: Exception | None = None
+    for path in paths:
+        try:
+            payload = _fetch_json_with_retries(
+                local_port,
+                path,
+                timeout_sec=timeout_sec,
+                attempts=attempts,
+            )
+            return payload, path
+        except Exception as exc:  # noqa: BLE001
+            last_exc = exc
+    if last_exc is None:
+        raise RuntimeError("failed to fetch JSON from any candidate path")
+    raise RuntimeError(f"failed to fetch JSON from candidate paths {paths}: {last_exc}") from last_exc
+
+
+def _as_int(value: object, default: int = 0) -> int:
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return int(value)
+    if isinstance(value, (int, float)):
+        return int(value)
+    if isinstance(value, str):
+        text = value.strip()
+        if not text:
+            return default
+        try:
+            if "." in text:
+                return int(float(text))
+            return int(text)
+        except ValueError:
+            return default
+    return default
+
+
+def _normalize_status_payload(payload: dict[str, object]) -> dict[str, object]:
+    pipelines = payload.get("pipelines", [])
+    input_lines = 0
+    output_lines = 0
+    if isinstance(pipelines, list):
+        for pipeline in pipelines:
+            if not isinstance(pipeline, dict):
+                continue
+            transform = pipeline.get("transform")
+            if isinstance(transform, dict):
+                input_lines += _as_int(transform.get("lines_in"), 0)
+                output_lines += _as_int(transform.get("lines_out"), 0)
+
+    system = payload.get("system")
+    memory = system.get("memory") if isinstance(system, dict) else None
+    rss_bytes = _as_int(memory.get("resident"), 0) if isinstance(memory, dict) else 0
+
+    return {
+        "input_lines": input_lines,
+        "output_lines": output_lines,
+        "rss_bytes": rss_bytes,
+        "cpu_user_ms": 0,
+        "cpu_sys_ms": 0,
+    }
+
+
+def _normalize_stats_payload(payload: dict[str, object]) -> dict[str, object]:
+    if "input_lines" in payload or "output_lines" in payload:
+        return {
+            "input_lines": _as_int(payload.get("input_lines"), 0),
+            "output_lines": _as_int(payload.get("output_lines"), 0),
+            "rss_bytes": _as_int(payload.get("rss_bytes"), 0),
+            "cpu_user_ms": _as_int(payload.get("cpu_user_ms"), 0),
+            "cpu_sys_ms": _as_int(payload.get("cpu_sys_ms"), 0),
+        }
+    if "pipelines" in payload:
+        return _normalize_status_payload(payload)
+    return {
+        "input_lines": 0,
+        "output_lines": 0,
+        "rss_bytes": 0,
+        "cpu_user_ms": 0,
+        "cpu_sys_ms": 0,
+    }
+
+
 def fetch_stats(local_port: int) -> dict[str, object]:
-    return _fetch_json_with_retries(local_port, "/api/stats")
+    payload, _ = _fetch_json_from_paths(
+        local_port,
+        ["/admin/v1/stats", "/api/stats", "/admin/v1/status"],
+    )
+    return _normalize_stats_payload(payload)
 
 
 def fetch_capture_stats(local_port: int) -> dict[str, object]:
