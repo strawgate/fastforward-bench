@@ -80,8 +80,7 @@ def _merge_status_dropped_batches(summary: DeliveryDiagnostics, artifacts_dir: P
             if isinstance(batches, dict):
                 dropped_total += _as_positive_int(batches.get("dropped_batches_total"))
 
-    if dropped_total > 0:
-        summary.collector_dropped_batches_total = dropped_total
+    summary.collector_dropped_batches_total = dropped_total
 
 
 def _analyze_json_log_line(summary: DeliveryDiagnostics, line: str) -> bool:
