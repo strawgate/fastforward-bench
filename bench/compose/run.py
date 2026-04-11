@@ -1095,6 +1095,10 @@ def main() -> int:
     collector_rss_samples: list[float] = []
     collector_resource_samples: list[dict[str, float]] = []
     generator_cpu_samples: list[float] = []
+    measure_sink_events_start: int | None = None
+    measure_sink_events_end: int | None = None
+    measure_started_at: float | None = None
+    measure_completed_at: float | None = None
     capture_file_path = runtime_dir / "capture.ndjson"
     events_file_path = runtime_dir / "events.ndjson"
     max_throughput_mode = eps_per_sec == 0
@@ -1114,7 +1118,19 @@ def main() -> int:
         if base_profile.warmup_sec > 0:
             time.sleep(base_profile.warmup_sec)
 
-        deadline = time.time() + base_profile.measure_sec
+        try:
+            measure_sink_events_start = sink_reported_events(
+                adapter,
+                sink_diag_port,
+                capture_stats_port,
+                capture_file_path,
+                benchmark_id,
+            )
+        except Exception:
+            measure_sink_events_start = None
+
+        measure_started_at = time.time()
+        deadline = measure_started_at + base_profile.measure_sec
         while True:
             sink_samples.append(
                 sample_sink(
@@ -1146,6 +1162,18 @@ def main() -> int:
             if time.time() >= deadline:
                 break
             time.sleep(1)
+
+        measure_completed_at = time.time()
+        try:
+            measure_sink_events_end = sink_reported_events(
+                adapter,
+                sink_diag_port,
+                capture_stats_port,
+                capture_file_path,
+                benchmark_id,
+            )
+        except Exception:
+            measure_sink_events_end = None
 
         if base_profile.cooldown_sec > 0:
             time.sleep(base_profile.cooldown_sec)
@@ -1215,19 +1243,34 @@ def main() -> int:
             result.sink_rss_mb_avg = avg(sink_rss_series)
             result.sink_rss_mb_p95 = percentile(sink_rss_series, 0.95)
 
+        measured_sink_events: int | None = None
+        measured_window_sec: float | None = None
+        if (
+            measure_sink_events_start is not None
+            and measure_sink_events_end is not None
+            and measure_sink_events_end >= measure_sink_events_start
+        ):
+            measured_sink_events = max(0, measure_sink_events_end - measure_sink_events_start)
+        if measure_started_at is not None and measure_completed_at is not None and measure_completed_at > measure_started_at:
+            measured_window_sec = measure_completed_at - measure_started_at
+
+        if result.sink_lines_total is None and measured_sink_events is not None:
+            result.sink_lines_total = measured_sink_events
+
         estimated_throughput = False
         if (
             (result.sink_lines_per_sec_avg is None or result.sink_lines_per_sec_avg <= 0.0)
-            and (result.sink_reported_events_total or 0) > 0
-            and base_profile.measure_sec > 0
+            and measured_sink_events is not None
+            and measured_window_sec is not None
+            and measured_window_sec > 0.0
         ):
-            estimated = float(result.sink_reported_events_total or 0) / float(base_profile.measure_sec)
+            estimated = float(measured_sink_events) / measured_window_sec
             result.sink_lines_per_sec_avg = estimated
             result.sink_lines_per_sec_p50 = estimated
             result.sink_lines_per_sec_p95 = estimated
             result.sink_lines_per_sec_p99 = estimated
             if (result.sink_lines_total or 0) == 0:
-                result.sink_lines_total = int(result.sink_reported_events_total or 0)
+                result.sink_lines_total = int(measured_sink_events)
             estimated_throughput = True
 
         if collector_cpu_samples and collector_rss_samples:
@@ -1265,7 +1308,7 @@ def main() -> int:
             if estimated_throughput:
                 result.notes = (
                     f"compose benchmark succeeded for collector={adapter.name}; "
-                    f"sink_lines_per_sec_avg estimated from sink_reported_events_total/measure_sec: "
+                    f"sink_lines_per_sec_avg estimated from measure-window sink delta: "
                     f"{result.sink_lines_per_sec_avg}"
                 )
             elif not integrity_clean:

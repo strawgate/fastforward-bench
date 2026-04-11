@@ -68,11 +68,12 @@ if isinstance(failed, int):
         else:
             detail = f"{failed} failing"
     else:
-        status = "PASS"
         if isinstance(total, int) and total > 0:
+            status = "PASS"
             detail = f"all {total} passing"
         else:
-            detail = "no failures"
+            status = "FAIL"
+            detail = "no results"
 
 print(status)
 print(detail)
