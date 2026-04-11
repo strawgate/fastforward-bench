@@ -11,13 +11,13 @@ transform: >-
   SELECT
     'compose-nginx' AS scenario,
     'nginx-access' AS source_id,
-    regexp_extract(_raw, 'compose-nginx:[0-9]+', 0) AS event_id,
-    int(regexp_extract(_raw, 'compose-nginx:([0-9]+)', 1)) AS seq,
+    regexp_extract(body, 'compose-nginx:[0-9]+', 0) AS event_id,
+    int(regexp_extract(body, 'compose-nginx:([0-9]+)', 1)) AS seq,
     'GET' AS method,
-    regexp_extract(_raw, '^/e2e/compose-nginx/compose-nginx:[0-9]+', 0) AS path,
+    regexp_extract(body, '^/e2e/compose-nginx/compose-nginx:[0-9]+', 0) AS path,
     204 AS status
   FROM logs
-  WHERE _raw LIKE '/e2e/compose-nginx/compose-nginx:%'
+  WHERE body LIKE '/e2e/compose-nginx/compose-nginx:%'
 
 output:
   type: tcp
