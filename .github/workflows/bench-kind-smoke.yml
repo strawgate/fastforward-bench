@@ -26,6 +26,7 @@ on:
         type: choice
         default: smoke
         options:
+          - quick
           - smoke
           - default
       target_set:
@@ -119,7 +120,9 @@ jobs:
 
           case "${TARGET_SET}" in
             profile)
-              if [[ "${INPUT_PROFILE}" == "default" ]]; then
+              if [[ "${INPUT_PROFILE}" == "quick" ]]; then
+                echo 'workloads=[{"label":"profile-quick","pods":1,"eps_per_pod":10}]' >>"$GITHUB_OUTPUT"
+              elif [[ "${INPUT_PROFILE}" == "default" ]]; then
                 echo 'workloads=[{"label":"profile-default","pods":30,"eps_per_pod":300}]' >>"$GITHUB_OUTPUT"
               else
                 echo 'workloads=[{"label":"profile-smoke","pods":5,"eps_per_pod":100}]' >>"$GITHUB_OUTPUT"

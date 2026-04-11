@@ -28,7 +28,7 @@ the same collector adapters and output contracts for throughput checks.
   - `file` for `logfwd`, `otelcol`, `filebeat`, `vector`
   - `otlp` for `logfwd`, `otelcol`
 - collectors: `logfwd`, `otelcol`, `filebeat`, `vector`
-- profiles: `smoke`, `default`
+- profiles: `quick`, `smoke`, `default`
 - CPU profiles: `single`, `multi`
 
 ## Usage

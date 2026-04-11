@@ -116,6 +116,8 @@ python3 bench/kind/run.py \
   --results-dir bench/kind/results/local-smoke
 ```
 
+For the fastest sanity lane, use `--profile quick` (single pod at ~10 EPS, 1s measure).
+
 Run only the infrastructure bootstrap path:
 
 ```bash
