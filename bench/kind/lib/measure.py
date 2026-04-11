@@ -415,42 +415,16 @@ def collect_bench_samples(
             try:
                 sink_sample = sink_fetch_sample(sink_local_port)
             except Exception:
-                if sink_samples:
-                    prev = sink_samples[-1]
-                    sink_sample = StatsSample(
-                        timestamp=time.time(),
-                        output_lines=prev.output_lines,
-                        rss_bytes=prev.rss_bytes,
-                        cpu_total_ms=prev.cpu_total_ms,
-                    )
-                else:
-                    sink_sample = StatsSample(
-                        timestamp=time.time(),
-                        output_lines=0,
-                        rss_bytes=0,
-                        cpu_total_ms=0,
-                    )
-            sink_samples.append(sink_sample)
+                sink_sample = None
+            if sink_sample is not None:
+                sink_samples.append(sink_sample)
 
             try:
                 collector_sample = collector_fetch_sample(collector_local_port)
             except Exception:
-                if collector_samples:
-                    prev = collector_samples[-1]
-                    collector_sample = StatsSample(
-                        timestamp=time.time(),
-                        output_lines=prev.output_lines,
-                        rss_bytes=prev.rss_bytes,
-                        cpu_total_ms=prev.cpu_total_ms,
-                    )
-                else:
-                    collector_sample = StatsSample(
-                        timestamp=time.time(),
-                        output_lines=0,
-                        rss_bytes=0,
-                        cpu_total_ms=0,
-                    )
-            collector_samples.append(collector_sample)
+                collector_sample = None
+            if collector_sample is not None:
+                collector_samples.append(collector_sample)
             if time.time() >= deadline:
                 break
             time.sleep(1)
