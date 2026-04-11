@@ -577,7 +577,7 @@ def build_compose_yaml() -> str:
 services:
   sink:
     image: ${MEMAGENT_IMAGE}
-    command: ["--config", "/config/sink.yaml"]
+    command: ["run", "--config", "/config/sink.yaml"]
     volumes:
       - ${BENCH_RESULTS_RUNTIME_DIR}:/runtime
       - ${BENCH_RESULTS_RENDERED_DIR}:/config:ro
@@ -605,7 +605,7 @@ services:
 
   generator:
     image: ${MEMAGENT_IMAGE}
-    command: ["--config", "/config/generator.yaml"]
+    command: ["run", "--config", "/config/generator.yaml"]
     volumes:
       - ${BENCH_RESULTS_RUNTIME_DIR}:/runtime
       - ${BENCH_RESULTS_RENDERED_DIR}:/config:ro
@@ -617,7 +617,7 @@ services:
   collector-logfwd:
     profiles: ["logfwd"]
     image: ${LOGFWD_COLLECTOR_IMAGE}
-    command: ["--config", "/config/collector-logfwd.yaml"]
+    command: ["run", "--config", "/config/collector-logfwd.yaml"]
     volumes:
       - ${BENCH_RESULTS_RUNTIME_DIR}:/runtime
       - ${BENCH_RESULTS_RENDERED_DIR}:/config:ro
