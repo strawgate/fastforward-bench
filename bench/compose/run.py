@@ -372,6 +372,7 @@ input:
   listen: 0.0.0.0:4318
 """
     )
+    message_projection = "message" if ingest_mode == "file" else "body AS message"
     return f"""\
 server:
   diagnostics: 0.0.0.0:9090
@@ -391,7 +392,7 @@ transform: |
     seq,
     event_created_unix_nano,
     level,
-    message,
+    {message_projection},
     status,
     duration_ms,
     service
