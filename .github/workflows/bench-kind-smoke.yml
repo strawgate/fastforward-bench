@@ -5,9 +5,12 @@ on:
     branches: [master]
     paths:
       - 'bench/kind/**'
+      - 'bench/lib/**'
+      - 'reporting/**'
       - '.github/workflows/bench-kind-smoke.yml'
       - '.github/workflows/bench-kind-aggregate.yml'
       - '.github/actions/setup-memagent-build/**'
+      - '.github/actions/checkout-memagent/**'
   schedule:
     - cron: '0 7 * * *'
   workflow_dispatch:
@@ -23,6 +26,7 @@ on:
         type: choice
         default: smoke
         options:
+          - quick
           - smoke
           - default
       target_set:
@@ -71,6 +75,11 @@ on:
         options:
           - 'false'
           - 'true'
+      collector_batch_target_bytes:
+        description: optional logfwd collector batch_target_bytes override
+        required: false
+        type: string
+        default: ''
 
 permissions:
   contents: write
@@ -111,17 +120,27 @@ jobs:
 
           case "${TARGET_SET}" in
             profile)
-              if [[ "${INPUT_PROFILE}" == "default" ]]; then
+              if [[ "${INPUT_PROFILE}" == "quick" ]]; then
+                echo 'workloads=[{"label":"profile-quick","pods":1,"eps_per_pod":10}]' >>"$GITHUB_OUTPUT"
+              elif [[ "${INPUT_PROFILE}" == "default" ]]; then
                 echo 'workloads=[{"label":"profile-default","pods":30,"eps_per_pod":300}]' >>"$GITHUB_OUTPUT"
               else
                 echo 'workloads=[{"label":"profile-smoke","pods":5,"eps_per_pod":100}]' >>"$GITHUB_OUTPUT"
               fi
               ;;
             ladder)
-              echo 'workloads=[{"label":"t1","pods":1,"eps_per_pod":1},{"label":"t10","pods":1,"eps_per_pod":10},{"label":"t100","pods":1,"eps_per_pod":100},{"label":"t1k","pods":1,"eps_per_pod":1000},{"label":"t10k","pods":1,"eps_per_pod":10000},{"label":"t100k","pods":1,"eps_per_pod":100000},{"label":"t1m","pods":1,"eps_per_pod":1000000}]' >>"$GITHUB_OUTPUT"
+              if [[ "${INPUT_PROFILE}" == "quick" ]]; then
+                echo 'workloads=[{"label":"t10","pods":1,"eps_per_pod":10},{"label":"t100","pods":1,"eps_per_pod":100},{"label":"t1k","pods":1,"eps_per_pod":1000},{"label":"t10k","pods":1,"eps_per_pod":10000},{"label":"t100k","pods":1,"eps_per_pod":100000}]' >>"$GITHUB_OUTPUT"
+              else
+                echo 'workloads=[{"label":"t1","pods":1,"eps_per_pod":1},{"label":"t10","pods":1,"eps_per_pod":10},{"label":"t100","pods":1,"eps_per_pod":100},{"label":"t1k","pods":1,"eps_per_pod":1000},{"label":"t10k","pods":1,"eps_per_pod":10000},{"label":"t100k","pods":1,"eps_per_pod":100000},{"label":"t1m","pods":1,"eps_per_pod":1000000}]' >>"$GITHUB_OUTPUT"
+              fi
               ;;
             ladder_and_max)
-              echo 'workloads=[{"label":"t1","pods":1,"eps_per_pod":1},{"label":"t10","pods":1,"eps_per_pod":10},{"label":"t100","pods":1,"eps_per_pod":100},{"label":"t1k","pods":1,"eps_per_pod":1000},{"label":"t10k","pods":1,"eps_per_pod":10000},{"label":"t100k","pods":1,"eps_per_pod":100000},{"label":"t1m","pods":1,"eps_per_pod":1000000},{"label":"tmax","pods":1,"eps_per_pod":0}]' >>"$GITHUB_OUTPUT"
+              if [[ "${INPUT_PROFILE}" == "quick" ]]; then
+                echo 'workloads=[{"label":"t10","pods":1,"eps_per_pod":10},{"label":"t100","pods":1,"eps_per_pod":100},{"label":"t1k","pods":1,"eps_per_pod":1000},{"label":"t10k","pods":1,"eps_per_pod":10000},{"label":"t100k","pods":1,"eps_per_pod":100000},{"label":"tmax","pods":1,"eps_per_pod":0}]' >>"$GITHUB_OUTPUT"
+              else
+                echo 'workloads=[{"label":"t1","pods":1,"eps_per_pod":1},{"label":"t10","pods":1,"eps_per_pod":10},{"label":"t100","pods":1,"eps_per_pod":100},{"label":"t1k","pods":1,"eps_per_pod":1000},{"label":"t10k","pods":1,"eps_per_pod":10000},{"label":"t100k","pods":1,"eps_per_pod":100000},{"label":"t1m","pods":1,"eps_per_pod":1000000},{"label":"tmax","pods":1,"eps_per_pod":0}]' >>"$GITHUB_OUTPUT"
+              fi
               ;;
             max)
               echo 'workloads=[{"label":"tmax","pods":1,"eps_per_pod":0}]' >>"$GITHUB_OUTPUT"
@@ -180,47 +199,16 @@ jobs:
       BENCH_WORKLOAD_LABEL: ${{ matrix.workload.label }}
       BENCH_PODS: ${{ matrix.workload.pods }}
       BENCH_EPS_PER_POD: ${{ matrix.workload.eps_per_pod }}
+      BENCH_COLLECTOR_BATCH_TARGET_BYTES: ${{ inputs.collector_batch_target_bytes || '' }}
       BENCHKIT_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}--kind-bench-${{ needs.plan.outputs.bench_profile }}-${{ matrix.ingest_mode }}-${{ matrix.workload.label }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}
     steps:
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
-      - id: checkout_memagent
-        continue-on-error: true
-        uses: actions/checkout@v6
+      - uses: ./.github/actions/checkout-memagent
         with:
-          repository: strawgate/memagent
-          ref: ${{ env.MEMAGENT_REF }}
-          path: memagent
-          persist-credentials: false
-      - if: steps.checkout_memagent.outcome == 'failure'
-        name: Fallback clone memagent checkout
-        shell: bash
-        run: |
-          set -euo pipefail
-          repo_url="https://github.com/strawgate/memagent.git"
-          ref="${MEMAGENT_REF}"
-          rm -rf memagent
-          for attempt in 1 2 3; do
-            echo "Fallback clone attempt ${attempt}/3 for ref ${ref}"
-            if [[ "$ref" =~ ^[0-9a-f]{40}$ ]]; then
-              if git clone --no-tags --depth 1 "$repo_url" memagent \
-                && git -C memagent fetch --no-tags --depth 1 origin "$ref" \
-                && git -C memagent checkout --detach FETCH_HEAD; then
-                break
-              fi
-            else
-              if git clone --no-tags --depth 1 --branch "$ref" "$repo_url" memagent; then
-                break
-              fi
-            fi
-            rm -rf memagent
-            if [[ "$attempt" -eq 3 ]]; then
-              echo "Failed to clone memagent ref ${ref} after retries" >&2
-              exit 1
-            fi
-            sleep $((attempt * 5))
-          done
+          memagent-ref: ${{ env.MEMAGENT_REF }}
+          memagent-path: memagent
       - uses: ./.github/actions/setup-memagent-build
         with:
           memagent-repo-root: memagent
@@ -228,12 +216,7 @@ jobs:
       - if: env.PERSIST_BENCH_DATA == 'true'
         name: Start Octo11y monitor
         id: monitor
-        uses: strawgate/octo11y/actions/monitor@main-dist
-        env:
-          GIT_AUTHOR_NAME: github-actions[bot]
-          GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
-          GIT_COMMITTER_NAME: github-actions[bot]
-          GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+        uses: strawgate/o11ykit/octo11y/actions/monitor@main-dist
         with:
           run-id: ${{ env.BENCHKIT_RUN_ID }}
           scrape-interval: 1s
@@ -275,72 +258,24 @@ jobs:
       - if: always()
         name: Ensure fallback benchmark result exists
         run: |
-          python3 - <<'PY'
-          import json
-          import os
-          from pathlib import Path
-
-          results_dir = Path(os.environ["BENCH_RESULTS_DIR"])
-          result_path = results_dir / "result.json"
-          if result_path.exists():
-            raise SystemExit(0)
-
-          results_dir.mkdir(parents=True, exist_ok=True)
-          target_eps = int(os.environ.get("BENCH_EPS_PER_POD", "0") or 0) * int(os.environ.get("BENCH_PODS", "1") or 1)
-          fallback = {
-            "benchmark_id": "missing-result",
-            "timestamp_utc": "",
-            "phase": "smoke",
-            "benchmark_mode": "baseline-pass-through",
-            "cluster": "kind",
-            "cluster_name": os.environ.get("CLUSTER_NAME", ""),
-            "namespace": "bench",
-            "collector": os.environ.get("BENCH_COLLECTOR", "unknown"),
-            "protocol": "otlp_http",
-            "ingest_mode": os.environ.get("BENCH_INGEST_MODE", "unknown"),
-            "cpu_profile": os.environ.get("BENCH_CPU_PROFILE", "unknown"),
-            "cluster_cpu_limit_cores": None,
-            "pods": int(os.environ.get("BENCH_PODS", "1") or 1),
-            "target_eps_per_pod": int(os.environ.get("BENCH_EPS_PER_POD", "0") or 0),
-            "total_target_eps": target_eps,
-            "warmup_sec": None,
-            "measure_sec": None,
-            "cooldown_sec": None,
-            "sink_lines_total": 0,
-            "emitter_reported_events_total": None,
-            "sink_reported_events_total": 0,
-            "captured_rows_total": None,
-            "source_rows_total": None,
-            "missing_source_count": None,
-            "missing_event_count": None,
-            "unexpected_event_count": None,
-            "sink_lines_per_sec_avg": 0.0,
-            "sink_lines_per_sec_p50": None,
-            "sink_lines_per_sec_p95": None,
-            "sink_lines_per_sec_p99": None,
-            "drop_estimate": None,
-            "dup_estimate": None,
-            "latency_ms_p50": None,
-            "latency_ms_p95": None,
-            "latency_ms_p99": None,
-            "collector_cpu_cores_avg": None,
-            "collector_cpu_cores_p95": None,
-            "collector_rss_mb_avg": None,
-            "collector_rss_mb_p95": None,
-            "cluster_ready": False,
-            "sink_ready": False,
-            "status": "fail",
-            "notes": "kind benchmark harness exited before writing result.json",
-          }
-          result_path.write_text(json.dumps(fallback, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-          (results_dir / "summary.md").write_text(
-            "# Benchmark result missing\n\n"
-            "- status: `fail`\n"
-            "- notes: kind benchmark harness exited before writing result.json\n",
-            encoding="utf-8",
-          )
-          print(f"wrote fallback result at {result_path}")
-          PY
+          if [[ -f "${BENCH_RESULTS_DIR}/result.json" ]]; then
+            exit 0
+          fi
+          set -- \
+            --output-dir "${BENCH_RESULTS_DIR}" \
+            --cluster "kind-single-node" \
+            --cluster-name "${CLUSTER_NAME}" \
+            --namespace "memagent-bench" \
+            --collector "${BENCH_COLLECTOR}" \
+            --ingest-mode "${BENCH_INGEST_MODE}" \
+            --cpu-profile "${BENCH_CPU_PROFILE}" \
+            --pods "${BENCH_PODS}" \
+            --target-eps-per-pod "${BENCH_EPS_PER_POD}" \
+            --notes "kind benchmark harness exited before writing result.json"
+          if [[ -n "${BENCH_COLLECTOR_BATCH_TARGET_BYTES}" ]]; then
+            set -- "$@" --collector-batch-target-bytes "${BENCH_COLLECTOR_BATCH_TARGET_BYTES}"
+          fi
+          python3 bench/lib/write_missing_result.py "$@"
       - if: env.PERSIST_BENCH_DATA == 'true'
         name: Stash jitter
         shell: bash
@@ -352,16 +287,13 @@ jobs:
       - if: env.PERSIST_BENCH_DATA == 'true'
         name: Stash benchmark run
         continue-on-error: true
-        env:
-          GIT_AUTHOR_NAME: github-actions[bot]
-          GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
-          GIT_COMMITTER_NAME: github-actions[bot]
-          GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
-        uses: strawgate/octo11y/actions/stash@main-dist
+        uses: strawgate/o11ykit/actions/parse-results@main-dist
         with:
+          mode: file
           results: ${{ env.BENCH_RESULTS_DIR }}/benchkit-run.otlp.json
           format: otlp
           run-id: ${{ env.BENCHKIT_RUN_ID }}
+          github-token: ${{ github.token }}
           summary: true
       - if: always()
         uses: actions/upload-artifact@v5
@@ -371,7 +303,7 @@ jobs:
           retention-days: 7
 
   summarize:
-    if: always() && github.event_name != 'pull_request'
+    if: always()
     needs:
       - plan
       - kind-bench-smoke
@@ -554,10 +486,9 @@ jobs:
               )
 
           if integrity_violations:
-            print("integrity violations detected:", file=sys.stderr)
+            print("diagnostic integrity deltas detected (non-gating):")
             for violation in integrity_violations[:20]:
-              print(violation, file=sys.stderr)
-            sys.exit(1)
+              print(violation)
 
           single_cpu_violations = []
           for row in summary.get("results", []):

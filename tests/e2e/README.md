@@ -5,15 +5,18 @@ This directory contains the explicit-job e2e platform for `memagent`.
 ## Layout
 
 - `lib/` shared plumbing only
-  - HTTP capture server
+  - TCP capture server
   - row oracle
   - shell helpers
 - `scenarios/<scenario-id>/` self-contained scenarios
-  - `up.sh`
-  - `run_workload.sh`
-  - `verify.sh`
-  - `down.sh`
+  - required: `run_workload.sh`
+  - optional: `up.sh`, `verify.sh`, `down.sh`, `collect.sh`
   - scenario-local manifests, compose files, and config
+
+Phases missing from a scenario can be satisfied by family defaults in `lib/common.sh`.
+Today:
+- compose scenarios default `up`, `down`, `collect`, and `verify`
+- otlp scenarios default `up`, `down`, and `collect`
 
 ## Design rules
 

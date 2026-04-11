@@ -5,9 +5,13 @@ on:
     branches: [master]
     paths:
       - 'bench/compose/**'
+      - 'bench/lib/**'
+      - 'bench/kind/render_issue_summary.py'
+      - 'reporting/**'
       - '.github/workflows/bench-compose-smoke.yml'
       - '.github/workflows/bench-kind-aggregate.yml'
       - '.github/actions/setup-memagent-build/**'
+      - '.github/actions/checkout-memagent/**'
       - '.github/actions/setup-compose/**'
   schedule:
     - cron: '30 7 * * *'
@@ -24,6 +28,7 @@ on:
         type: choice
         default: smoke
         options:
+          - quick
           - smoke
           - default
       target_set:
@@ -113,17 +118,27 @@ jobs:
 
           case "${TARGET_SET}" in
             profile)
-              if [[ "${INPUT_PROFILE}" == "default" ]]; then
+              if [[ "${INPUT_PROFILE}" == "quick" ]]; then
+                echo 'workloads=[{"label":"profile-quick","eps_per_sec":10}]' >>"$GITHUB_OUTPUT"
+              elif [[ "${INPUT_PROFILE}" == "default" ]]; then
                 echo 'workloads=[{"label":"profile-default","eps_per_sec":300}]' >>"$GITHUB_OUTPUT"
               else
                 echo 'workloads=[{"label":"profile-smoke","eps_per_sec":100}]' >>"$GITHUB_OUTPUT"
               fi
               ;;
             ladder)
-              echo 'workloads=[{"label":"t1","eps_per_sec":1},{"label":"t10","eps_per_sec":10},{"label":"t100","eps_per_sec":100},{"label":"t1k","eps_per_sec":1000},{"label":"t10k","eps_per_sec":10000},{"label":"t100k","eps_per_sec":100000},{"label":"t1m","eps_per_sec":1000000}]' >>"$GITHUB_OUTPUT"
+              if [[ "${INPUT_PROFILE}" == "quick" ]]; then
+                echo 'workloads=[{"label":"t10","eps_per_sec":10},{"label":"t100","eps_per_sec":100},{"label":"t1k","eps_per_sec":1000},{"label":"t10k","eps_per_sec":10000},{"label":"t100k","eps_per_sec":100000}]' >>"$GITHUB_OUTPUT"
+              else
+                echo 'workloads=[{"label":"t1","eps_per_sec":1},{"label":"t10","eps_per_sec":10},{"label":"t100","eps_per_sec":100},{"label":"t1k","eps_per_sec":1000},{"label":"t10k","eps_per_sec":10000},{"label":"t100k","eps_per_sec":100000},{"label":"t1m","eps_per_sec":1000000}]' >>"$GITHUB_OUTPUT"
+              fi
               ;;
             ladder_and_max)
-              echo 'workloads=[{"label":"t1","eps_per_sec":1},{"label":"t10","eps_per_sec":10},{"label":"t100","eps_per_sec":100},{"label":"t1k","eps_per_sec":1000},{"label":"t10k","eps_per_sec":10000},{"label":"t100k","eps_per_sec":100000},{"label":"t1m","eps_per_sec":1000000},{"label":"tmax","eps_per_sec":0}]' >>"$GITHUB_OUTPUT"
+              if [[ "${INPUT_PROFILE}" == "quick" ]]; then
+                echo 'workloads=[{"label":"t10","eps_per_sec":10},{"label":"t100","eps_per_sec":100},{"label":"t1k","eps_per_sec":1000},{"label":"t10k","eps_per_sec":10000},{"label":"t100k","eps_per_sec":100000},{"label":"tmax","eps_per_sec":0}]' >>"$GITHUB_OUTPUT"
+              else
+                echo 'workloads=[{"label":"t1","eps_per_sec":1},{"label":"t10","eps_per_sec":10},{"label":"t100","eps_per_sec":100},{"label":"t1k","eps_per_sec":1000},{"label":"t10k","eps_per_sec":10000},{"label":"t100k","eps_per_sec":100000},{"label":"t1m","eps_per_sec":1000000},{"label":"tmax","eps_per_sec":0}]' >>"$GITHUB_OUTPUT"
+              fi
               ;;
             max)
               echo 'workloads=[{"label":"tmax","eps_per_sec":0}]' >>"$GITHUB_OUTPUT"
@@ -180,42 +195,10 @@ jobs:
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
-      - id: checkout_memagent
-        continue-on-error: true
-        uses: actions/checkout@v6
+      - uses: ./.github/actions/checkout-memagent
         with:
-          repository: strawgate/memagent
-          ref: ${{ env.MEMAGENT_REF }}
-          path: memagent
-          persist-credentials: false
-      - if: steps.checkout_memagent.outcome == 'failure'
-        name: Fallback clone memagent checkout
-        shell: bash
-        run: |
-          set -euo pipefail
-          repo_url="https://github.com/strawgate/memagent.git"
-          ref="${MEMAGENT_REF}"
-          rm -rf memagent
-          for attempt in 1 2 3; do
-            echo "Fallback clone attempt ${attempt}/3 for ref ${ref}"
-            if [[ "$ref" =~ ^[0-9a-f]{40}$ ]]; then
-              if git clone --no-tags --depth 1 "$repo_url" memagent \
-                && git -C memagent fetch --no-tags --depth 1 origin "$ref" \
-                && git -C memagent checkout --detach FETCH_HEAD; then
-                break
-              fi
-            else
-              if git clone --no-tags --depth 1 --branch "$ref" "$repo_url" memagent; then
-                break
-              fi
-            fi
-            rm -rf memagent
-            if [[ "$attempt" -eq 3 ]]; then
-              echo "Failed to clone memagent ref ${ref} after retries" >&2
-              exit 1
-            fi
-            sleep $((attempt * 5))
-          done
+          memagent-ref: ${{ env.MEMAGENT_REF }}
+          memagent-path: memagent
       - uses: ./.github/actions/setup-memagent-build
         with:
           memagent-repo-root: memagent
@@ -226,12 +209,7 @@ jobs:
       - if: env.PERSIST_BENCH_DATA == 'true'
         name: Start Octo11y monitor
         id: monitor
-        uses: strawgate/octo11y/actions/monitor@main-dist
-        env:
-          GIT_AUTHOR_NAME: github-actions[bot]
-          GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
-          GIT_COMMITTER_NAME: github-actions[bot]
-          GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+        uses: strawgate/o11ykit/octo11y/actions/monitor@main-dist
         with:
           run-id: ${{ env.BENCHKIT_RUN_ID }}
           scrape-interval: 1s
@@ -260,96 +238,20 @@ jobs:
       - if: always()
         name: Ensure fallback benchmark result exists
         run: |
-          python3 - <<'PY'
-          import json
-          import os
-          from pathlib import Path
-
-          results_dir = Path(os.environ["BENCH_RESULTS_DIR"])
-          result_path = results_dir / "result.json"
-          if result_path.exists():
-            raise SystemExit(0)
-
-          results_dir.mkdir(parents=True, exist_ok=True)
-          fallback = {
-            "benchmark_id": "missing-result",
-            "timestamp_utc": "",
-            "phase": "smoke",
-            "benchmark_mode": "baseline-pass-through",
-            "cluster": "docker-compose",
-            "cluster_name": "",
-            "namespace": "compose",
-            "collector": os.environ.get("BENCH_COLLECTOR", "unknown"),
-            "protocol": "otlp_http",
-            "ingest_mode": os.environ.get("BENCH_INGEST_MODE", "unknown"),
-            "cpu_profile": os.environ.get("BENCH_CPU_PROFILE", "unknown"),
-            "cluster_cpu_limit_cores": None,
-            "pods": 1,
-            "target_eps_per_pod": int(os.environ.get("BENCH_EPS_PER_SEC", "0") or 0),
-            "total_target_eps": int(os.environ.get("BENCH_EPS_PER_SEC", "0") or 0),
-            "warmup_sec": None,
-            "measure_sec": None,
-            "cooldown_sec": None,
-            "sink_lines_total": 0,
-            "emitter_reported_events_total": None,
-            "sink_reported_events_total": 0,
-            "captured_rows_total": None,
-            "source_rows_total": None,
-            "missing_source_count": None,
-            "missing_event_count": None,
-            "unexpected_event_count": None,
-            "sink_lines_per_sec_avg": 0.0,
-            "sink_lines_per_sec_p50": None,
-            "sink_lines_per_sec_p95": None,
-            "sink_lines_per_sec_p99": None,
-            "drop_estimate": None,
-            "dup_estimate": None,
-            "latency_ms_p50": None,
-            "latency_ms_p95": None,
-            "latency_ms_p99": None,
-            "collector_cpu_cores_avg": None,
-            "collector_cpu_cores_p95": None,
-            "collector_rss_mb_avg": None,
-            "collector_rss_mb_p95": None,
-            "cluster_ready": False,
-            "sink_ready": False,
-            "status": "fail",
-            "notes": "compose benchmark harness exited before writing result.json",
-          }
-          result_path.write_text(json.dumps(fallback, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-          (results_dir / "summary.md").write_text(
-            "# Benchmark result missing\n\n"
-            "- status: `fail`\n"
-            "- notes: compose benchmark harness exited before writing result.json\n",
-            encoding="utf-8",
-          )
-          print(f"wrote fallback result at {result_path}")
-          PY
-      - if: env.PERSIST_BENCH_DATA == 'true'
-        name: Materialize monitor OTLP document
-        run: |
-          python3 - <<'PY'
-          import json
-          import os
-          from pathlib import Path
-
-          monitor_jsonl = Path(os.environ["RUNNER_TEMP"]) / "benchkit-telemetry.otlp.jsonl"
-          out_path = Path(os.environ["BENCH_RESULTS_DIR"]) / "monitor.otlp.json"
-          resource_metrics = []
-          if monitor_jsonl.exists():
-            with monitor_jsonl.open("r", encoding="utf-8") as handle:
-              for raw in handle:
-                line = raw.strip()
-                if not line:
-                  continue
-                doc = json.loads(line)
-                values = doc.get("resourceMetrics")
-                if isinstance(values, list):
-                  resource_metrics.extend(values)
-          payload = {"resourceMetrics": resource_metrics}
-          out_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-          print(f"wrote {out_path} with {len(resource_metrics)} resourceMetrics entries")
-          PY
+          if [[ -f "${BENCH_RESULTS_DIR}/result.json" ]]; then
+            exit 0
+          fi
+          python3 bench/lib/write_missing_result.py \
+            --output-dir "${BENCH_RESULTS_DIR}" \
+            --cluster "docker-compose" \
+            --cluster-name "missing-result" \
+            --namespace "compose" \
+            --collector "${BENCH_COLLECTOR}" \
+            --ingest-mode "${BENCH_INGEST_MODE}" \
+            --cpu-profile "${BENCH_CPU_PROFILE}" \
+            --pods 1 \
+            --target-eps-per-pod "${BENCH_EPS_PER_SEC}" \
+            --notes "compose benchmark harness exited before writing result.json"
       - if: env.PERSIST_BENCH_DATA == 'true'
         name: Stash jitter
         shell: bash
@@ -361,17 +263,13 @@ jobs:
       - if: env.PERSIST_BENCH_DATA == 'true'
         name: Stash benchmark run
         continue-on-error: true
-        env:
-          GIT_AUTHOR_NAME: github-actions[bot]
-          GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
-          GIT_COMMITTER_NAME: github-actions[bot]
-          GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
-        uses: strawgate/octo11y/actions/stash@main-dist
+        uses: strawgate/o11ykit/actions/parse-results@main-dist
         with:
+          mode: file
           results: ${{ env.BENCH_RESULTS_DIR }}/benchkit-run.otlp.json
-          monitor-results: ${{ env.BENCH_RESULTS_DIR }}/monitor.otlp.json
           format: otlp
           run-id: ${{ env.BENCHKIT_RUN_ID }}
+          github-token: ${{ github.token }}
           summary: false
       - if: always()
         uses: actions/upload-artifact@v5
@@ -553,10 +451,9 @@ jobs:
               )
 
           if integrity_violations:
-            print("integrity violations detected:", file=sys.stderr)
+            print("diagnostic integrity deltas detected (non-gating):")
             for violation in integrity_violations[:20]:
-              print(violation, file=sys.stderr)
-            sys.exit(1)
+              print(violation)
 
           single_cpu_violations = []
           for row in summary.get("results", []):

@@ -22,6 +22,7 @@ land. Fields that are not collected in a phase are emitted as `null`.
 | `ingest_mode` | string | Collector input mode: `file` or `otlp` |
 | `cpu_profile` | string | CPU shaping profile, currently `single` or `multi` |
 | `cluster_cpu_limit_cores` | number | CPU cap applied to the KIND control-plane container |
+| `collector_batch_target_bytes` | integer or null | Optional logfwd collector `batch_target_bytes` override used for payload-size experiments |
 | `pods` | integer | Target emitter pod count for the profile |
 | `target_eps_per_pod` | integer | Target rate for the profile |
 | `total_target_eps` | integer | `pods * target_eps_per_pod` |
@@ -42,6 +43,12 @@ land. Fields that are not collected in a phase are emitted as `null`.
 | `sink_lines_per_sec_p99` | number or null | P99 steady-state sink throughput |
 | `drop_estimate` | integer or null | Current drop estimate; exact source-vs-sink count in `smoke` |
 | `dup_estimate` | integer or null | Duplicate benchmark event estimate |
+| `rejected_batches_total` | integer or null | Count of explicit collector/emitter batch rejection log signals found in artifacts |
+| `http_413_count` | integer or null | Count of HTTP 413 / payload-too-large rejection signals found in artifacts |
+| `rejected_rows_estimate` | integer or null | Sum of structured batch span `output_rows` or `input_rows` on rejected-batch log lines, when present |
+| `rejected_bytes_estimate` | integer or null | Sum of structured batch span `bytes_in` on rejected-batch log lines, when present |
+| `backpressure_warning_count` | integer or null | Count of `input.backpressure` warning signals found in artifacts |
+| `collector_dropped_batches_total` | integer or null | Structural `dropped_batches_total` from collector `/admin/v1/status` when available |
 | `latency_ms_p50` | number or null | Reserved for later latency capture |
 | `latency_ms_p95` | number or null | Reserved for later latency capture |
 | `latency_ms_p99` | number or null | Reserved for later latency capture |
@@ -51,6 +58,8 @@ land. Fields that are not collected in a phase are emitted as `null`.
 | `sink_rss_mb_p95` | number or null | P95 sink RSS during the measured window |
 | `collector_cpu_cores_avg` | number or null | Average collector CPU usage during the measured window |
 | `collector_cpu_cores_p95` | number or null | P95 collector CPU usage during the measured window |
+| `generator_cpu_cores_avg` | number or null | Average aggregate generator CPU usage during the measured window |
+| `generator_cpu_cores_p95` | number or null | P95 aggregate generator CPU usage during the measured window |
 | `collector_rss_mb_avg` | number or null | Average collector RSS during the measured window |
 | `collector_rss_mb_p95` | number or null | P95 collector RSS during the measured window |
 | `cluster_ready` | boolean | Whether KIND was created and reachable |
@@ -76,13 +85,13 @@ The smoke phase currently runs one narrow benchmark mode:
 
 This is intended to be a useful and honest baseline:
 
-- it does verify exact event preservation for the benchmark envelope
+- competitive pass/fail is sink-outcome based (did the lane produce sink output)
+- integrity/rejection counters remain in the row as diagnostics for analysis
 - it does not claim parse-and-enrich coverage or score those costs yet
 
 For `ingest_mode=otlp`, the smoke run intentionally skips strict source-vs-sink
 comparison because the emitter is not writing source logs to stdout in that
-mode. In OTLP ingest mode, pass/fail is based on positive sink observation and
-diagnostic counters.
+mode.
 
 ## Artifact Expectations
 
@@ -98,6 +107,7 @@ Alongside the JSON row, each run should preserve:
 - `actual_rows.json` in `smoke`
 - `source_rows.json` in `smoke`
 - `stream-summary.json` in `smoke`
+- `artifacts/delivery-diagnostics.json` with rejected batch / HTTP 413 / backpressure signals
 
 ## Benchkit OTLP Projection
 

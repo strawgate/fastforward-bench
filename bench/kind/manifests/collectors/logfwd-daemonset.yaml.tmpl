@@ -24,7 +24,7 @@ spec:
         - name: logfwd
           image: ${MEMAGENT_IMAGE}
           imagePullPolicy: IfNotPresent
-          args: ["--config", "/etc/logfwd/config.yaml"]
+          args: ["run", "--config", "/etc/logfwd/config.yaml"]
           resources:
             requests:
               cpu: ${COLLECTOR_CPU_REQUEST}

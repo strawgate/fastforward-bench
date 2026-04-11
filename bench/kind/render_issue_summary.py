@@ -7,6 +7,14 @@ import json
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+import sys
+
+try:
+    from reporting.markdown import markdown_table
+except ModuleNotFoundError:
+    REPO_ROOT = Path(__file__).resolve().parents[2]
+    sys.path.insert(0, str(REPO_ROOT))
+    from reporting.markdown import markdown_table
 
 
 @dataclass
@@ -15,6 +23,7 @@ class BenchResult:
     collector: str
     ingest_mode: str
     cpu_profile: str
+    collector_batch_target_bytes: int | None
     pods: int
     target_eps_per_pod: int
     phase: str
@@ -25,8 +34,15 @@ class BenchResult:
     unexpected_event_count: int | None
     dup_estimate: int | None
     drop_estimate: int | None
+    rejected_batches_total: int | None
+    http_413_count: int | None
+    rejected_rows_estimate: int | None
+    rejected_bytes_estimate: int | None
+    backpressure_warning_count: int | None
+    collector_dropped_batches_total: int | None
     sink_cpu_cores_avg: float | None
     collector_cpu_cores_avg: float | None
+    generator_cpu_cores_avg: float | None
     notes: str
 
     @property
@@ -82,6 +98,7 @@ def load_result(path: Path, artifact_name: str) -> BenchResult:
         collector=str(payload.get("collector") or "unknown"),
         ingest_mode=str(payload.get("ingest_mode") or "file"),
         cpu_profile=str(payload.get("cpu_profile") or "unknown"),
+        collector_batch_target_bytes=as_int(payload.get("collector_batch_target_bytes")),
         pods=as_int(payload.get("pods")) or 0,
         target_eps_per_pod=as_int(payload.get("target_eps_per_pod")) or 0,
         phase=str(payload.get("phase") or "unknown"),
@@ -92,8 +109,15 @@ def load_result(path: Path, artifact_name: str) -> BenchResult:
         unexpected_event_count=as_int(payload.get("unexpected_event_count")),
         dup_estimate=as_int(payload.get("dup_estimate")),
         drop_estimate=as_int(payload.get("drop_estimate")),
+        rejected_batches_total=as_int(payload.get("rejected_batches_total")),
+        http_413_count=as_int(payload.get("http_413_count")),
+        rejected_rows_estimate=as_int(payload.get("rejected_rows_estimate")),
+        rejected_bytes_estimate=as_int(payload.get("rejected_bytes_estimate")),
+        backpressure_warning_count=as_int(payload.get("backpressure_warning_count")),
+        collector_dropped_batches_total=as_int(payload.get("collector_dropped_batches_total")),
         sink_cpu_cores_avg=as_float(payload.get("sink_cpu_cores_avg")),
         collector_cpu_cores_avg=as_float(payload.get("collector_cpu_cores_avg")),
+        generator_cpu_cores_avg=as_float(payload.get("generator_cpu_cores_avg")),
         notes=str(payload.get("notes") or ""),
     )
 
@@ -102,6 +126,10 @@ def scan_artifacts(root: Path) -> list[BenchResult]:
     results: list[BenchResult] = []
     if not root.exists():
         return results
+
+    root_result = root / "result.json"
+    if root_result.exists():
+        results.append(load_result(root_result, root.name))
 
     for artifact_dir in sorted(path for path in root.iterdir() if path.is_dir()):
         result_path = artifact_dir / "result.json"
@@ -158,6 +186,21 @@ def target_rank(total_target_eps: int) -> tuple[int, int]:
     return (0, total_target_eps)
 
 
+def target_label(total_target_eps: int) -> str:
+    return "max" if total_target_eps == 0 else str(total_target_eps)
+
+
+def has_integrity_alert(result: BenchResult) -> bool:
+    return (
+        (result.missing_event_count or 0) > 0
+        or (result.unexpected_event_count or 0) > 0
+        or (result.dup_estimate or 0) > 0
+        or (result.rejected_batches_total or 0) > 0
+        or (result.http_413_count or 0) > 0
+        or not result.passed
+    )
+
+
 def render_markdown(
     *,
     suite_name: str,
@@ -203,15 +246,7 @@ def render_markdown(
         ingest_modes = sorted({result.ingest_mode for result in sorted_results}, key=ingest_rank)
         collectors = sorted({result.collector for result in sorted_results}, key=collector_rank)
 
-        lines.extend(
-            [
-                "",
-                "## Max EPS Snapshot",
-                "",
-                "| Collector | Ingest | CPU | Max EPS | Collector CPU Avg | % of Target | Source Target |",
-                "| --- | --- | --- | ---: | ---: | ---: | --- |",
-            ]
-        )
+        max_snapshot_rows: list[list[str]] = []
         for collector in collectors:
             for ingest_mode in ingest_modes:
                 for cpu_profile in cpu_profiles:
@@ -238,19 +273,76 @@ def render_markdown(
                     pct_of_target = None
                     if chosen.total_target_eps > 0 and chosen.sink_lines_per_sec_avg is not None:
                         pct_of_target = chosen.sink_lines_per_sec_avg / chosen.total_target_eps
-                    source_target = "max" if chosen.total_target_eps == 0 else str(chosen.total_target_eps)
-                    lines.append(
-                        "| {collector} | {ingest_mode} | {cpu_profile} | {eps_avg} | {cpu_avg} | {pct} | {source_target} |".format(
-                            collector=collector,
-                            ingest_mode=ingest_mode,
-                            cpu_profile=cpu_profile,
-                            eps_avg=fmt_float(chosen.sink_lines_per_sec_avg),
-                            cpu_avg=fmt_float(chosen.collector_cpu_cores_avg),
-                            pct=fmt_percent(pct_of_target),
-                            source_target=source_target,
-                        )
+                    max_snapshot_rows.append(
+                        [
+                            collector,
+                            ingest_mode,
+                            cpu_profile,
+                            fmt_float(chosen.sink_lines_per_sec_avg),
+                            fmt_float(chosen.collector_cpu_cores_avg),
+                            fmt_float(chosen.generator_cpu_cores_avg),
+                            fmt_percent(pct_of_target),
+                            target_label(chosen.total_target_eps),
+                        ]
                     )
+        lines.extend(["", "## Max EPS Snapshot", ""])
+        lines.extend(
+            markdown_table(
+                headers=[
+                    "Collector",
+                    "Ingest",
+                    "CPU",
+                    "Max EPS",
+                    "Collector CPU Avg",
+                    "Generator CPU Avg",
+                    "% of Target",
+                    "Source Target",
+                ],
+                rows=max_snapshot_rows,
+                align=["left", "left", "left", "right", "right", "right", "right", "left"],
+            )
+        )
         lines.append("")
+
+        integrity_alert_rows = [
+            [
+                result.collector,
+                result.ingest_mode,
+                result.cpu_profile,
+                fmt_int(result.collector_batch_target_bytes),
+                target_label(result.total_target_eps),
+                result.status.upper(),
+                fmt_int(result.missing_event_count),
+                fmt_int(result.unexpected_event_count),
+                fmt_int(result.dup_estimate),
+                fmt_int(result.rejected_batches_total),
+                fmt_int(result.http_413_count),
+            ]
+            for result in sorted_results
+            if has_integrity_alert(result)
+        ]
+        if integrity_alert_rows:
+            lines.extend(["## Integrity Alerts", ""])
+            lines.extend(
+                markdown_table(
+                    headers=[
+                        "Collector",
+                        "Ingest",
+                        "CPU",
+                        "Batch Target Bytes",
+                        "Target EPS",
+                        "Status",
+                        "Missing",
+                        "Unexpected",
+                        "Duplicates",
+                        "Rejected Batches",
+                        "HTTP 413",
+                    ],
+                    rows=integrity_alert_rows,
+                    align=["left", "left", "left", "right", "right", "left", "right", "right", "right", "right", "right"],
+                )
+            )
+            lines.append("")
 
         for cpu_profile in cpu_profiles:
             lines.extend(["", f"## CPU: `{cpu_profile}`", ""])
@@ -262,14 +354,8 @@ def render_markdown(
                 ]
                 if not subset:
                     continue
-                lines.extend(
-                    [
-                        f"### Ingest: `{ingest_mode}`",
-                        "",
-                        "| Collector | Target EPS | Status | EPS Avg | Collector CPU Avg | Sink CPU Avg | % of Target | Missing | Unexpected | Duplicates | Dropped |",
-                        "| --- | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
-                    ]
-                )
+                summary_rows: list[list[str]] = []
+                diagnostics_rows: list[list[str]] = []
                 for result in sorted(
                     subset,
                     key=lambda item: (
@@ -281,29 +367,104 @@ def render_markdown(
                     eps_ratio = None
                     if result.sink_lines_per_sec_avg is not None and result.total_target_eps > 0:
                         eps_ratio = result.sink_lines_per_sec_avg / result.total_target_eps
-                    lines.append(
-                        "| {collector} | {target_eps} | {status} | {eps_avg} | {collector_cpu_avg} | {sink_cpu_avg} | {ratio} | {missing} | {unexpected} | {dup} | {drop} |".format(
-                            collector=result.collector,
-                            target_eps="max" if result.total_target_eps == 0 else fmt_int(result.total_target_eps),
-                            status=result.status.upper(),
-                            eps_avg=fmt_float(result.sink_lines_per_sec_avg),
-                            collector_cpu_avg=fmt_float(result.collector_cpu_cores_avg),
-                            sink_cpu_avg=fmt_float(result.sink_cpu_cores_avg),
-                            ratio=fmt_percent(eps_ratio),
-                            missing=fmt_int(result.missing_event_count),
-                            unexpected=fmt_int(result.unexpected_event_count),
-                            dup=fmt_int(result.dup_estimate),
-                            drop=fmt_int(result.drop_estimate),
-                        )
+                    summary_rows.append(
+                        [
+                            result.collector,
+                            target_label(result.total_target_eps),
+                            result.status.upper(),
+                            fmt_float(result.sink_lines_per_sec_avg),
+                            fmt_float(result.collector_cpu_cores_avg),
+                            fmt_float(result.generator_cpu_cores_avg),
+                            fmt_float(result.sink_cpu_cores_avg),
+                            fmt_percent(eps_ratio),
+                        ]
                     )
+                    diagnostics_rows.append(
+                        [
+                            result.collector,
+                            fmt_int(result.collector_batch_target_bytes),
+                            target_label(result.total_target_eps),
+                            fmt_int(result.missing_event_count),
+                            fmt_int(result.unexpected_event_count),
+                            fmt_int(result.dup_estimate),
+                            fmt_int(result.drop_estimate),
+                            fmt_int(result.rejected_batches_total),
+                            fmt_int(result.http_413_count),
+                            fmt_int(result.rejected_rows_estimate),
+                            fmt_int(result.rejected_bytes_estimate),
+                            fmt_int(result.backpressure_warning_count),
+                            fmt_int(result.collector_dropped_batches_total),
+                        ]
+                    )
+                lines.extend([f"### Ingest: `{ingest_mode}`", ""])
+                lines.extend(
+                    markdown_table(
+                        headers=[
+                            "Collector",
+                            "Target EPS",
+                            "Status",
+                            "EPS Avg",
+                            "Collector CPU Avg",
+                            "Generator CPU Avg",
+                            "Sink CPU Avg",
+                            "% of Target",
+                        ],
+                        rows=summary_rows,
+                        align=["left", "right", "left", "right", "right", "right", "right", "right"],
+                    )
+                )
+                lines.extend(
+                    [
+                        "",
+                        "<details>",
+                        "<summary>Diagnostics Table</summary>",
+                        "",
+                    ]
+                )
+                lines.extend(
+                    markdown_table(
+                        headers=[
+                            "Collector",
+                            "Batch Target Bytes",
+                            "Target EPS",
+                            "Missing",
+                            "Unexpected",
+                            "Duplicates",
+                            "Dropped",
+                            "Rejected Batches",
+                            "HTTP 413",
+                            "Rejected Rows",
+                            "Rejected Bytes",
+                            "Backpressure Warnings",
+                            "Dropped Batches",
+                        ],
+                        rows=diagnostics_rows,
+                        align=[
+                            "left",
+                            "right",
+                            "right",
+                            "right",
+                            "right",
+                            "right",
+                            "right",
+                            "right",
+                            "right",
+                            "right",
+                            "right",
+                            "right",
+                            "right",
+                        ],
+                    )
+                )
+                lines.extend(["", "</details>"])
                 lines.append("")
 
     failing = [result for result in sorted_results if not result.passed]
     if failing:
         lines.extend(["", "## Failing Benchmarks", ""])
         for result in failing:
-            target_label = "max" if result.total_target_eps == 0 else str(result.total_target_eps)
-            lines.append(f"### {result.collector} / {result.ingest_mode} / {result.cpu_profile} / target={target_label}")
+            failing_target_label = target_label(result.total_target_eps)
+            lines.append(f"### {result.collector} / {result.ingest_mode} / {result.cpu_profile} / target={failing_target_label}")
             lines.append("")
             lines.append(f"- Status: `{result.status}`")
             lines.append(f"- Notes: {result.notes or 'n/a'}")
@@ -341,6 +502,7 @@ def main() -> None:
                 "collector": result.collector,
                 "ingest_mode": result.ingest_mode,
                 "cpu_profile": result.cpu_profile,
+                "collector_batch_target_bytes": result.collector_batch_target_bytes,
                 "pods": result.pods,
                 "target_eps_per_pod": result.target_eps_per_pod,
                 "phase": result.phase,
@@ -351,8 +513,15 @@ def main() -> None:
                 "unexpected_event_count": result.unexpected_event_count,
                 "dup_estimate": result.dup_estimate,
                 "drop_estimate": result.drop_estimate,
+                "rejected_batches_total": result.rejected_batches_total,
+                "http_413_count": result.http_413_count,
+                "rejected_rows_estimate": result.rejected_rows_estimate,
+                "rejected_bytes_estimate": result.rejected_bytes_estimate,
+                "backpressure_warning_count": result.backpressure_warning_count,
+                "collector_dropped_batches_total": result.collector_dropped_batches_total,
                 "sink_cpu_cores_avg": result.sink_cpu_cores_avg,
                 "collector_cpu_cores_avg": result.collector_cpu_cores_avg,
+                "generator_cpu_cores_avg": result.generator_cpu_cores_avg,
                 "notes": result.notes,
             }
             for result in results

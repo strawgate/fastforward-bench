@@ -78,13 +78,6 @@ wait_for_file() {
     return 1
 }
 
-append_job_summary() {
-    local summary_file="${1:-$E2E_RESULTS_DIR/summary.md}"
-    if [[ -n "${GITHUB_STEP_SUMMARY:-}" && -f "$summary_file" ]]; then
-        cat "$summary_file" >>"$GITHUB_STEP_SUMMARY"
-    fi
-}
-
 run_oracle_verify() {
     local actual_ndjson="${1:-$E2E_RESULTS_DIR/captured.ndjson}"
     wait_for_file "$actual_ndjson" 30
@@ -115,6 +108,12 @@ run_default_phase() {
             ;;
         compose:verify)
             run_oracle_verify
+            ;;
+        otlp:up)
+            ;;
+        otlp:down)
+            ;;
+        otlp:collect)
             ;;
         *)
             echo "No default implementation for phase '${phase}' in family '${SCENARIO_FAMILY}'" >&2

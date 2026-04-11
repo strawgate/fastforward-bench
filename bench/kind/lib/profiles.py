@@ -18,6 +18,7 @@ class Profile:
 
 
 PROFILES: dict[str, Profile] = {
+    "quick": Profile("quick", pods=1, eps_per_pod=10, warmup_sec=0, measure_sec=1, cooldown_sec=0),
     "smoke": Profile("smoke", pods=5, eps_per_pod=100, warmup_sec=5, measure_sec=15, cooldown_sec=5),
     "default": Profile("default", pods=30, eps_per_pod=300, warmup_sec=30, measure_sec=120, cooldown_sec=10),
 }

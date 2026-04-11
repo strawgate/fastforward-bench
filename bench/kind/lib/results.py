@@ -20,6 +20,7 @@ class BenchmarkResult:
     ingest_mode: str
     cpu_profile: str
     cluster_cpu_limit_cores: float
+    collector_batch_target_bytes: int | None
     pods: int
     target_eps_per_pod: int
     total_target_eps: int
@@ -40,6 +41,12 @@ class BenchmarkResult:
     sink_lines_per_sec_p99: float | None
     drop_estimate: int | None
     dup_estimate: int | None
+    rejected_batches_total: int | None
+    http_413_count: int | None
+    rejected_rows_estimate: int | None
+    rejected_bytes_estimate: int | None
+    backpressure_warning_count: int | None
+    collector_dropped_batches_total: int | None
     latency_ms_p50: float | None
     latency_ms_p95: float | None
     latency_ms_p99: float | None
@@ -49,6 +56,8 @@ class BenchmarkResult:
     sink_rss_mb_p95: float | None
     collector_cpu_cores_avg: float | None
     collector_cpu_cores_p95: float | None
+    generator_cpu_cores_avg: float | None
+    generator_cpu_cores_p95: float | None
     collector_rss_mb_avg: float | None
     collector_rss_mb_p95: float | None
     cluster_ready: bool
@@ -100,6 +109,16 @@ def _otlp_metric(
     }
 
 
+def _benchmark_family(cluster: str) -> str:
+    if cluster == "docker-compose":
+        return "compose"
+    return "kind"
+
+
+def _scope_name(family: str) -> str:
+    return f"memagent-e2e.{family}-bench"
+
+
 def _metric_specs(result: BenchmarkResult) -> list[tuple[str, float | int | None, str, str, str]]:
     return [
         ("sink_lines_total", result.sink_lines_total, "events", "bigger_is_better", "outcome"),
@@ -116,6 +135,18 @@ def _metric_specs(result: BenchmarkResult) -> list[tuple[str, float | int | None
         ("sink_lines_per_sec_p99", result.sink_lines_per_sec_p99, "events/sec", "bigger_is_better", "outcome"),
         ("drop_estimate", result.drop_estimate, "events", "smaller_is_better", "outcome"),
         ("dup_estimate", result.dup_estimate, "events", "smaller_is_better", "outcome"),
+        ("rejected_batches_total", result.rejected_batches_total, "batches", "smaller_is_better", "diagnostic"),
+        ("http_413_count", result.http_413_count, "responses", "smaller_is_better", "diagnostic"),
+        ("rejected_rows_estimate", result.rejected_rows_estimate, "events", "smaller_is_better", "diagnostic"),
+        ("rejected_bytes_estimate", result.rejected_bytes_estimate, "bytes", "smaller_is_better", "diagnostic"),
+        ("backpressure_warning_count", result.backpressure_warning_count, "events", "smaller_is_better", "diagnostic"),
+        (
+            "collector_dropped_batches_total",
+            result.collector_dropped_batches_total,
+            "batches",
+            "smaller_is_better",
+            "diagnostic",
+        ),
         ("latency_ms_p50", result.latency_ms_p50, "ms", "smaller_is_better", "outcome"),
         ("latency_ms_p95", result.latency_ms_p95, "ms", "smaller_is_better", "outcome"),
         ("latency_ms_p99", result.latency_ms_p99, "ms", "smaller_is_better", "outcome"),
@@ -125,6 +156,8 @@ def _metric_specs(result: BenchmarkResult) -> list[tuple[str, float | int | None
         ("sink_rss_mb_p95", result.sink_rss_mb_p95, "MB", "smaller_is_better", "diagnostic"),
         ("collector_cpu_cores_avg", result.collector_cpu_cores_avg, "cores", "smaller_is_better", "diagnostic"),
         ("collector_cpu_cores_p95", result.collector_cpu_cores_p95, "cores", "smaller_is_better", "diagnostic"),
+        ("generator_cpu_cores_avg", result.generator_cpu_cores_avg, "cores", "smaller_is_better", "diagnostic"),
+        ("generator_cpu_cores_p95", result.generator_cpu_cores_p95, "cores", "smaller_is_better", "diagnostic"),
         ("collector_rss_mb_avg", result.collector_rss_mb_avg, "MB", "smaller_is_better", "diagnostic"),
         ("collector_rss_mb_p95", result.collector_rss_mb_p95, "MB", "smaller_is_better", "diagnostic"),
     ]
@@ -167,7 +200,8 @@ def build_otlp_result_payload(
         if value:
             resource_attrs.append(_otlp_attr(key, value))
 
-    scenario = f"kind/{result.phase}/{result.benchmark_mode}/{result.ingest_mode}"
+    family = _benchmark_family(result.cluster)
+    scenario = f"{family}/{result.phase}/{result.benchmark_mode}/{result.ingest_mode}"
     tags = {
         "benchkit.impl": result.collector,
         "benchkit.protocol": result.protocol,
@@ -181,6 +215,8 @@ def build_otlp_result_payload(
         "benchkit.target_eps_per_pod": str(result.target_eps_per_pod),
         "benchkit.total_target_eps": str(result.total_target_eps),
     }
+    if result.collector_batch_target_bytes is not None:
+        tags["benchkit.collector_batch_target_bytes"] = str(result.collector_batch_target_bytes)
 
     metrics = [
         _otlp_metric(
@@ -207,7 +243,7 @@ def build_otlp_result_payload(
                 "scopeMetrics": [
                     {
                         "scope": {
-                            "name": "memagent-e2e.kind-bench",
+                            "name": _scope_name(family),
                         },
                         "metrics": metrics,
                     }
@@ -257,7 +293,8 @@ def build_otlp_phase_signal_payload(
         if value:
             resource_attrs.append(_otlp_attr(key, value))
 
-    scenario = f"kind/{result.phase}/{result.benchmark_mode}/{result.ingest_mode}"
+    family = _benchmark_family(result.cluster)
+    scenario = f"{family}/{result.phase}/{result.benchmark_mode}/{result.ingest_mode}"
     tags = {
         "benchkit.impl": result.collector,
         "benchkit.protocol": result.protocol,
@@ -295,7 +332,7 @@ def build_otlp_phase_signal_payload(
                 "scopeMetrics": [
                     {
                         "scope": {
-                            "name": "memagent-e2e.kind-bench",
+                            "name": _scope_name(family),
                         },
                         "metrics": [metric],
                     }
@@ -388,7 +425,7 @@ def render_summary(result: BenchmarkResult) -> str:
         return "n/a" if value is None else str(value)
 
     lines = [
-        f"# KIND Benchmark / {result.phase}",
+        f"# {result.cluster} Benchmark / {result.phase}",
         "",
         f"- Status: `{status}`",
         f"- Benchmark ID: `{result.benchmark_id}`",
@@ -417,6 +454,12 @@ def render_summary(result: BenchmarkResult) -> str:
         f"- sink_lines_per_sec_avg: `{show(result.sink_lines_per_sec_avg)}`",
         f"- drop_estimate: `{show(result.drop_estimate)}`",
         f"- dup_estimate: `{show(result.dup_estimate)}`",
+        f"- rejected_batches_total: `{show(result.rejected_batches_total)}`",
+        f"- http_413_count: `{show(result.http_413_count)}`",
+        f"- rejected_rows_estimate: `{show(result.rejected_rows_estimate)}`",
+        f"- rejected_bytes_estimate: `{show(result.rejected_bytes_estimate)}`",
+        f"- backpressure_warning_count: `{show(result.backpressure_warning_count)}`",
+        f"- collector_dropped_batches_total: `{show(result.collector_dropped_batches_total)}`",
         f"- sink_cpu_cores_avg: `{show(result.sink_cpu_cores_avg)}`",
         f"- sink_rss_mb_avg: `{show(result.sink_rss_mb_avg)}`",
         f"- collector_cpu_cores_avg: `{show(result.collector_cpu_cores_avg)}`",

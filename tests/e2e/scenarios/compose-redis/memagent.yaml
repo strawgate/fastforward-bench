@@ -11,14 +11,14 @@ transform: >-
   SELECT
     'compose-redis' AS scenario,
     'redis-monitor' AS source_id,
-    regexp_extract(_raw, 'compose-redis:[0-9]+', 0) AS event_id,
-    int(regexp_extract(_raw, 'compose-redis:([0-9]+)', 1)) AS seq,
+    regexp_extract(body, 'compose-redis:[0-9]+', 0) AS event_id,
+    int(regexp_extract(body, 'compose-redis:([0-9]+)', 1)) AS seq,
     'SET' AS command,
-    regexp_extract(_raw, 'compose-redis:[0-9]+', 0) AS key,
-    regexp_extract(_raw, 'value-[0-9]+', 0) AS value
+    regexp_extract(body, 'compose-redis:[0-9]+', 0) AS key,
+    regexp_extract(body, 'value-[0-9]+', 0) AS value
   FROM logs
-  WHERE _raw LIKE '%compose-redis:%'
-    AND _raw LIKE '%"SET"%'
+  WHERE body LIKE '%compose-redis:%'
+    AND body LIKE '%"SET"%'
 
 output:
   type: tcp

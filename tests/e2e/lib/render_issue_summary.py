@@ -8,6 +8,14 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+import sys
+
+try:
+    from reporting.markdown import markdown_table
+except ModuleNotFoundError:
+    REPO_ROOT = Path(__file__).resolve().parents[3]
+    sys.path.insert(0, str(REPO_ROOT))
+    from reporting.markdown import markdown_table
 
 
 @dataclass
@@ -104,31 +112,50 @@ def render_markdown(
         f"- Updated: `{updated_at}`",
         f"- Workflow run: [view run]({run_url})",
         f"- Scenarios: `{total}` total, `{passed}` passed, `{failed}` failed",
-        "",
-        "| Scenario | Status | Source | Policy | Expected | Actual | Missing | Duplicates | Extras | Order Violations | Null Violations |",
-        "| --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
 
+    table_rows: list[list[str]] = []
     if not results:
-        lines.append("| _none_ | FAIL | n/a | unknown | 0 | 0 | 0 | 0 | 0 | 0 | 0 |")
+        table_rows.append(["_none_", "FAIL", "n/a", "unknown", "0", "0", "0", "0", "0", "0", "0"])
     else:
         for result in results:
             source_status = "PASS" if result.source_passed else "FAIL" if result.source_checked else "n/a"
-            lines.append(
-                "| {scenario} | {status} | {source_status} | `{policy}` | {expected} | {actual} | {missing} | {duplicates} | {extras} | {order} | {nulls} |".format(
-                    scenario=result.scenario,
-                    status="PASS" if result.passed else "FAIL",
-                    source_status=source_status,
-                    policy=result.policy,
-                    expected=result.expected_count,
-                    actual=result.actual_count,
-                    missing=result.missing_count,
-                    duplicates=result.duplicate_count,
-                    extras=result.extra_count,
-                    order=result.order_violations,
-                    nulls=result.null_field_violations,
-                )
+            table_rows.append(
+                [
+                    result.scenario,
+                    "PASS" if result.passed else "FAIL",
+                    source_status,
+                    f"`{result.policy}`",
+                    str(result.expected_count),
+                    str(result.actual_count),
+                    str(result.missing_count),
+                    str(result.duplicate_count),
+                    str(result.extra_count),
+                    str(result.order_violations),
+                    str(result.null_field_violations),
+                ]
             )
+
+    lines.append("")
+    lines.extend(
+        markdown_table(
+            headers=[
+                "Scenario",
+                "Status",
+                "Source",
+                "Policy",
+                "Expected",
+                "Actual",
+                "Missing",
+                "Duplicates",
+                "Extras",
+                "Order Violations",
+                "Null Violations",
+            ],
+            rows=table_rows,
+            align=["left", "left", "left", "left", "right", "right", "right", "right", "right", "right", "right"],
+        )
+    )
 
     failing = [result for result in results if not result.passed]
     if failing:

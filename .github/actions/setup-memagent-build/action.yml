@@ -9,7 +9,7 @@ inputs:
   memagent-ref:
     description: Memagent branch, tag, or SHA under test
     required: false
-    default: master
+    default: main
   image-repository:
     description: GHCR image repository to try before falling back to a local build
     required: false
@@ -32,20 +32,23 @@ runs:
       run: |
         ref="${{ inputs.memagent-ref }}"
         image_repo="${{ inputs.image-repository }}"
-        candidate=""
-
-        if [[ "$ref" == "master" || "$ref" == "main" ]]; then
-          candidate="${image_repo}:master"
+        candidates=()
+        if [[ "$ref" == "main" ]]; then
+          candidates+=("${image_repo}:main" "${image_repo}:master")
+        elif [[ "$ref" == "master" ]]; then
+          candidates+=("${image_repo}:master" "${image_repo}:main")
         elif [[ "$ref" =~ ^[0-9a-f]{40}$ ]]; then
-          candidate="${image_repo}:sha-${ref}"
+          candidates+=("${image_repo}:sha-${ref}")
         fi
 
-        if [[ -n "$candidate" ]]; then
+        for candidate in "${candidates[@]}"; do
           echo "Trying prebuilt image: $candidate"
           if docker pull "$candidate"; then
             docker tag "$candidate" logfwd:e2e
             exit 0
           fi
+        done
+        if [[ "${#candidates[@]}" -gt 0 ]]; then
           echo "Prebuilt image unavailable, falling back to local build"
         fi
 

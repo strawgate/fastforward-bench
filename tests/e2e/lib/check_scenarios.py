@@ -9,7 +9,7 @@ from pathlib import Path
 FAMILY_DEFAULTS = {
     "compose": {"up", "down", "collect", "verify"},
     "kind": set(),
-    "otlp": set(),
+    "otlp": {"up", "down", "collect"},
     "custom": set(),
 }
 
@@ -20,7 +20,7 @@ FAMILY_REQUIRED_FILES = {
     "custom": {"run_workload.sh"},
 }
 
-PHASES = ("up", "run_workload", "verify", "down")
+PHASES = ("up", "run_workload", "verify", "collect", "down")
 
 
 def parse_args() -> argparse.Namespace:

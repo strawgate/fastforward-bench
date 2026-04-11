@@ -11,12 +11,12 @@ transform: >-
   SELECT
     'compose-memcached' AS scenario,
     'memcached-verbose' AS source_id,
-    regexp_extract(_raw, 'compose-memcached:[0-9]+', 0) AS event_id,
+    regexp_extract(body, 'compose-memcached:[0-9]+', 0) AS event_id,
     'set' AS command,
-    regexp_extract(_raw, 'compose-memcached:[0-9]+', 0) AS key
+    regexp_extract(body, 'compose-memcached:[0-9]+', 0) AS key
   FROM logs
-  WHERE _raw LIKE '%compose-memcached:%'
-    AND _raw LIKE '%set compose-memcached:%'
+  WHERE body LIKE '%compose-memcached:%'
+    AND body LIKE '%set compose-memcached:%'
 
 output:
   type: tcp

@@ -116,6 +116,8 @@ python3 bench/kind/run.py \
   --results-dir bench/kind/results/local-smoke
 ```
 
+For the fastest sanity lane, use `--profile quick` (single pod at ~10 EPS, 1s measure).
+
 Run only the infrastructure bootstrap path:
 
 ```bash
@@ -146,6 +148,10 @@ Useful flags:
   Records the target sink protocol in metadata. Defaults to `otlp_http`.
 - `--ingest-mode`
   Selects the collector input path: `file` (default) or `otlp`.
+- `--collector-batch-target-bytes`
+  Applies a logfwd collector `batch_target_bytes` override for payload-size
+  experiments. The same knob can be supplied as
+  `BENCH_COLLECTOR_BATCH_TARGET_BYTES`.
 
 ## Outputs
 
@@ -161,7 +167,10 @@ Each run writes a directory under `bench/kind/results/` containing:
 - `sink-stats.json`
 - `sink-samples.json` for `smoke`
 - `collector-samples.json` for `smoke`
+- `emitter-samples.json` for `smoke`
 - `stream-summary.json` for `smoke`
+- `artifacts/delivery-diagnostics.json` with rejected batch, HTTP 413, and
+  backpressure signal counts derived from artifacts
 - `actual_rows.json` for `smoke`
 - `source_rows.json` for `smoke`
 
@@ -170,10 +179,8 @@ Each run writes a directory under `bench/kind/results/` containing:
 Current smoke runs should be interpreted as:
 
 - benchmark mode: `baseline-pass-through`
-- `ingest_mode=file`: pass means the sink observed the same benchmark-tagged
-  events the emitters produced, with no duplicates or unexpected rows
-- `ingest_mode=otlp`: pass means direct-OTLP ingest observed positive sink
-  output; strict source-vs-sink oracle is intentionally skipped
+- pass/fail is sink-outcome based for competitive scoring
+- integrity/rejection counters remain diagnostic-only and are still emitted for debugging
 - the result row also records producer-reported totals from the emitter
   and sink `logfwd` diagnostics as extra diagnostics
 - scores do not yet include parse-and-enrich overhead

@@ -15,8 +15,8 @@ This repo does **not** own the `memagent` product code. Workflows check out
 `strawgate/memagent` as the system under test and build `logfwd:e2e` from that
 checkout.
 
-When `memagent_ref` points at `master` or a full 40-character commit SHA, the
-shared setup action first tries to pull a prebuilt image from
+When `memagent_ref` points at `main` (or legacy `master`) or a full
+40-character commit SHA, the shared setup action first tries to pull a prebuilt image from
 `ghcr.io/strawgate/memagent`. It falls back to a local build when no matching
 image is available.
 

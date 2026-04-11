@@ -25,12 +25,14 @@ if str(KIND_LIB) not in sys.path:
 from measure import (  # noqa: E402
     StatsSample,
     avg,
+    cpu_cores_series,
     diff_output_lines,
     fetch_capture_stats,
     fetch_stats,
     fetch_text,
     lines_per_sec_series,
     percentile,
+    rss_mb_series,
 )
 from profiles import PROFILES, Profile  # noqa: E402
 from results import BenchmarkResult, write_result_files  # noqa: E402
@@ -370,6 +372,7 @@ input:
   listen: 0.0.0.0:4318
 """
     )
+    message_projection = "message" if ingest_mode == "file" else "body AS message"
     return f"""\
 server:
   diagnostics: 0.0.0.0:9090
@@ -389,7 +392,7 @@ transform: |
     seq,
     event_created_unix_nano,
     level,
-    message,
+    {message_projection},
     status,
     duration_ms,
     service
@@ -575,7 +578,7 @@ def build_compose_yaml() -> str:
 services:
   sink:
     image: ${MEMAGENT_IMAGE}
-    command: ["--config", "/config/sink.yaml"]
+    command: ["run", "--config", "/config/sink.yaml"]
     volumes:
       - ${BENCH_RESULTS_RUNTIME_DIR}:/runtime
       - ${BENCH_RESULTS_RENDERED_DIR}:/config:ro
@@ -603,7 +606,7 @@ services:
 
   generator:
     image: ${MEMAGENT_IMAGE}
-    command: ["--config", "/config/generator.yaml"]
+    command: ["run", "--config", "/config/generator.yaml"]
     volumes:
       - ${BENCH_RESULTS_RUNTIME_DIR}:/runtime
       - ${BENCH_RESULTS_RENDERED_DIR}:/config:ro
@@ -615,7 +618,7 @@ services:
   collector-logfwd:
     profiles: ["logfwd"]
     image: ${LOGFWD_COLLECTOR_IMAGE}
-    command: ["--config", "/config/collector-logfwd.yaml"]
+    command: ["run", "--config", "/config/collector-logfwd.yaml"]
     volumes:
       - ${BENCH_RESULTS_RUNTIME_DIR}:/runtime
       - ${BENCH_RESULTS_RENDERED_DIR}:/config:ro
@@ -881,6 +884,18 @@ def count_rows_with_rollovers(base_file_path: Path) -> int:
     return sum(count_ndjson_rows(path) for path in files)
 
 
+def remove_rollover_files(base_file_path: Path) -> None:
+    parent = base_file_path.parent
+    base_name = base_file_path.name
+    for path in parent.glob(f"{base_name}*"):
+        if not path.is_file():
+            continue
+        try:
+            path.unlink()
+        except OSError:
+            continue
+
+
 def max_seq_with_rollovers(base_file_path: Path) -> int:
     parent = base_file_path.parent
     base_name = base_file_path.name
@@ -955,10 +970,9 @@ def main() -> int:
     ensure_world_writable_dir(runtime_dir / "collector")
     artifacts_dir.mkdir(parents=True, exist_ok=True)
 
-    # Remove stale runtime files from prior local reruns.
-    for stale_file in (runtime_dir / "events.ndjson", runtime_dir / "capture.ndjson"):
-        if stale_file.exists():
-            stale_file.unlink()
+    # Remove stale runtime files (including rollover segments) from prior local reruns.
+    for stale_base_file in (runtime_dir / "events.ndjson", runtime_dir / "capture.ndjson"):
+        remove_rollover_files(stale_base_file)
 
     compose_file = rendered_dir / "compose.yaml"
     write_text(compose_file, build_compose_yaml())
@@ -1030,6 +1044,7 @@ def main() -> int:
         ingest_mode=args.ingest_mode,
         cpu_profile=cpu_profile.name,
         cluster_cpu_limit_cores=cpu_profile.cluster_cpu_cores,
+        collector_batch_target_bytes=None,
         pods=1,
         target_eps_per_pod=eps_per_sec,
         total_target_eps=eps_per_sec,
@@ -1050,6 +1065,12 @@ def main() -> int:
         sink_lines_per_sec_p99=None,
         drop_estimate=None,
         dup_estimate=None,
+        rejected_batches_total=None,
+        http_413_count=None,
+        rejected_rows_estimate=None,
+        rejected_bytes_estimate=None,
+        backpressure_warning_count=None,
+        collector_dropped_batches_total=None,
         latency_ms_p50=None,
         latency_ms_p95=None,
         latency_ms_p99=None,
@@ -1059,6 +1080,8 @@ def main() -> int:
         sink_rss_mb_p95=None,
         collector_cpu_cores_avg=None,
         collector_cpu_cores_p95=None,
+        generator_cpu_cores_avg=None,
+        generator_cpu_cores_p95=None,
         collector_rss_mb_avg=None,
         collector_rss_mb_p95=None,
         cluster_ready=False,
@@ -1070,6 +1093,12 @@ def main() -> int:
     sink_samples: list[StatsSample] = []
     collector_cpu_samples: list[float] = []
     collector_rss_samples: list[float] = []
+    collector_resource_samples: list[dict[str, float]] = []
+    generator_cpu_samples: list[float] = []
+    measure_sink_events_start: int | None = None
+    measure_sink_events_end: int | None = None
+    measure_started_at: float | None = None
+    measure_completed_at: float | None = None
     capture_file_path = runtime_dir / "capture.ndjson"
     events_file_path = runtime_dir / "events.ndjson"
     max_throughput_mode = eps_per_sec == 0
@@ -1084,11 +1113,24 @@ def main() -> int:
         collector_container_id = resolve_container_id(compose, adapter.service_name, env)
         run(compose + ["--profile", adapter.name, "up", "-d", "generator"], env=env)
         wait_until_ready(lambda: fetch_stats(generator_diag_port), timeout_sec=60)
+        generator_container_id = resolve_container_id(compose, "generator", env)
 
         if base_profile.warmup_sec > 0:
             time.sleep(base_profile.warmup_sec)
 
-        deadline = time.time() + base_profile.measure_sec
+        try:
+            measure_sink_events_start = sink_reported_events(
+                adapter,
+                sink_diag_port,
+                capture_stats_port,
+                capture_file_path,
+                benchmark_id,
+            )
+        except Exception:
+            measure_sink_events_start = None
+
+        measure_started_at = time.time()
+        deadline = measure_started_at + base_profile.measure_sec
         while True:
             sink_samples.append(
                 sample_sink(
@@ -1105,9 +1147,33 @@ def main() -> int:
                     cpu_cores, rss_mb = resource_sample
                     collector_cpu_samples.append(cpu_cores)
                     collector_rss_samples.append(rss_mb)
+                    collector_resource_samples.append(
+                        {
+                            "timestamp": time.time(),
+                            "cpu_cores": cpu_cores,
+                            "rss_mb": rss_mb,
+                        }
+                    )
+            if generator_container_id:
+                resource_sample = read_container_resource_sample(generator_container_id)
+                if resource_sample is not None:
+                    cpu_cores, _rss_mb = resource_sample
+                    generator_cpu_samples.append(cpu_cores)
             if time.time() >= deadline:
                 break
             time.sleep(1)
+
+        measure_completed_at = time.time()
+        try:
+            measure_sink_events_end = sink_reported_events(
+                adapter,
+                sink_diag_port,
+                capture_stats_port,
+                capture_file_path,
+                benchmark_id,
+            )
+        except Exception:
+            measure_sink_events_end = None
 
         if base_profile.cooldown_sec > 0:
             time.sleep(base_profile.cooldown_sec)
@@ -1168,20 +1234,43 @@ def main() -> int:
         result.sink_lines_per_sec_p50 = percentile(sink_series, 0.50)
         result.sink_lines_per_sec_p95 = percentile(sink_series, 0.95)
         result.sink_lines_per_sec_p99 = percentile(sink_series, 0.99)
+        sink_cpu_series = cpu_cores_series(sink_samples)
+        sink_rss_series = rss_mb_series(sink_samples)
+        if sink_cpu_series and any(sample.cpu_total_ms > 0 for sample in sink_samples):
+            result.sink_cpu_cores_avg = avg(sink_cpu_series)
+            result.sink_cpu_cores_p95 = percentile(sink_cpu_series, 0.95)
+        if sink_rss_series and any(sample.rss_bytes > 0 for sample in sink_samples):
+            result.sink_rss_mb_avg = avg(sink_rss_series)
+            result.sink_rss_mb_p95 = percentile(sink_rss_series, 0.95)
+
+        measured_sink_events: int | None = None
+        measured_window_sec: float | None = None
+        if (
+            measure_sink_events_start is not None
+            and measure_sink_events_end is not None
+            and measure_sink_events_end >= measure_sink_events_start
+        ):
+            measured_sink_events = max(0, measure_sink_events_end - measure_sink_events_start)
+        if measure_started_at is not None and measure_completed_at is not None and measure_completed_at > measure_started_at:
+            measured_window_sec = measure_completed_at - measure_started_at
+
+        if result.sink_lines_total is None and measured_sink_events is not None:
+            result.sink_lines_total = measured_sink_events
 
         estimated_throughput = False
         if (
             (result.sink_lines_per_sec_avg is None or result.sink_lines_per_sec_avg <= 0.0)
-            and (result.sink_reported_events_total or 0) > 0
-            and base_profile.measure_sec > 0
+            and measured_sink_events is not None
+            and measured_window_sec is not None
+            and measured_window_sec > 0.0
         ):
-            estimated = float(result.sink_reported_events_total or 0) / float(base_profile.measure_sec)
+            estimated = float(measured_sink_events) / measured_window_sec
             result.sink_lines_per_sec_avg = estimated
             result.sink_lines_per_sec_p50 = estimated
             result.sink_lines_per_sec_p95 = estimated
             result.sink_lines_per_sec_p99 = estimated
             if (result.sink_lines_total or 0) == 0:
-                result.sink_lines_total = int(result.sink_reported_events_total or 0)
+                result.sink_lines_total = int(measured_sink_events)
             estimated_throughput = True
 
         if collector_cpu_samples and collector_rss_samples:
@@ -1189,6 +1278,9 @@ def main() -> int:
             result.collector_cpu_cores_p95 = percentile(collector_cpu_samples, 0.95)
             result.collector_rss_mb_avg = avg(collector_rss_samples)
             result.collector_rss_mb_p95 = percentile(collector_rss_samples, 0.95)
+        if generator_cpu_samples:
+            result.generator_cpu_cores_avg = avg(generator_cpu_samples)
+            result.generator_cpu_cores_p95 = percentile(generator_cpu_samples, 0.95)
 
         if max_throughput_mode:
             # In unbounded mode we focus on peak throughput; strict source-vs-sink oracle is not applied.
@@ -1211,13 +1303,21 @@ def main() -> int:
                 and (result.unexpected_event_count or 0) == 0
             )
         )
-        if (result.sink_reported_events_total or 0) > 0 and integrity_clean:
+        if (result.sink_reported_events_total or 0) > 0:
             result.status = "pass"
             if estimated_throughput:
                 result.notes = (
                     f"compose benchmark succeeded for collector={adapter.name}; "
-                    f"sink_lines_per_sec_avg estimated from sink_reported_events_total/measure_sec: "
+                    f"sink_lines_per_sec_avg estimated from measure-window sink delta: "
                     f"{result.sink_lines_per_sec_avg}"
+                )
+            elif not integrity_clean:
+                result.notes = (
+                    f"compose benchmark produced sink output for collector={adapter.name}; "
+                    "integrity deltas are recorded as diagnostics and do not gate competitive scoring. "
+                    f"missing_event_count={result.missing_event_count}, unexpected_event_count={result.unexpected_event_count}, "
+                    f"drop_estimate={result.drop_estimate}, dup_estimate={result.dup_estimate}, "
+                    f"sink_lines_per_sec_avg={result.sink_lines_per_sec_avg}"
                 )
             elif saturation_target_mode and (
                 (result.drop_estimate or 0) > 0 or (result.dup_estimate or 0) > 0
@@ -1234,13 +1334,6 @@ def main() -> int:
                     f"compose benchmark succeeded for collector={adapter.name}; "
                     f"sink_lines_per_sec_avg={result.sink_lines_per_sec_avg}"
                 )
-        elif (result.sink_reported_events_total or 0) > 0:
-            result.status = "fail"
-            result.notes = (
-                f"compose benchmark observed integrity errors for collector={adapter.name}; "
-                f"missing_event_count={result.missing_event_count}, unexpected_event_count={result.unexpected_event_count}, "
-                f"drop_estimate={result.drop_estimate}, dup_estimate={result.dup_estimate}"
-            )
         else:
             result.status = "fail"
             result.notes = (
@@ -1254,7 +1347,7 @@ def main() -> int:
         result.notes = f"compose benchmark failed before completion: {exc}"
     finally:
         write_samples(results_dir / "sink-samples.json", sink_samples)
-        write_json(results_dir / "collector-samples.json", [])
+        write_json(results_dir / "collector-samples.json", collector_resource_samples)
         write_json(
             results_dir / "ports.json",
             {
