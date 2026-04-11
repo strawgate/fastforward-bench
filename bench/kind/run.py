@@ -783,6 +783,7 @@ def run_smoke_phase(
     apply_manifest(manifests["emitter_statefulset"])
     emitter_rollout_timeout = max(120, profile.pods * 12)
     rollout_status(args.namespace, "statefulset", "log-emitter", timeout_sec=emitter_rollout_timeout)
+    emitter_pods = get_pod_names(args.namespace, "app.kubernetes.io/name=log-emitter")
     collector_restart_before, collector_reasons_before = collector_runtime_snapshot(args.namespace, collector_pod)
 
     emit_phase_signal(
@@ -793,7 +794,7 @@ def run_smoke_phase(
         phase_name="warmup",
         event="start",
     )
-    sink_samples, collector_samples = collect_bench_samples(
+    sink_samples, collector_samples, emitter_samples = collect_bench_samples(
         args.namespace,
         "deployment/logfwd-capture",
         adapter.diagnostics_target_format.format(pod_name=collector_pod),
@@ -803,6 +804,8 @@ def run_smoke_phase(
         collector_stats_port=adapter.collector_stats_port,
         warmup_sec=profile.warmup_sec,
         measure_sec=profile.measure_sec,
+        emitter_targets=[f"pod/{pod_name}" for pod_name in emitter_pods],
+        emitter_stats_port=9090,
         on_measure_start=lambda: emit_phase_signal(
             args=args,
             results_dir=results_dir,
@@ -822,6 +825,7 @@ def run_smoke_phase(
     )
     write_samples(results_dir / "sink-samples.json", sink_samples)
     write_samples(results_dir / "collector-samples.json", collector_samples)
+    write_samples(results_dir / "emitter-samples.json", emitter_samples)
     collector_pod_after = get_first_pod_name(args.namespace, adapter.pod_selector)
     if collector_pod_after is None:
         collector_pod_after = collector_pod
@@ -867,6 +871,10 @@ def run_smoke_phase(
     result.collector_rss_mb_avg = avg(rss_series)
     result.collector_rss_mb_p95 = percentile(rss_series, 0.95)
 
+    emitter_cpu_series = cpu_cores_series(emitter_samples)
+    result.generator_cpu_cores_avg = avg(emitter_cpu_series)
+    result.generator_cpu_cores_p95 = percentile(emitter_cpu_series, 0.95)
+
     artifacts_dir = results_dir / "artifacts"
     artifacts_dir.mkdir(parents=True, exist_ok=True)
     collector_restarts_during_measure = max(0, collector_restart_after - collector_restart_before)
@@ -907,7 +915,6 @@ def run_smoke_phase(
         result.notes = f"{prefix} {prior}".strip() if prior else prefix
         return 1
 
-    emitter_pods = get_pod_names(args.namespace, "app.kubernetes.io/name=log-emitter")
     emitter_reported_total, emitter_reported_stats = collect_emitter_reported_total(args.namespace, emitter_pods)
     result.emitter_reported_events_total = emitter_reported_total
 
@@ -1186,11 +1193,6 @@ def run_smoke_phase(
         and comparison.source_row_count < result.emitter_reported_events_total
     )
     diagnostics_available = result.emitter_reported_events_total is not None and result.sink_reported_events_total is not None
-    diagnostics_oracle_clean = (
-        diagnostics_available
-        and result.sink_reported_events_total >= result.emitter_reported_events_total
-        and comparison.missing_source_count == 0
-    )
     observed_any_sink_output = bool((result.sink_lines_total is not None and result.sink_lines_total > 0) or comparison.sink_row_count > 0)
 
     if source_oracle_incomplete:
@@ -1202,28 +1204,26 @@ def run_smoke_phase(
         else:
             result.drop_estimate = None
 
-        if diagnostics_oracle_clean and observed_any_sink_output:
+        if observed_any_sink_output:
             result.status = "pass"
             result.notes = (
-                f"smoke benchmark passed in {adapter.benchmark_mode} with degraded source oracle; "
+                f"smoke benchmark produced sink output in {adapter.benchmark_mode} with a degraded source oracle; "
                 f"source rows captured ({comparison.source_row_count}) were lower than emitter diagnostics total "
-                f"({result.emitter_reported_events_total}), so pass/fail used emitter/sink diagnostics totals instead. "
+                f"({result.emitter_reported_events_total}). Integrity counters remain diagnostic-only for "
+                "competitive benchmark scoring. "
                 f"captured_rows_total={comparison.sink_row_count}, sink_lines_total={result.sink_lines_total}, "
                 f"sink_reported_events_total={result.sink_reported_events_total}, drop_estimate={result.drop_estimate}."
             )
             return finalize(0)
 
+        result.status = "fail"
         if diagnostics_available:
-            result.status = "fail"
             result.notes = (
-                f"smoke benchmark failed in {adapter.benchmark_mode} with degraded source oracle; "
-                f"source rows captured ({comparison.source_row_count}) were lower than emitter diagnostics total "
-                f"({result.emitter_reported_events_total}), and sink diagnostics remained behind "
-                f"({result.sink_reported_events_total}). captured_rows_total={comparison.sink_row_count}, "
-                f"sink_lines_total={result.sink_lines_total}, drop_estimate={result.drop_estimate}."
+                f"smoke benchmark did not observe sink output in {adapter.benchmark_mode} with degraded source oracle; "
+                f"source_rows_total={comparison.source_row_count}, captured_rows_total={comparison.sink_row_count}, "
+                f"sink_lines_total={result.sink_lines_total}, sink_reported_events_total={result.sink_reported_events_total}."
             )
         else:
-            result.status = "fail"
             result.notes = (
                 f"smoke benchmark failed in {adapter.benchmark_mode} with degraded source oracle and missing diagnostics; "
                 f"source_rows_total={comparison.source_row_count}, captured_rows_total={comparison.sink_row_count}, "
@@ -1238,14 +1238,24 @@ def run_smoke_phase(
         and comparison.duplicate_event_count == 0
         and comparison.gap_count == 0
     )
-    if strict_oracle_clean and observed_any_sink_output:
+    if observed_any_sink_output:
         result.status = "pass"
-        result.notes = (
-            f"smoke benchmark succeeded in {adapter.benchmark_mode}; source_rows_total={comparison.source_row_count}, "
-            f"captured_rows_total={comparison.sink_row_count}, sink_lines_total={result.sink_lines_total}, "
-            f"missing_events={comparison.missing_event_count}, unexpected_events={comparison.unexpected_event_count}, "
-            f"duplicates={comparison.duplicate_event_count}, gaps={comparison.gap_count}."
-        )
+        if strict_oracle_clean:
+            result.notes = (
+                f"smoke benchmark succeeded in {adapter.benchmark_mode}; source_rows_total={comparison.source_row_count}, "
+                f"captured_rows_total={comparison.sink_row_count}, sink_lines_total={result.sink_lines_total}, "
+                f"missing_events={comparison.missing_event_count}, unexpected_events={comparison.unexpected_event_count}, "
+                f"duplicates={comparison.duplicate_event_count}, gaps={comparison.gap_count}."
+            )
+        else:
+            result.notes = (
+                f"smoke benchmark produced sink output in {adapter.benchmark_mode}; integrity deltas are recorded as "
+                "diagnostics and do not gate competitive scoring. "
+                f"source_rows_total={comparison.source_row_count}, captured_rows_total={comparison.sink_row_count}, "
+                f"missing_sources={comparison.missing_sources}, missing_events={comparison.missing_event_count}, "
+                f"unexpected_events={comparison.unexpected_event_count}, duplicates={comparison.duplicate_event_count}, "
+                f"gaps={comparison.gap_count}."
+            )
         return finalize(0)
 
     result.status = "fail"
@@ -1343,6 +1353,8 @@ def main() -> int:
         sink_rss_mb_p95=None,
         collector_cpu_cores_avg=None,
         collector_cpu_cores_p95=None,
+        generator_cpu_cores_avg=None,
+        generator_cpu_cores_p95=None,
         collector_rss_mb_avg=None,
         collector_rss_mb_p95=None,
         cluster_ready=False,

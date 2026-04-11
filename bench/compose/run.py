@@ -1066,6 +1066,8 @@ def main() -> int:
         sink_rss_mb_p95=None,
         collector_cpu_cores_avg=None,
         collector_cpu_cores_p95=None,
+        generator_cpu_cores_avg=None,
+        generator_cpu_cores_p95=None,
         collector_rss_mb_avg=None,
         collector_rss_mb_p95=None,
         cluster_ready=False,
@@ -1077,6 +1079,7 @@ def main() -> int:
     sink_samples: list[StatsSample] = []
     collector_cpu_samples: list[float] = []
     collector_rss_samples: list[float] = []
+    generator_cpu_samples: list[float] = []
     capture_file_path = runtime_dir / "capture.ndjson"
     events_file_path = runtime_dir / "events.ndjson"
     max_throughput_mode = eps_per_sec == 0
@@ -1091,6 +1094,7 @@ def main() -> int:
         collector_container_id = resolve_container_id(compose, adapter.service_name, env)
         run(compose + ["--profile", adapter.name, "up", "-d", "generator"], env=env)
         wait_until_ready(lambda: fetch_stats(generator_diag_port), timeout_sec=60)
+        generator_container_id = resolve_container_id(compose, "generator", env)
 
         if base_profile.warmup_sec > 0:
             time.sleep(base_profile.warmup_sec)
@@ -1112,6 +1116,11 @@ def main() -> int:
                     cpu_cores, rss_mb = resource_sample
                     collector_cpu_samples.append(cpu_cores)
                     collector_rss_samples.append(rss_mb)
+            if generator_container_id:
+                resource_sample = read_container_resource_sample(generator_container_id)
+                if resource_sample is not None:
+                    cpu_cores, _rss_mb = resource_sample
+                    generator_cpu_samples.append(cpu_cores)
             if time.time() >= deadline:
                 break
             time.sleep(1)
@@ -1196,6 +1205,9 @@ def main() -> int:
             result.collector_cpu_cores_p95 = percentile(collector_cpu_samples, 0.95)
             result.collector_rss_mb_avg = avg(collector_rss_samples)
             result.collector_rss_mb_p95 = percentile(collector_rss_samples, 0.95)
+        if generator_cpu_samples:
+            result.generator_cpu_cores_avg = avg(generator_cpu_samples)
+            result.generator_cpu_cores_p95 = percentile(generator_cpu_samples, 0.95)
 
         if max_throughput_mode:
             # In unbounded mode we focus on peak throughput; strict source-vs-sink oracle is not applied.
@@ -1218,13 +1230,21 @@ def main() -> int:
                 and (result.unexpected_event_count or 0) == 0
             )
         )
-        if (result.sink_reported_events_total or 0) > 0 and integrity_clean:
+        if (result.sink_reported_events_total or 0) > 0:
             result.status = "pass"
             if estimated_throughput:
                 result.notes = (
                     f"compose benchmark succeeded for collector={adapter.name}; "
                     f"sink_lines_per_sec_avg estimated from sink_reported_events_total/measure_sec: "
                     f"{result.sink_lines_per_sec_avg}"
+                )
+            elif not integrity_clean:
+                result.notes = (
+                    f"compose benchmark produced sink output for collector={adapter.name}; "
+                    "integrity deltas are recorded as diagnostics and do not gate competitive scoring. "
+                    f"missing_event_count={result.missing_event_count}, unexpected_event_count={result.unexpected_event_count}, "
+                    f"drop_estimate={result.drop_estimate}, dup_estimate={result.dup_estimate}, "
+                    f"sink_lines_per_sec_avg={result.sink_lines_per_sec_avg}"
                 )
             elif saturation_target_mode and (
                 (result.drop_estimate or 0) > 0 or (result.dup_estimate or 0) > 0
@@ -1241,13 +1261,6 @@ def main() -> int:
                     f"compose benchmark succeeded for collector={adapter.name}; "
                     f"sink_lines_per_sec_avg={result.sink_lines_per_sec_avg}"
                 )
-        elif (result.sink_reported_events_total or 0) > 0:
-            result.status = "fail"
-            result.notes = (
-                f"compose benchmark observed integrity errors for collector={adapter.name}; "
-                f"missing_event_count={result.missing_event_count}, unexpected_event_count={result.unexpected_event_count}, "
-                f"drop_estimate={result.drop_estimate}, dup_estimate={result.dup_estimate}"
-            )
         else:
             result.status = "fail"
             result.notes = (

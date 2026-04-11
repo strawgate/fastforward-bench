@@ -356,9 +356,11 @@ def collect_bench_samples(
     collector_stats_port: int,
     warmup_sec: int,
     measure_sec: int,
+    emitter_targets: list[str] | None = None,
+    emitter_stats_port: int = 9090,
     on_measure_start: Callable[[], None] | None = None,
     on_measure_complete: Callable[[], None] | None = None,
-) -> tuple[list[StatsSample], list[StatsSample]]:
+) -> tuple[list[StatsSample], list[StatsSample], list[StatsSample]]:
     if sink_stats_kind == "logfwd":
         sink_ready_check = fetch_stats
         sink_fetch_sample = lambda port: _sample_from_payload(fetch_stats(port))
@@ -382,6 +384,7 @@ def collect_bench_samples(
 
     sink_local_port = reserve_local_port()
     collector_local_port = reserve_local_port()
+    emitter_local_ports: list[int] = []
     with ExitStack() as stack:
         stack.enter_context(
             PortForward(
@@ -401,6 +404,18 @@ def collect_bench_samples(
                 ready_check=collector_ready_check,
             )
         )
+        for target in emitter_targets or []:
+            local_port = reserve_local_port()
+            stack.enter_context(
+                PortForward(
+                    namespace,
+                    target,
+                    local_port,
+                    emitter_stats_port,
+                    ready_check=fetch_stats,
+                )
+            )
+            emitter_local_ports.append(local_port)
 
         if warmup_sec > 0:
             time.sleep(warmup_sec)
@@ -409,6 +424,7 @@ def collect_bench_samples(
 
         sink_samples: list[StatsSample] = []
         collector_samples: list[StatsSample] = []
+        emitter_samples: list[StatsSample] = []
         deadline = time.time() + measure_sec
 
         while True:
@@ -425,13 +441,38 @@ def collect_bench_samples(
                 collector_sample = None
             if collector_sample is not None:
                 collector_samples.append(collector_sample)
+
+            if emitter_local_ports:
+                emitter_cpu_total_ms = 0
+                emitter_output_lines = 0
+                emitter_rss_bytes = 0
+                emitter_successes = 0
+                for local_port in emitter_local_ports:
+                    try:
+                        payload = fetch_stats(local_port)
+                    except Exception:
+                        continue
+                    sample = _sample_from_payload(payload)
+                    emitter_cpu_total_ms += sample.cpu_total_ms
+                    emitter_output_lines += sample.output_lines
+                    emitter_rss_bytes += sample.rss_bytes
+                    emitter_successes += 1
+                if emitter_successes > 0:
+                    emitter_samples.append(
+                        StatsSample(
+                            timestamp=time.time(),
+                            output_lines=emitter_output_lines,
+                            rss_bytes=emitter_rss_bytes,
+                            cpu_total_ms=emitter_cpu_total_ms,
+                        )
+                    )
             if time.time() >= deadline:
                 break
             time.sleep(1)
         if on_measure_complete is not None:
             on_measure_complete()
 
-    return sink_samples, collector_samples
+    return sink_samples, collector_samples, emitter_samples
 
 
 def diff_output_lines(samples: list[StatsSample]) -> int | None:

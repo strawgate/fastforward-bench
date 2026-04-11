@@ -74,6 +74,7 @@ class BenchResult:
     collector_dropped_batches_total: int | None
     sink_cpu_cores_avg: float | None
     collector_cpu_cores_avg: float | None
+    generator_cpu_cores_avg: float | None
     notes: str
 
     @property
@@ -148,6 +149,7 @@ def load_result(path: Path, artifact_name: str) -> BenchResult:
         collector_dropped_batches_total=as_int(payload.get("collector_dropped_batches_total")),
         sink_cpu_cores_avg=as_float(payload.get("sink_cpu_cores_avg")),
         collector_cpu_cores_avg=as_float(payload.get("collector_cpu_cores_avg")),
+        generator_cpu_cores_avg=as_float(payload.get("generator_cpu_cores_avg")),
         notes=str(payload.get("notes") or ""),
     )
 
@@ -310,6 +312,7 @@ def render_markdown(
                             cpu_profile,
                             fmt_float(chosen.sink_lines_per_sec_avg),
                             fmt_float(chosen.collector_cpu_cores_avg),
+                            fmt_float(chosen.generator_cpu_cores_avg),
                             fmt_percent(pct_of_target),
                             target_label(chosen.total_target_eps),
                         ]
@@ -317,9 +320,18 @@ def render_markdown(
         lines.extend(["", "## Max EPS Snapshot", ""])
         lines.extend(
             markdown_table(
-                headers=["Collector", "Ingest", "CPU", "Max EPS", "Collector CPU Avg", "% of Target", "Source Target"],
+                headers=[
+                    "Collector",
+                    "Ingest",
+                    "CPU",
+                    "Max EPS",
+                    "Collector CPU Avg",
+                    "Generator CPU Avg",
+                    "% of Target",
+                    "Source Target",
+                ],
                 rows=max_snapshot_rows,
-                align=["left", "left", "left", "right", "right", "right", "left"],
+                align=["left", "left", "left", "right", "right", "right", "right", "left"],
             )
         )
         lines.append("")
@@ -394,6 +406,7 @@ def render_markdown(
                             result.status.upper(),
                             fmt_float(result.sink_lines_per_sec_avg),
                             fmt_float(result.collector_cpu_cores_avg),
+                            fmt_float(result.generator_cpu_cores_avg),
                             fmt_float(result.sink_cpu_cores_avg),
                             fmt_percent(eps_ratio),
                         ]
@@ -424,11 +437,12 @@ def render_markdown(
                             "Status",
                             "EPS Avg",
                             "Collector CPU Avg",
+                            "Generator CPU Avg",
                             "Sink CPU Avg",
                             "% of Target",
                         ],
                         rows=summary_rows,
-                        align=["left", "right", "left", "right", "right", "right", "right"],
+                        align=["left", "right", "left", "right", "right", "right", "right", "right"],
                     )
                 )
                 lines.extend(
@@ -539,6 +553,7 @@ def main() -> None:
                 "collector_dropped_batches_total": result.collector_dropped_batches_total,
                 "sink_cpu_cores_avg": result.sink_cpu_cores_avg,
                 "collector_cpu_cores_avg": result.collector_cpu_cores_avg,
+                "generator_cpu_cores_avg": result.generator_cpu_cores_avg,
                 "notes": result.notes,
             }
             for result in results

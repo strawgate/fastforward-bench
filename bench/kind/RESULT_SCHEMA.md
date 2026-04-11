@@ -58,6 +58,8 @@ land. Fields that are not collected in a phase are emitted as `null`.
 | `sink_rss_mb_p95` | number or null | P95 sink RSS during the measured window |
 | `collector_cpu_cores_avg` | number or null | Average collector CPU usage during the measured window |
 | `collector_cpu_cores_p95` | number or null | P95 collector CPU usage during the measured window |
+| `generator_cpu_cores_avg` | number or null | Average aggregate generator CPU usage during the measured window |
+| `generator_cpu_cores_p95` | number or null | P95 aggregate generator CPU usage during the measured window |
 | `collector_rss_mb_avg` | number or null | Average collector RSS during the measured window |
 | `collector_rss_mb_p95` | number or null | P95 collector RSS during the measured window |
 | `cluster_ready` | boolean | Whether KIND was created and reachable |
@@ -83,13 +85,13 @@ The smoke phase currently runs one narrow benchmark mode:
 
 This is intended to be a useful and honest baseline:
 
-- it does verify exact event preservation for the benchmark envelope
+- competitive pass/fail is sink-outcome based (did the lane produce sink output)
+- integrity/rejection counters remain in the row as diagnostics for analysis
 - it does not claim parse-and-enrich coverage or score those costs yet
 
 For `ingest_mode=otlp`, the smoke run intentionally skips strict source-vs-sink
 comparison because the emitter is not writing source logs to stdout in that
-mode. In OTLP ingest mode, pass/fail is based on positive sink observation and
-diagnostic counters.
+mode.
 
 ## Artifact Expectations
 

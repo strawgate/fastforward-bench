@@ -56,6 +56,8 @@ class BenchmarkResult:
     sink_rss_mb_p95: float | None
     collector_cpu_cores_avg: float | None
     collector_cpu_cores_p95: float | None
+    generator_cpu_cores_avg: float | None
+    generator_cpu_cores_p95: float | None
     collector_rss_mb_avg: float | None
     collector_rss_mb_p95: float | None
     cluster_ready: bool
@@ -144,6 +146,8 @@ def _metric_specs(result: BenchmarkResult) -> list[tuple[str, float | int | None
         ("sink_rss_mb_p95", result.sink_rss_mb_p95, "MB", "smaller_is_better", "diagnostic"),
         ("collector_cpu_cores_avg", result.collector_cpu_cores_avg, "cores", "smaller_is_better", "diagnostic"),
         ("collector_cpu_cores_p95", result.collector_cpu_cores_p95, "cores", "smaller_is_better", "diagnostic"),
+        ("generator_cpu_cores_avg", result.generator_cpu_cores_avg, "cores", "smaller_is_better", "diagnostic"),
+        ("generator_cpu_cores_p95", result.generator_cpu_cores_p95, "cores", "smaller_is_better", "diagnostic"),
         ("collector_rss_mb_avg", result.collector_rss_mb_avg, "MB", "smaller_is_better", "diagnostic"),
         ("collector_rss_mb_p95", result.collector_rss_mb_p95, "MB", "smaller_is_better", "diagnostic"),
     ]
