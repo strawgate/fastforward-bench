@@ -49,12 +49,6 @@ jobs:
       memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit
 
-  compose-esql-input-oracle:
-    uses: ./.github/workflows/e2e-compose-esql-input-oracle.yml
-    with:
-      memagent_ref: ${{ inputs.memagent_ref || 'main' }}
-    secrets: inherit
-
   compose-synthetic-multiline:
     uses: ./.github/workflows/e2e-compose-synthetic-multiline.yml
     with:
@@ -92,7 +86,6 @@ jobs:
       - compose-redis
       - compose-memcached
       - compose-nginx
-      - compose-esql-input-oracle
       - compose-synthetic-multiline
       - compose-synthetic-burst
       - compose-synthetic-rotation

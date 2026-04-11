@@ -1091,6 +1091,8 @@ def main() -> int:
     )
 
     sink_samples: list[StatsSample] = []
+    sink_cpu_samples: list[float] = []
+    sink_rss_samples: list[float] = []
     collector_cpu_samples: list[float] = []
     collector_rss_samples: list[float] = []
     collector_resource_samples: list[dict[str, float]] = []
@@ -1108,6 +1110,7 @@ def main() -> int:
         wait_until_ready(lambda: fetch_stats(sink_diag_port), timeout_sec=90)
         result.cluster_ready = True
         result.sink_ready = True
+        sink_container_id = resolve_container_id(compose, "sink", env)
 
         wait_for_collector_ready(adapter, collector_stats_port, timeout_sec=90)
         collector_container_id = resolve_container_id(compose, adapter.service_name, env)
@@ -1141,6 +1144,12 @@ def main() -> int:
                     benchmark_id,
                 )
             )
+            if sink_container_id:
+                resource_sample = read_container_resource_sample(sink_container_id)
+                if resource_sample is not None:
+                    cpu_cores, rss_mb = resource_sample
+                    sink_cpu_samples.append(cpu_cores)
+                    sink_rss_samples.append(rss_mb)
             if collector_container_id:
                 resource_sample = read_container_resource_sample(collector_container_id)
                 if resource_sample is not None:
@@ -1242,6 +1251,12 @@ def main() -> int:
         if sink_rss_series and any(sample.rss_bytes > 0 for sample in sink_samples):
             result.sink_rss_mb_avg = avg(sink_rss_series)
             result.sink_rss_mb_p95 = percentile(sink_rss_series, 0.95)
+        if result.sink_cpu_cores_avg is None and sink_cpu_samples:
+            result.sink_cpu_cores_avg = avg(sink_cpu_samples)
+            result.sink_cpu_cores_p95 = percentile(sink_cpu_samples, 0.95)
+        if result.sink_rss_mb_avg is None and sink_rss_samples:
+            result.sink_rss_mb_avg = avg(sink_rss_samples)
+            result.sink_rss_mb_p95 = percentile(sink_rss_samples, 0.95)
 
         measured_sink_events: int | None = None
         measured_window_sec: float | None = None
