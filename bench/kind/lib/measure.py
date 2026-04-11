@@ -363,21 +363,26 @@ def collect_bench_samples(
 ) -> tuple[list[StatsSample], list[StatsSample], list[StatsSample]]:
     if sink_stats_kind == "logfwd":
         sink_ready_check = fetch_stats
-        sink_fetch_sample = lambda port: _sample_from_payload(fetch_stats(port))
+        def sink_fetch_sample(port: int) -> StatsSample:
+            return _sample_from_payload(fetch_stats(port))
     elif sink_stats_kind == "capture_reader":
         sink_ready_check = fetch_capture_stats
-        sink_fetch_sample = lambda port: _sample_from_capture_payload(fetch_capture_stats(port))
+        def sink_fetch_sample(port: int) -> StatsSample:
+            return _sample_from_capture_payload(fetch_capture_stats(port))
     else:
         raise ValueError(f"unknown sink_stats_kind: {sink_stats_kind}")
 
     if collector_stats_kind == "logfwd":
         collector_ready_check = fetch_stats
-        collector_fetch_sample = lambda port: _sample_from_payload(fetch_stats(port))
+        def collector_fetch_sample(port: int) -> StatsSample:
+            return _sample_from_payload(fetch_stats(port))
     elif collector_stats_kind == "otelcol_prometheus":
-        collector_ready_check = lambda port: fetch_text(port, "/metrics")
+        def collector_ready_check(port: int) -> str:
+            return fetch_text(port, "/metrics")
         collector_fetch_sample = fetch_otelcol_prometheus_sample
     elif collector_stats_kind == "vector_prometheus":
-        collector_ready_check = lambda port: fetch_text(port, "/metrics")
+        def collector_ready_check(port: int) -> str:
+            return fetch_text(port, "/metrics")
         collector_fetch_sample = fetch_vector_prometheus_sample
     else:
         raise ValueError(f"unknown collector_stats_kind: {collector_stats_kind}")

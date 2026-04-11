@@ -4,49 +4,17 @@ from __future__ import annotations
 
 import argparse
 import json
-from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Literal
+import sys
 
-MarkdownTableAlign = Literal["left", "center", "right"]
-
-_ALIGN_DIVIDER: dict[MarkdownTableAlign, str] = {
-    "left": "---",
-    "center": ":---:",
-    "right": "---:",
-}
-
-
-def _escape_cell(value: object) -> str:
-    text = str(value)
-    return text.replace("|", "\\|").replace("\n", "<br>")
-
-
-def markdown_table(
-    *,
-    headers: Sequence[str],
-    rows: Iterable[Sequence[object]],
-    align: Sequence[MarkdownTableAlign] | None = None,
-) -> list[str]:
-    if not headers:
-        raise ValueError("headers must not be empty")
-    if align is not None and len(align) != len(headers):
-        raise ValueError("align length must match headers length")
-
-    effective_align = align or ["left"] * len(headers)
-    divider_cells = [_ALIGN_DIVIDER[cell_align] for cell_align in effective_align]
-
-    lines = [
-        f"| {' | '.join(_escape_cell(header) for header in headers)} |",
-        f"| {' | '.join(divider_cells)} |",
-    ]
-    for row in rows:
-        if len(row) != len(headers):
-            raise ValueError("row length must match headers length")
-        lines.append(f"| {' | '.join(_escape_cell(cell) for cell in row)} |")
-    return lines
+try:
+    from reporting.markdown import markdown_table
+except ModuleNotFoundError:
+    REPO_ROOT = Path(__file__).resolve().parents[2]
+    sys.path.insert(0, str(REPO_ROOT))
+    from reporting.markdown import markdown_table
 
 
 @dataclass
