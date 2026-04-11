@@ -71,6 +71,11 @@ on:
         options:
           - 'false'
           - 'true'
+      collector_batch_target_bytes:
+        description: optional logfwd collector batch_target_bytes override
+        required: false
+        type: string
+        default: ''
 
 permissions:
   contents: write
@@ -180,6 +185,7 @@ jobs:
       BENCH_WORKLOAD_LABEL: ${{ matrix.workload.label }}
       BENCH_PODS: ${{ matrix.workload.pods }}
       BENCH_EPS_PER_POD: ${{ matrix.workload.eps_per_pod }}
+      BENCH_COLLECTOR_BATCH_TARGET_BYTES: ${{ inputs.collector_batch_target_bytes || '' }}
       BENCHKIT_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}--kind-bench-${{ needs.plan.outputs.bench_profile }}-${{ matrix.ingest_mode }}-${{ matrix.workload.label }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}
     steps:
       - uses: actions/checkout@v6
@@ -320,6 +326,12 @@ jobs:
             "sink_lines_per_sec_p99": None,
             "drop_estimate": None,
             "dup_estimate": None,
+            "rejected_batches_total": None,
+            "http_413_count": None,
+            "rejected_rows_estimate": None,
+            "rejected_bytes_estimate": None,
+            "backpressure_warning_count": None,
+            "collector_dropped_batches_total": None,
             "latency_ms_p50": None,
             "latency_ms_p95": None,
             "latency_ms_p99": None,

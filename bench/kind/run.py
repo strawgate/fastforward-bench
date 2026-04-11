@@ -30,6 +30,7 @@ from lib.cluster import (
     set_kind_control_plane_cpu_limit,
 )
 from lib.collectors import CollectorAdapter, get_collector_adapter
+from lib.diagnostics import analyze_delivery_diagnostics
 from lib.kube import (
     apply_manifest,
     collect_debug_artifacts,
@@ -40,6 +41,7 @@ from lib.kube import (
     wait_for_namespace,
 )
 from lib.measure import (
+    PortForward,
     StatsSample,
     avg,
     collect_bench_samples,
@@ -47,8 +49,10 @@ from lib.measure import (
     collect_sink_reported_stats,
     cpu_cores_series,
     diff_output_lines,
+    fetch_text,
     lines_per_sec_series,
     percentile,
+    reserve_local_port,
     rss_mb_series,
 )
 from lib.profiles import PROFILES, Profile
@@ -145,6 +149,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--cpu-profile", choices=sorted(CPU_PROFILES), default="single")
     parser.add_argument("--pods", type=int, default=None)
     parser.add_argument("--eps-per-pod", type=int, default=None)
+    parser.add_argument(
+        "--collector-batch-target-bytes",
+        type=int,
+        default=None,
+        help=(
+            "Optional logfwd collector batch_target_bytes override for benchmark experiments. "
+            "Can also be set with BENCH_COLLECTOR_BATCH_TARGET_BYTES."
+        ),
+    )
     parser.add_argument("--keep-cluster", action="store_true")
     return parser.parse_args()
 
@@ -204,6 +217,23 @@ def normalize_otlp_metrics_url(endpoint: str) -> str:
     if trimmed.endswith("/v1/metrics"):
         return trimmed
     return f"{trimmed}/v1/metrics"
+
+
+def resolve_optional_positive_int(cli_value: int | None, env_name: str) -> int | None:
+    if cli_value is not None:
+        if cli_value <= 0:
+            raise ValueError(f"{env_name.lower()} must be > 0")
+        return cli_value
+    raw = os.environ.get(env_name)
+    if raw is None or raw.strip() == "":
+        return None
+    try:
+        value = int(raw)
+    except ValueError as exc:
+        raise ValueError(f"{env_name} must be an integer") from exc
+    if value <= 0:
+        raise ValueError(f"{env_name} must be > 0")
+    return value
 
 
 def format_cpu_quantity(mcpu: int) -> str:
@@ -444,6 +474,21 @@ def collect_pod_logs(
     destination.write_text("\n".join(chunks), encoding="utf-8")
 
 
+def collect_collector_status_artifact(
+    *,
+    namespace: str,
+    pod_name: str,
+    adapter: CollectorAdapter,
+    destination: Path,
+) -> None:
+    if adapter.collector_stats_kind != "logfwd":
+        return
+    local_port = reserve_local_port()
+    with PortForward(namespace, f"pod/{pod_name}", local_port, adapter.collector_stats_port):
+        body = fetch_text(local_port, "/admin/v1/status")
+    destination.write_text(body, encoding="utf-8")
+
+
 def collect_sink_capture(namespace: str, sink_pod: str, destination: Path) -> None:
     sink_capture = subprocess.run(
         [
@@ -647,6 +692,7 @@ def render_manifests(
     resource_plan: ResourcePlan,
     benchmark_id: str,
     rendered_dir: Path,
+    collector_batch_target_bytes: int | None,
 ) -> dict[str, Path]:
     if profile.eps_per_pod == 0:
         generator_batch_size = 64
@@ -654,6 +700,10 @@ def render_manifests(
         # Keep low-rate targets smooth so per-second throughput sampling reflects
         # the requested EPS instead of front-loading a large first burst.
         generator_batch_size = max(1, min(1024, profile.eps_per_pod))
+    collector_batch_target_yaml = ""
+    if collector_batch_target_bytes is not None:
+        collector_batch_target_yaml = f"        batch_target_bytes: {collector_batch_target_bytes}"
+
     substitutions = {
         "NAMESPACE": args.namespace,
         "MEMAGENT_IMAGE": args.memagent_image,
@@ -678,6 +728,7 @@ def render_manifests(
         "CAPTURE_READER_CPU_LIMIT": resource_plan.capture_reader_cpu,
         "CAPTURE_READER_MEMORY_REQUEST": resource_plan.capture_reader_memory,
         "CAPTURE_READER_MEMORY_LIMIT": resource_plan.capture_reader_memory,
+        "COLLECTOR_BATCH_TARGET_BYTES_YAML": collector_batch_target_yaml,
     }
     manifests = {
         "namespace": rendered_dir / "namespace.yaml",
@@ -835,7 +886,6 @@ def run_smoke_phase(
             "pod_replaced": collector_pod_replaced,
         },
     )
-
     collector_instability_reasons: list[str] = []
     if collector_pod_replaced:
         collector_instability_reasons.append(f"collector pod changed from {collector_pod} to {collector_pod_after}")
@@ -891,6 +941,15 @@ def run_smoke_phase(
         sink_reported_stats,
         sink_stats_kind=sink_stats_kind,
     )
+    try:
+        collect_collector_status_artifact(
+            namespace=args.namespace,
+            pod_name=collector_pod_after,
+            adapter=adapter,
+            destination=artifacts_dir / "collector-status.json",
+        )
+    except Exception as exc:  # noqa: BLE001
+        append_artifact_note(results_dir, "collector-status-error.txt", str(exc))
     collect_pod_logs(
         namespace=args.namespace,
         pod_names=[sink_pod],
@@ -1210,6 +1269,12 @@ def main() -> int:
     adapter = get_collector_adapter(args.collector)
     if not adapter.supports_ingest_mode(args.ingest_mode):
         raise NotImplementedError(f"collector '{args.collector}' does not support ingest mode '{args.ingest_mode}'")
+    collector_batch_target_bytes = resolve_optional_positive_int(
+        args.collector_batch_target_bytes,
+        "BENCH_COLLECTOR_BATCH_TARGET_BYTES",
+    )
+    if collector_batch_target_bytes is not None and adapter.name != "logfwd":
+        raise ValueError("--collector-batch-target-bytes currently applies only to the logfwd collector adapter")
     cpu_profile = CPU_PROFILES[args.cpu_profile]
     resource_plan = build_resource_plan(
         cpu_profile=cpu_profile,
@@ -1262,6 +1327,12 @@ def main() -> int:
         sink_lines_per_sec_p99=None,
         drop_estimate=None,
         dup_estimate=None,
+        rejected_batches_total=None,
+        http_413_count=None,
+        rejected_rows_estimate=None,
+        rejected_bytes_estimate=None,
+        backpressure_warning_count=None,
+        collector_dropped_batches_total=None,
         latency_ms_p50=None,
         latency_ms_p95=None,
         latency_ms_p99=None,
@@ -1287,6 +1358,7 @@ def main() -> int:
         resource_plan=resource_plan,
         benchmark_id=benchmark_id,
         rendered_dir=rendered_dir,
+        collector_batch_target_bytes=collector_batch_target_bytes,
     )
 
     try:
@@ -1355,6 +1427,15 @@ def main() -> int:
             artifacts_dir.mkdir(parents=True, exist_ok=True)
             (artifacts_dir / "artifact-collection-error.txt").write_text(str(exc), encoding="utf-8")
         finally:
+            artifacts_dir = results_dir / "artifacts"
+            delivery_diagnostics = analyze_delivery_diagnostics(artifacts_dir)
+            result.rejected_batches_total = delivery_diagnostics.rejected_batches_total
+            result.http_413_count = delivery_diagnostics.http_413_count
+            result.rejected_rows_estimate = delivery_diagnostics.rejected_rows_estimate
+            result.rejected_bytes_estimate = delivery_diagnostics.rejected_bytes_estimate
+            result.backpressure_warning_count = delivery_diagnostics.backpressure_warning_count
+            result.collector_dropped_batches_total = delivery_diagnostics.collector_dropped_batches_total
+            write_json(artifacts_dir / "delivery-diagnostics.json", delivery_diagnostics.to_dict())
             write_result_files(
                 results_dir,
                 result,

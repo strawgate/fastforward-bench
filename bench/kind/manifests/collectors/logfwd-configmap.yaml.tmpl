@@ -12,27 +12,30 @@ data:
     storage:
       data_dir: /var/lib/logfwd
 
-    input:
-      type: file
-      path: /var/log/pods/${NAMESPACE}_log-emitter-*/*/*.log
-      format: cri
+    pipelines:
+      default:
+        inputs:
+          - type: file
+            path: /var/log/pods/${NAMESPACE}_log-emitter-*/*/*.log
+            format: cri
 
-    transform: |
-      SELECT
-        benchmark_id,
-        pod_name,
-        stream_id,
-        event_id,
-        seq,
-        event_created_unix_nano,
-        level,
-        message,
-        status,
-        duration_ms,
-        service
-      FROM logs
-      WHERE benchmark_id = '${BENCHMARK_ID}'
+        transform: |
+          SELECT
+            benchmark_id,
+            pod_name,
+            stream_id,
+            event_id,
+            seq,
+            event_created_unix_nano,
+            level,
+            message,
+            status,
+            duration_ms,
+            service
+          FROM logs
+          WHERE benchmark_id = '${BENCHMARK_ID}'
 
-    output:
-      type: otlp
-      endpoint: http://logfwd-capture.${NAMESPACE}.svc.cluster.local:4318/v1/logs
+        outputs:
+          - type: otlp
+            endpoint: http://logfwd-capture.${NAMESPACE}.svc.cluster.local:4318/v1/logs
+${COLLECTOR_BATCH_TARGET_BYTES_YAML}

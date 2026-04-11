@@ -146,6 +146,10 @@ Useful flags:
   Records the target sink protocol in metadata. Defaults to `otlp_http`.
 - `--ingest-mode`
   Selects the collector input path: `file` (default) or `otlp`.
+- `--collector-batch-target-bytes`
+  Applies a logfwd collector `batch_target_bytes` override for payload-size
+  experiments. The same knob can be supplied as
+  `BENCH_COLLECTOR_BATCH_TARGET_BYTES`.
 
 ## Outputs
 
@@ -162,6 +166,8 @@ Each run writes a directory under `bench/kind/results/` containing:
 - `sink-samples.json` for `smoke`
 - `collector-samples.json` for `smoke`
 - `stream-summary.json` for `smoke`
+- `artifacts/delivery-diagnostics.json` with rejected batch, HTTP 413, and
+  backpressure signal counts derived from artifacts
 - `actual_rows.json` for `smoke`
 - `source_rows.json` for `smoke`
 

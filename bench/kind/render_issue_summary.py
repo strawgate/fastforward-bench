@@ -25,6 +25,12 @@ class BenchResult:
     unexpected_event_count: int | None
     dup_estimate: int | None
     drop_estimate: int | None
+    rejected_batches_total: int | None
+    http_413_count: int | None
+    rejected_rows_estimate: int | None
+    rejected_bytes_estimate: int | None
+    backpressure_warning_count: int | None
+    collector_dropped_batches_total: int | None
     sink_cpu_cores_avg: float | None
     collector_cpu_cores_avg: float | None
     notes: str
@@ -92,6 +98,12 @@ def load_result(path: Path, artifact_name: str) -> BenchResult:
         unexpected_event_count=as_int(payload.get("unexpected_event_count")),
         dup_estimate=as_int(payload.get("dup_estimate")),
         drop_estimate=as_int(payload.get("drop_estimate")),
+        rejected_batches_total=as_int(payload.get("rejected_batches_total")),
+        http_413_count=as_int(payload.get("http_413_count")),
+        rejected_rows_estimate=as_int(payload.get("rejected_rows_estimate")),
+        rejected_bytes_estimate=as_int(payload.get("rejected_bytes_estimate")),
+        backpressure_warning_count=as_int(payload.get("backpressure_warning_count")),
+        collector_dropped_batches_total=as_int(payload.get("collector_dropped_batches_total")),
         sink_cpu_cores_avg=as_float(payload.get("sink_cpu_cores_avg")),
         collector_cpu_cores_avg=as_float(payload.get("collector_cpu_cores_avg")),
         notes=str(payload.get("notes") or ""),
@@ -266,8 +278,8 @@ def render_markdown(
                     [
                         f"### Ingest: `{ingest_mode}`",
                         "",
-                        "| Collector | Target EPS | Status | EPS Avg | Collector CPU Avg | Sink CPU Avg | % of Target | Missing | Unexpected | Duplicates | Dropped |",
-                        "| --- | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+                        "| Collector | Target EPS | Status | EPS Avg | Collector CPU Avg | Sink CPU Avg | % of Target | Missing | Unexpected | Duplicates | Dropped | Rejected Batches | HTTP 413 | Rejected Rows |",
+                        "| --- | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
                     ]
                 )
                 for result in sorted(
@@ -282,7 +294,7 @@ def render_markdown(
                     if result.sink_lines_per_sec_avg is not None and result.total_target_eps > 0:
                         eps_ratio = result.sink_lines_per_sec_avg / result.total_target_eps
                     lines.append(
-                        "| {collector} | {target_eps} | {status} | {eps_avg} | {collector_cpu_avg} | {sink_cpu_avg} | {ratio} | {missing} | {unexpected} | {dup} | {drop} |".format(
+                        "| {collector} | {target_eps} | {status} | {eps_avg} | {collector_cpu_avg} | {sink_cpu_avg} | {ratio} | {missing} | {unexpected} | {dup} | {drop} | {rejected_batches} | {http_413} | {rejected_rows} |".format(
                             collector=result.collector,
                             target_eps="max" if result.total_target_eps == 0 else fmt_int(result.total_target_eps),
                             status=result.status.upper(),
@@ -294,6 +306,9 @@ def render_markdown(
                             unexpected=fmt_int(result.unexpected_event_count),
                             dup=fmt_int(result.dup_estimate),
                             drop=fmt_int(result.drop_estimate),
+                            rejected_batches=fmt_int(result.rejected_batches_total),
+                            http_413=fmt_int(result.http_413_count),
+                            rejected_rows=fmt_int(result.rejected_rows_estimate),
                         )
                     )
                 lines.append("")
@@ -351,6 +366,12 @@ def main() -> None:
                 "unexpected_event_count": result.unexpected_event_count,
                 "dup_estimate": result.dup_estimate,
                 "drop_estimate": result.drop_estimate,
+                "rejected_batches_total": result.rejected_batches_total,
+                "http_413_count": result.http_413_count,
+                "rejected_rows_estimate": result.rejected_rows_estimate,
+                "rejected_bytes_estimate": result.rejected_bytes_estimate,
+                "backpressure_warning_count": result.backpressure_warning_count,
+                "collector_dropped_batches_total": result.collector_dropped_batches_total,
                 "sink_cpu_cores_avg": result.sink_cpu_cores_avg,
                 "collector_cpu_cores_avg": result.collector_cpu_cores_avg,
                 "notes": result.notes,

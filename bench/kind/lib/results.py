@@ -40,6 +40,12 @@ class BenchmarkResult:
     sink_lines_per_sec_p99: float | None
     drop_estimate: int | None
     dup_estimate: int | None
+    rejected_batches_total: int | None
+    http_413_count: int | None
+    rejected_rows_estimate: int | None
+    rejected_bytes_estimate: int | None
+    backpressure_warning_count: int | None
+    collector_dropped_batches_total: int | None
     latency_ms_p50: float | None
     latency_ms_p95: float | None
     latency_ms_p99: float | None
@@ -116,6 +122,18 @@ def _metric_specs(result: BenchmarkResult) -> list[tuple[str, float | int | None
         ("sink_lines_per_sec_p99", result.sink_lines_per_sec_p99, "events/sec", "bigger_is_better", "outcome"),
         ("drop_estimate", result.drop_estimate, "events", "smaller_is_better", "outcome"),
         ("dup_estimate", result.dup_estimate, "events", "smaller_is_better", "outcome"),
+        ("rejected_batches_total", result.rejected_batches_total, "batches", "smaller_is_better", "diagnostic"),
+        ("http_413_count", result.http_413_count, "responses", "smaller_is_better", "diagnostic"),
+        ("rejected_rows_estimate", result.rejected_rows_estimate, "events", "smaller_is_better", "diagnostic"),
+        ("rejected_bytes_estimate", result.rejected_bytes_estimate, "bytes", "smaller_is_better", "diagnostic"),
+        ("backpressure_warning_count", result.backpressure_warning_count, "events", "smaller_is_better", "diagnostic"),
+        (
+            "collector_dropped_batches_total",
+            result.collector_dropped_batches_total,
+            "batches",
+            "smaller_is_better",
+            "diagnostic",
+        ),
         ("latency_ms_p50", result.latency_ms_p50, "ms", "smaller_is_better", "outcome"),
         ("latency_ms_p95", result.latency_ms_p95, "ms", "smaller_is_better", "outcome"),
         ("latency_ms_p99", result.latency_ms_p99, "ms", "smaller_is_better", "outcome"),
@@ -417,6 +435,12 @@ def render_summary(result: BenchmarkResult) -> str:
         f"- sink_lines_per_sec_avg: `{show(result.sink_lines_per_sec_avg)}`",
         f"- drop_estimate: `{show(result.drop_estimate)}`",
         f"- dup_estimate: `{show(result.dup_estimate)}`",
+        f"- rejected_batches_total: `{show(result.rejected_batches_total)}`",
+        f"- http_413_count: `{show(result.http_413_count)}`",
+        f"- rejected_rows_estimate: `{show(result.rejected_rows_estimate)}`",
+        f"- rejected_bytes_estimate: `{show(result.rejected_bytes_estimate)}`",
+        f"- backpressure_warning_count: `{show(result.backpressure_warning_count)}`",
+        f"- collector_dropped_batches_total: `{show(result.collector_dropped_batches_total)}`",
         f"- sink_cpu_cores_avg: `{show(result.sink_cpu_cores_avg)}`",
         f"- sink_rss_mb_avg: `{show(result.sink_rss_mb_avg)}`",
         f"- collector_cpu_cores_avg: `{show(result.collector_cpu_cores_avg)}`",

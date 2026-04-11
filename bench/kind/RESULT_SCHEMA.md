@@ -42,6 +42,12 @@ land. Fields that are not collected in a phase are emitted as `null`.
 | `sink_lines_per_sec_p99` | number or null | P99 steady-state sink throughput |
 | `drop_estimate` | integer or null | Current drop estimate; exact source-vs-sink count in `smoke` |
 | `dup_estimate` | integer or null | Duplicate benchmark event estimate |
+| `rejected_batches_total` | integer or null | Count of explicit collector/emitter batch rejection log signals found in artifacts |
+| `http_413_count` | integer or null | Count of HTTP 413 / payload-too-large rejection signals found in artifacts |
+| `rejected_rows_estimate` | integer or null | Sum of structured batch span `output_rows` or `input_rows` on rejected-batch log lines, when present |
+| `rejected_bytes_estimate` | integer or null | Sum of structured batch span `bytes_in` on rejected-batch log lines, when present |
+| `backpressure_warning_count` | integer or null | Count of `input.backpressure` warning signals found in artifacts |
+| `collector_dropped_batches_total` | integer or null | Structural `dropped_batches_total` from collector `/admin/v1/status` when available |
 | `latency_ms_p50` | number or null | Reserved for later latency capture |
 | `latency_ms_p95` | number or null | Reserved for later latency capture |
 | `latency_ms_p99` | number or null | Reserved for later latency capture |
@@ -98,6 +104,7 @@ Alongside the JSON row, each run should preserve:
 - `actual_rows.json` in `smoke`
 - `source_rows.json` in `smoke`
 - `stream-summary.json` in `smoke`
+- `artifacts/delivery-diagnostics.json` with rejected batch / HTTP 413 / backpressure signals
 
 ## Benchkit OTLP Projection
 
