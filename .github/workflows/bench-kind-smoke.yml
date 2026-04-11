@@ -129,10 +129,18 @@ jobs:
               fi
               ;;
             ladder)
-              echo 'workloads=[{"label":"t1","pods":1,"eps_per_pod":1},{"label":"t10","pods":1,"eps_per_pod":10},{"label":"t100","pods":1,"eps_per_pod":100},{"label":"t1k","pods":1,"eps_per_pod":1000},{"label":"t10k","pods":1,"eps_per_pod":10000},{"label":"t100k","pods":1,"eps_per_pod":100000},{"label":"t1m","pods":1,"eps_per_pod":1000000}]' >>"$GITHUB_OUTPUT"
+              if [[ "${INPUT_PROFILE}" == "quick" ]]; then
+                echo 'workloads=[{"label":"t1","pods":1,"eps_per_pod":1},{"label":"t10","pods":1,"eps_per_pod":10},{"label":"t100","pods":1,"eps_per_pod":100},{"label":"t1k","pods":1,"eps_per_pod":1000},{"label":"t10k","pods":1,"eps_per_pod":10000},{"label":"t100k","pods":1,"eps_per_pod":100000}]' >>"$GITHUB_OUTPUT"
+              else
+                echo 'workloads=[{"label":"t1","pods":1,"eps_per_pod":1},{"label":"t10","pods":1,"eps_per_pod":10},{"label":"t100","pods":1,"eps_per_pod":100},{"label":"t1k","pods":1,"eps_per_pod":1000},{"label":"t10k","pods":1,"eps_per_pod":10000},{"label":"t100k","pods":1,"eps_per_pod":100000},{"label":"t1m","pods":1,"eps_per_pod":1000000}]' >>"$GITHUB_OUTPUT"
+              fi
               ;;
             ladder_and_max)
-              echo 'workloads=[{"label":"t1","pods":1,"eps_per_pod":1},{"label":"t10","pods":1,"eps_per_pod":10},{"label":"t100","pods":1,"eps_per_pod":100},{"label":"t1k","pods":1,"eps_per_pod":1000},{"label":"t10k","pods":1,"eps_per_pod":10000},{"label":"t100k","pods":1,"eps_per_pod":100000},{"label":"t1m","pods":1,"eps_per_pod":1000000},{"label":"tmax","pods":1,"eps_per_pod":0}]' >>"$GITHUB_OUTPUT"
+              if [[ "${INPUT_PROFILE}" == "quick" ]]; then
+                echo 'workloads=[{"label":"t1","pods":1,"eps_per_pod":1},{"label":"t10","pods":1,"eps_per_pod":10},{"label":"t100","pods":1,"eps_per_pod":100},{"label":"t1k","pods":1,"eps_per_pod":1000},{"label":"t10k","pods":1,"eps_per_pod":10000},{"label":"t100k","pods":1,"eps_per_pod":100000},{"label":"tmax","pods":1,"eps_per_pod":0}]' >>"$GITHUB_OUTPUT"
+              else
+                echo 'workloads=[{"label":"t1","pods":1,"eps_per_pod":1},{"label":"t10","pods":1,"eps_per_pod":10},{"label":"t100","pods":1,"eps_per_pod":100},{"label":"t1k","pods":1,"eps_per_pod":1000},{"label":"t10k","pods":1,"eps_per_pod":10000},{"label":"t100k","pods":1,"eps_per_pod":100000},{"label":"t1m","pods":1,"eps_per_pod":1000000},{"label":"tmax","pods":1,"eps_per_pod":0}]' >>"$GITHUB_OUTPUT"
+              fi
               ;;
             max)
               echo 'workloads=[{"label":"tmax","pods":1,"eps_per_pod":0}]' >>"$GITHUB_OUTPUT"

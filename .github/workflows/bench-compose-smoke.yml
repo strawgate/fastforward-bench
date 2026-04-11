@@ -127,10 +127,18 @@ jobs:
               fi
               ;;
             ladder)
-              echo 'workloads=[{"label":"t1","eps_per_sec":1},{"label":"t10","eps_per_sec":10},{"label":"t100","eps_per_sec":100},{"label":"t1k","eps_per_sec":1000},{"label":"t10k","eps_per_sec":10000},{"label":"t100k","eps_per_sec":100000},{"label":"t1m","eps_per_sec":1000000}]' >>"$GITHUB_OUTPUT"
+              if [[ "${INPUT_PROFILE}" == "quick" ]]; then
+                echo 'workloads=[{"label":"t1","eps_per_sec":1},{"label":"t10","eps_per_sec":10},{"label":"t100","eps_per_sec":100},{"label":"t1k","eps_per_sec":1000},{"label":"t10k","eps_per_sec":10000},{"label":"t100k","eps_per_sec":100000}]' >>"$GITHUB_OUTPUT"
+              else
+                echo 'workloads=[{"label":"t1","eps_per_sec":1},{"label":"t10","eps_per_sec":10},{"label":"t100","eps_per_sec":100},{"label":"t1k","eps_per_sec":1000},{"label":"t10k","eps_per_sec":10000},{"label":"t100k","eps_per_sec":100000},{"label":"t1m","eps_per_sec":1000000}]' >>"$GITHUB_OUTPUT"
+              fi
               ;;
             ladder_and_max)
-              echo 'workloads=[{"label":"t1","eps_per_sec":1},{"label":"t10","eps_per_sec":10},{"label":"t100","eps_per_sec":100},{"label":"t1k","eps_per_sec":1000},{"label":"t10k","eps_per_sec":10000},{"label":"t100k","eps_per_sec":100000},{"label":"t1m","eps_per_sec":1000000},{"label":"tmax","eps_per_sec":0}]' >>"$GITHUB_OUTPUT"
+              if [[ "${INPUT_PROFILE}" == "quick" ]]; then
+                echo 'workloads=[{"label":"t1","eps_per_sec":1},{"label":"t10","eps_per_sec":10},{"label":"t100","eps_per_sec":100},{"label":"t1k","eps_per_sec":1000},{"label":"t10k","eps_per_sec":10000},{"label":"t100k","eps_per_sec":100000},{"label":"tmax","eps_per_sec":0}]' >>"$GITHUB_OUTPUT"
+              else
+                echo 'workloads=[{"label":"t1","eps_per_sec":1},{"label":"t10","eps_per_sec":10},{"label":"t100","eps_per_sec":100},{"label":"t1k","eps_per_sec":1000},{"label":"t10k","eps_per_sec":10000},{"label":"t100k","eps_per_sec":100000},{"label":"t1m","eps_per_sec":1000000},{"label":"tmax","eps_per_sec":0}]' >>"$GITHUB_OUTPUT"
+              fi
               ;;
             max)
               echo 'workloads=[{"label":"tmax","eps_per_sec":0}]' >>"$GITHUB_OUTPUT"
