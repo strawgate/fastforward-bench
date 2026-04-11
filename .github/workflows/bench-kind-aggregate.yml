@@ -19,6 +19,6 @@ jobs:
         with:
           persist-credentials: false
       - name: Aggregate benchmark data
-        uses: strawgate/o11ykit/octo11y/actions/aggregate@main
+        uses: strawgate/o11ykit/octo11y/actions/aggregate@main-dist
         with:
           max-runs: 50

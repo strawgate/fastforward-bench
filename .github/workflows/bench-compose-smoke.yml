@@ -198,7 +198,7 @@ jobs:
       - if: env.PERSIST_BENCH_DATA == 'true'
         name: Start Octo11y monitor
         id: monitor
-        uses: strawgate/o11ykit/octo11y/actions/monitor@main
+        uses: strawgate/o11ykit/octo11y/actions/monitor@main-dist
         with:
           run-id: ${{ env.BENCHKIT_RUN_ID }}
           scrape-interval: 1s
@@ -252,7 +252,7 @@ jobs:
       - if: env.PERSIST_BENCH_DATA == 'true'
         name: Stash benchmark run
         continue-on-error: true
-        uses: strawgate/o11ykit/actions/parse-results@main
+        uses: strawgate/o11ykit/actions/parse-results@main-dist
         with:
           mode: file
           results: ${{ env.BENCH_RESULTS_DIR }}/benchkit-run.otlp.json
