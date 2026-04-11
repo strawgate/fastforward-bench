@@ -7,14 +7,6 @@ import json
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-import sys
-
-try:
-    from reporting.markdown import markdown_table
-except ModuleNotFoundError:
-    REPO_ROOT = Path(__file__).resolve().parents[2]
-    sys.path.insert(0, str(REPO_ROOT))
-    from reporting.markdown import markdown_table
 
 
 @dataclass
@@ -227,7 +219,15 @@ def render_markdown(
         ingest_modes = sorted({result.ingest_mode for result in sorted_results}, key=ingest_rank)
         collectors = sorted({result.collector for result in sorted_results}, key=collector_rank)
 
-        max_snapshot_rows: list[list[str]] = []
+        lines.extend(
+            [
+                "",
+                "## Max EPS Snapshot",
+                "",
+                "| Collector | Ingest | CPU | Max EPS | Collector CPU Avg | % of Target | Source Target |",
+                "| --- | --- | --- | ---: | ---: | ---: | --- |",
+            ]
+        )
         for collector in collectors:
             for ingest_mode in ingest_modes:
                 for cpu_profile in cpu_profiles:
@@ -255,34 +255,17 @@ def render_markdown(
                     if chosen.total_target_eps > 0 and chosen.sink_lines_per_sec_avg is not None:
                         pct_of_target = chosen.sink_lines_per_sec_avg / chosen.total_target_eps
                     source_target = "max" if chosen.total_target_eps == 0 else str(chosen.total_target_eps)
-                    max_snapshot_rows.append(
-                        [
-                            collector,
-                            ingest_mode,
-                            cpu_profile,
-                            fmt_float(chosen.sink_lines_per_sec_avg),
-                            fmt_float(chosen.collector_cpu_cores_avg),
-                            fmt_percent(pct_of_target),
-                            source_target,
-                        ]
+                    lines.append(
+                        "| {collector} | {ingest_mode} | {cpu_profile} | {eps_avg} | {cpu_avg} | {pct} | {source_target} |".format(
+                            collector=collector,
+                            ingest_mode=ingest_mode,
+                            cpu_profile=cpu_profile,
+                            eps_avg=fmt_float(chosen.sink_lines_per_sec_avg),
+                            cpu_avg=fmt_float(chosen.collector_cpu_cores_avg),
+                            pct=fmt_percent(pct_of_target),
+                            source_target=source_target,
+                        )
                     )
-
-        lines.extend(["", "## Max EPS Snapshot", ""])
-        lines.extend(
-            markdown_table(
-                headers=[
-                    "Collector",
-                    "Ingest",
-                    "CPU",
-                    "Max EPS",
-                    "Collector CPU Avg",
-                    "% of Target",
-                    "Source Target",
-                ],
-                rows=max_snapshot_rows,
-                align=["left", "left", "left", "right", "right", "right", "left"],
-            )
-        )
         lines.append("")
 
         for cpu_profile in cpu_profiles:
@@ -295,7 +278,14 @@ def render_markdown(
                 ]
                 if not subset:
                     continue
-                detail_rows: list[list[str]] = []
+                lines.extend(
+                    [
+                        f"### Ingest: `{ingest_mode}`",
+                        "",
+                        "| Collector | Target EPS | Status | EPS Avg | Collector CPU Avg | Sink CPU Avg | % of Target | Missing | Unexpected | Duplicates | Dropped | Rejected Batches | HTTP 413 | Rejected Rows |",
+                        "| --- | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+                    ]
+                )
                 for result in sorted(
                     subset,
                     key=lambda item: (
@@ -307,62 +297,24 @@ def render_markdown(
                     eps_ratio = None
                     if result.sink_lines_per_sec_avg is not None and result.total_target_eps > 0:
                         eps_ratio = result.sink_lines_per_sec_avg / result.total_target_eps
-                    detail_rows.append(
-                        [
-                            result.collector,
-                            "max" if result.total_target_eps == 0 else fmt_int(result.total_target_eps),
-                            result.status.upper(),
-                            fmt_float(result.sink_lines_per_sec_avg),
-                            fmt_float(result.collector_cpu_cores_avg),
-                            fmt_float(result.sink_cpu_cores_avg),
-                            fmt_percent(eps_ratio),
-                            fmt_int(result.missing_event_count),
-                            fmt_int(result.unexpected_event_count),
-                            fmt_int(result.dup_estimate),
-                            fmt_int(result.drop_estimate),
-                            fmt_int(result.rejected_batches_total),
-                            fmt_int(result.http_413_count),
-                            fmt_int(result.rejected_rows_estimate),
-                        ]
+                    lines.append(
+                        "| {collector} | {target_eps} | {status} | {eps_avg} | {collector_cpu_avg} | {sink_cpu_avg} | {ratio} | {missing} | {unexpected} | {dup} | {drop} | {rejected_batches} | {http_413} | {rejected_rows} |".format(
+                            collector=result.collector,
+                            target_eps="max" if result.total_target_eps == 0 else fmt_int(result.total_target_eps),
+                            status=result.status.upper(),
+                            eps_avg=fmt_float(result.sink_lines_per_sec_avg),
+                            collector_cpu_avg=fmt_float(result.collector_cpu_cores_avg),
+                            sink_cpu_avg=fmt_float(result.sink_cpu_cores_avg),
+                            ratio=fmt_percent(eps_ratio),
+                            missing=fmt_int(result.missing_event_count),
+                            unexpected=fmt_int(result.unexpected_event_count),
+                            dup=fmt_int(result.dup_estimate),
+                            drop=fmt_int(result.drop_estimate),
+                            rejected_batches=fmt_int(result.rejected_batches_total),
+                            http_413=fmt_int(result.http_413_count),
+                            rejected_rows=fmt_int(result.rejected_rows_estimate),
+                        )
                     )
-                lines.extend([f"### Ingest: `{ingest_mode}`", ""])
-                lines.extend(
-                    markdown_table(
-                        headers=[
-                            "Collector",
-                            "Target EPS",
-                            "Status",
-                            "EPS Avg",
-                            "Collector CPU Avg",
-                            "Sink CPU Avg",
-                            "% of Target",
-                            "Missing",
-                            "Unexpected",
-                            "Duplicates",
-                            "Dropped",
-                            "Rejected Batches",
-                            "HTTP 413",
-                            "Rejected Rows",
-                        ],
-                        rows=detail_rows,
-                        align=[
-                            "left",
-                            "right",
-                            "left",
-                            "right",
-                            "right",
-                            "right",
-                            "right",
-                            "right",
-                            "right",
-                            "right",
-                            "right",
-                            "right",
-                            "right",
-                            "right",
-                        ],
-                    )
-                )
                 lines.append("")
 
     failing = [result for result in sorted_results if not result.passed]
