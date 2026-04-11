@@ -21,7 +21,7 @@ services:
 
   memagent:
     image: logfwd:e2e
-    command: ["--config", "/scenario/memagent.yaml"]
+    command: ["run", "--config", "/scenario/memagent.yaml"]
     depends_on:
       capture:
         condition: service_healthy
