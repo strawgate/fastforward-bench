@@ -1307,6 +1307,7 @@ def main() -> int:
         ingest_mode=args.ingest_mode,
         cpu_profile=args.cpu_profile,
         cluster_cpu_limit_cores=resource_plan.cluster_cpu_cores,
+        collector_batch_target_bytes=collector_batch_target_bytes,
         pods=profile.pods,
         target_eps_per_pod=profile.eps_per_pod,
         total_target_eps=profile.total_target_eps,

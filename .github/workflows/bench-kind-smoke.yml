@@ -303,6 +303,7 @@ jobs:
             "ingest_mode": os.environ.get("BENCH_INGEST_MODE", "unknown"),
             "cpu_profile": os.environ.get("BENCH_CPU_PROFILE", "unknown"),
             "cluster_cpu_limit_cores": None,
+            "collector_batch_target_bytes": int(os.environ["BENCH_COLLECTOR_BATCH_TARGET_BYTES"]) if os.environ.get("BENCH_COLLECTOR_BATCH_TARGET_BYTES") else None,
             "pods": int(os.environ.get("BENCH_PODS", "1") or 1),
             "target_eps_per_pod": int(os.environ.get("BENCH_EPS_PER_POD", "0") or 0),
             "total_target_eps": target_eps,

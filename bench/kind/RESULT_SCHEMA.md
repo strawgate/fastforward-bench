@@ -22,6 +22,7 @@ land. Fields that are not collected in a phase are emitted as `null`.
 | `ingest_mode` | string | Collector input mode: `file` or `otlp` |
 | `cpu_profile` | string | CPU shaping profile, currently `single` or `multi` |
 | `cluster_cpu_limit_cores` | number | CPU cap applied to the KIND control-plane container |
+| `collector_batch_target_bytes` | integer or null | Optional logfwd collector `batch_target_bytes` override used for payload-size experiments |
 | `pods` | integer | Target emitter pod count for the profile |
 | `target_eps_per_pod` | integer | Target rate for the profile |
 | `total_target_eps` | integer | `pods * target_eps_per_pod` |

@@ -4,9 +4,49 @@ from __future__ import annotations
 
 import argparse
 import json
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Literal
+
+MarkdownTableAlign = Literal["left", "center", "right"]
+
+_ALIGN_DIVIDER: dict[MarkdownTableAlign, str] = {
+    "left": "---",
+    "center": ":---:",
+    "right": "---:",
+}
+
+
+def _escape_cell(value: object) -> str:
+    text = str(value)
+    return text.replace("|", "\\|").replace("\n", "<br>")
+
+
+def markdown_table(
+    *,
+    headers: Sequence[str],
+    rows: Iterable[Sequence[object]],
+    align: Sequence[MarkdownTableAlign] | None = None,
+) -> list[str]:
+    if not headers:
+        raise ValueError("headers must not be empty")
+    if align is not None and len(align) != len(headers):
+        raise ValueError("align length must match headers length")
+
+    effective_align = align or ["left"] * len(headers)
+    divider_cells = [_ALIGN_DIVIDER[cell_align] for cell_align in effective_align]
+
+    lines = [
+        f"| {' | '.join(_escape_cell(header) for header in headers)} |",
+        f"| {' | '.join(divider_cells)} |",
+    ]
+    for row in rows:
+        if len(row) != len(headers):
+            raise ValueError("row length must match headers length")
+        lines.append(f"| {' | '.join(_escape_cell(cell) for cell in row)} |")
+    return lines
 
 
 @dataclass
@@ -15,6 +55,7 @@ class BenchResult:
     collector: str
     ingest_mode: str
     cpu_profile: str
+    collector_batch_target_bytes: int | None
     pods: int
     target_eps_per_pod: int
     phase: str
@@ -88,6 +129,7 @@ def load_result(path: Path, artifact_name: str) -> BenchResult:
         collector=str(payload.get("collector") or "unknown"),
         ingest_mode=str(payload.get("ingest_mode") or "file"),
         cpu_profile=str(payload.get("cpu_profile") or "unknown"),
+        collector_batch_target_bytes=as_int(payload.get("collector_batch_target_bytes")),
         pods=as_int(payload.get("pods")) or 0,
         target_eps_per_pod=as_int(payload.get("target_eps_per_pod")) or 0,
         phase=str(payload.get("phase") or "unknown"),
@@ -174,6 +216,21 @@ def target_rank(total_target_eps: int) -> tuple[int, int]:
     return (0, total_target_eps)
 
 
+def target_label(total_target_eps: int) -> str:
+    return "max" if total_target_eps == 0 else str(total_target_eps)
+
+
+def has_integrity_alert(result: BenchResult) -> bool:
+    return (
+        (result.missing_event_count or 0) > 0
+        or (result.unexpected_event_count or 0) > 0
+        or (result.dup_estimate or 0) > 0
+        or (result.rejected_batches_total or 0) > 0
+        or (result.http_413_count or 0) > 0
+        or not result.passed
+    )
+
+
 def render_markdown(
     *,
     suite_name: str,
@@ -219,15 +276,7 @@ def render_markdown(
         ingest_modes = sorted({result.ingest_mode for result in sorted_results}, key=ingest_rank)
         collectors = sorted({result.collector for result in sorted_results}, key=collector_rank)
 
-        lines.extend(
-            [
-                "",
-                "## Max EPS Snapshot",
-                "",
-                "| Collector | Ingest | CPU | Max EPS | Collector CPU Avg | % of Target | Source Target |",
-                "| --- | --- | --- | ---: | ---: | ---: | --- |",
-            ]
-        )
+        max_snapshot_rows: list[list[str]] = []
         for collector in collectors:
             for ingest_mode in ingest_modes:
                 for cpu_profile in cpu_profiles:
@@ -254,19 +303,66 @@ def render_markdown(
                     pct_of_target = None
                     if chosen.total_target_eps > 0 and chosen.sink_lines_per_sec_avg is not None:
                         pct_of_target = chosen.sink_lines_per_sec_avg / chosen.total_target_eps
-                    source_target = "max" if chosen.total_target_eps == 0 else str(chosen.total_target_eps)
-                    lines.append(
-                        "| {collector} | {ingest_mode} | {cpu_profile} | {eps_avg} | {cpu_avg} | {pct} | {source_target} |".format(
-                            collector=collector,
-                            ingest_mode=ingest_mode,
-                            cpu_profile=cpu_profile,
-                            eps_avg=fmt_float(chosen.sink_lines_per_sec_avg),
-                            cpu_avg=fmt_float(chosen.collector_cpu_cores_avg),
-                            pct=fmt_percent(pct_of_target),
-                            source_target=source_target,
-                        )
+                    max_snapshot_rows.append(
+                        [
+                            collector,
+                            ingest_mode,
+                            cpu_profile,
+                            fmt_float(chosen.sink_lines_per_sec_avg),
+                            fmt_float(chosen.collector_cpu_cores_avg),
+                            fmt_percent(pct_of_target),
+                            target_label(chosen.total_target_eps),
+                        ]
                     )
+        lines.extend(["", "## Max EPS Snapshot", ""])
+        lines.extend(
+            markdown_table(
+                headers=["Collector", "Ingest", "CPU", "Max EPS", "Collector CPU Avg", "% of Target", "Source Target"],
+                rows=max_snapshot_rows,
+                align=["left", "left", "left", "right", "right", "right", "left"],
+            )
+        )
         lines.append("")
+
+        integrity_alert_rows = [
+            [
+                result.collector,
+                result.ingest_mode,
+                result.cpu_profile,
+                fmt_int(result.collector_batch_target_bytes),
+                target_label(result.total_target_eps),
+                result.status.upper(),
+                fmt_int(result.missing_event_count),
+                fmt_int(result.unexpected_event_count),
+                fmt_int(result.dup_estimate),
+                fmt_int(result.rejected_batches_total),
+                fmt_int(result.http_413_count),
+            ]
+            for result in sorted_results
+            if has_integrity_alert(result)
+        ]
+        if integrity_alert_rows:
+            lines.extend(["## Integrity Alerts", ""])
+            lines.extend(
+                markdown_table(
+                    headers=[
+                        "Collector",
+                        "Ingest",
+                        "CPU",
+                        "Batch Target Bytes",
+                        "Target EPS",
+                        "Status",
+                        "Missing",
+                        "Unexpected",
+                        "Duplicates",
+                        "Rejected Batches",
+                        "HTTP 413",
+                    ],
+                    rows=integrity_alert_rows,
+                    align=["left", "left", "left", "right", "right", "left", "right", "right", "right", "right", "right"],
+                )
+            )
+            lines.append("")
 
         for cpu_profile in cpu_profiles:
             lines.extend(["", f"## CPU: `{cpu_profile}`", ""])
@@ -278,14 +374,8 @@ def render_markdown(
                 ]
                 if not subset:
                     continue
-                lines.extend(
-                    [
-                        f"### Ingest: `{ingest_mode}`",
-                        "",
-                        "| Collector | Target EPS | Status | EPS Avg | Collector CPU Avg | Sink CPU Avg | % of Target | Missing | Unexpected | Duplicates | Dropped | Rejected Batches | HTTP 413 | Rejected Rows |",
-                        "| --- | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
-                    ]
-                )
+                summary_rows: list[list[str]] = []
+                diagnostics_rows: list[list[str]] = []
                 for result in sorted(
                     subset,
                     key=lambda item: (
@@ -297,32 +387,102 @@ def render_markdown(
                     eps_ratio = None
                     if result.sink_lines_per_sec_avg is not None and result.total_target_eps > 0:
                         eps_ratio = result.sink_lines_per_sec_avg / result.total_target_eps
-                    lines.append(
-                        "| {collector} | {target_eps} | {status} | {eps_avg} | {collector_cpu_avg} | {sink_cpu_avg} | {ratio} | {missing} | {unexpected} | {dup} | {drop} | {rejected_batches} | {http_413} | {rejected_rows} |".format(
-                            collector=result.collector,
-                            target_eps="max" if result.total_target_eps == 0 else fmt_int(result.total_target_eps),
-                            status=result.status.upper(),
-                            eps_avg=fmt_float(result.sink_lines_per_sec_avg),
-                            collector_cpu_avg=fmt_float(result.collector_cpu_cores_avg),
-                            sink_cpu_avg=fmt_float(result.sink_cpu_cores_avg),
-                            ratio=fmt_percent(eps_ratio),
-                            missing=fmt_int(result.missing_event_count),
-                            unexpected=fmt_int(result.unexpected_event_count),
-                            dup=fmt_int(result.dup_estimate),
-                            drop=fmt_int(result.drop_estimate),
-                            rejected_batches=fmt_int(result.rejected_batches_total),
-                            http_413=fmt_int(result.http_413_count),
-                            rejected_rows=fmt_int(result.rejected_rows_estimate),
-                        )
+                    summary_rows.append(
+                        [
+                            result.collector,
+                            target_label(result.total_target_eps),
+                            result.status.upper(),
+                            fmt_float(result.sink_lines_per_sec_avg),
+                            fmt_float(result.collector_cpu_cores_avg),
+                            fmt_float(result.sink_cpu_cores_avg),
+                            fmt_percent(eps_ratio),
+                        ]
                     )
+                    diagnostics_rows.append(
+                        [
+                            result.collector,
+                            fmt_int(result.collector_batch_target_bytes),
+                            target_label(result.total_target_eps),
+                            fmt_int(result.missing_event_count),
+                            fmt_int(result.unexpected_event_count),
+                            fmt_int(result.dup_estimate),
+                            fmt_int(result.drop_estimate),
+                            fmt_int(result.rejected_batches_total),
+                            fmt_int(result.http_413_count),
+                            fmt_int(result.rejected_rows_estimate),
+                            fmt_int(result.rejected_bytes_estimate),
+                            fmt_int(result.backpressure_warning_count),
+                            fmt_int(result.collector_dropped_batches_total),
+                        ]
+                    )
+                lines.extend([f"### Ingest: `{ingest_mode}`", ""])
+                lines.extend(
+                    markdown_table(
+                        headers=[
+                            "Collector",
+                            "Target EPS",
+                            "Status",
+                            "EPS Avg",
+                            "Collector CPU Avg",
+                            "Sink CPU Avg",
+                            "% of Target",
+                        ],
+                        rows=summary_rows,
+                        align=["left", "right", "left", "right", "right", "right", "right"],
+                    )
+                )
+                lines.extend(
+                    [
+                        "",
+                        "<details>",
+                        "<summary>Diagnostics Table</summary>",
+                        "",
+                    ]
+                )
+                lines.extend(
+                    markdown_table(
+                        headers=[
+                            "Collector",
+                            "Batch Target Bytes",
+                            "Target EPS",
+                            "Missing",
+                            "Unexpected",
+                            "Duplicates",
+                            "Dropped",
+                            "Rejected Batches",
+                            "HTTP 413",
+                            "Rejected Rows",
+                            "Rejected Bytes",
+                            "Backpressure Warnings",
+                            "Dropped Batches",
+                        ],
+                        rows=diagnostics_rows,
+                        align=[
+                            "left",
+                            "right",
+                            "right",
+                            "right",
+                            "right",
+                            "right",
+                            "right",
+                            "right",
+                            "right",
+                            "right",
+                            "right",
+                            "right",
+                            "right",
+                        ],
+                    )
+                )
+                lines.extend(["", "</details>"])
                 lines.append("")
 
     failing = [result for result in sorted_results if not result.passed]
     if failing:
         lines.extend(["", "## Failing Benchmarks", ""])
         for result in failing:
-            target_label = "max" if result.total_target_eps == 0 else str(result.total_target_eps)
-            lines.append(f"### {result.collector} / {result.ingest_mode} / {result.cpu_profile} / target={target_label}")
+            failing_target_label = target_label(result.total_target_eps)
+            lines.append(f"### {result.collector} / {result.ingest_mode} / {result.cpu_profile} / target={failing_target_label}")
             lines.append("")
             lines.append(f"- Status: `{result.status}`")
             lines.append(f"- Notes: {result.notes or 'n/a'}")
@@ -360,6 +520,7 @@ def main() -> None:
                 "collector": result.collector,
                 "ingest_mode": result.ingest_mode,
                 "cpu_profile": result.cpu_profile,
+                "collector_batch_target_bytes": result.collector_batch_target_bytes,
                 "pods": result.pods,
                 "target_eps_per_pod": result.target_eps_per_pod,
                 "phase": result.phase,

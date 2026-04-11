@@ -20,6 +20,7 @@ class BenchmarkResult:
     ingest_mode: str
     cpu_profile: str
     cluster_cpu_limit_cores: float
+    collector_batch_target_bytes: int | None
     pods: int
     target_eps_per_pod: int
     total_target_eps: int
@@ -199,6 +200,8 @@ def build_otlp_result_payload(
         "benchkit.target_eps_per_pod": str(result.target_eps_per_pod),
         "benchkit.total_target_eps": str(result.total_target_eps),
     }
+    if result.collector_batch_target_bytes is not None:
+        tags["benchkit.collector_batch_target_bytes"] = str(result.collector_batch_target_bytes)
 
     metrics = [
         _otlp_metric(
