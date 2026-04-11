@@ -309,7 +309,7 @@ def adjust_resource_plan_for_adapter(
     # Keep lane resources identical across collectors. For max-throughput OTLP
     # runs, use a common collector memory envelope to reduce restart noise.
     if ingest_mode == "otlp" and profile.eps_per_pod == 0:
-        return replace(resource_plan, collector_memory="3Gi")
+        return replace(resource_plan, collector_memory="4Gi")
     return resource_plan
 
 
