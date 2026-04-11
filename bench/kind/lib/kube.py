@@ -19,16 +19,6 @@ def apply_manifest(path: Path) -> None:
     kubectl(["apply", "-f", str(path)])
 
 
-def deployment_exists(namespace: str, name: str) -> bool:
-    completed = subprocess.run(
-        ["kubectl", "-n", namespace, "get", "deployment", name],
-        text=True,
-        capture_output=True,
-        check=False,
-    )
-    return completed.returncode == 0
-
-
 def wait_for_deployment(namespace: str, name: str, timeout_sec: int) -> None:
     kubectl(
         [

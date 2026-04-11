@@ -5,9 +5,12 @@ on:
     branches: [master]
     paths:
       - 'bench/kind/**'
+      - 'bench/lib/**'
+      - 'reporting/**'
       - '.github/workflows/bench-kind-smoke.yml'
       - '.github/workflows/bench-kind-aggregate.yml'
       - '.github/actions/setup-memagent-build/**'
+      - '.github/actions/checkout-memagent/**'
       - '.github/actions/start-octo11y-monitor/**'
       - '.github/actions/stash-octo11y-results/**'
   schedule:
@@ -193,42 +196,10 @@ jobs:
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
-      - id: checkout_memagent
-        continue-on-error: true
-        uses: actions/checkout@v6
+      - uses: ./.github/actions/checkout-memagent
         with:
-          repository: strawgate/memagent
-          ref: ${{ env.MEMAGENT_REF }}
-          path: memagent
-          persist-credentials: false
-      - if: steps.checkout_memagent.outcome == 'failure'
-        name: Fallback clone memagent checkout
-        shell: bash
-        run: |
-          set -euo pipefail
-          repo_url="https://github.com/strawgate/memagent.git"
-          ref="${MEMAGENT_REF}"
-          rm -rf memagent
-          for attempt in 1 2 3; do
-            echo "Fallback clone attempt ${attempt}/3 for ref ${ref}"
-            if [[ "$ref" =~ ^[0-9a-f]{40}$ ]]; then
-              if git clone --no-tags --depth 1 "$repo_url" memagent \
-                && git -C memagent fetch --no-tags --depth 1 origin "$ref" \
-                && git -C memagent checkout --detach FETCH_HEAD; then
-                break
-              fi
-            else
-              if git clone --no-tags --depth 1 --branch "$ref" "$repo_url" memagent; then
-                break
-              fi
-            fi
-            rm -rf memagent
-            if [[ "$attempt" -eq 3 ]]; then
-              echo "Failed to clone memagent ref ${ref} after retries" >&2
-              exit 1
-            fi
-            sleep $((attempt * 5))
-          done
+          memagent-ref: ${{ env.MEMAGENT_REF }}
+          memagent-path: memagent
       - uses: ./.github/actions/setup-memagent-build
         with:
           memagent-repo-root: memagent
@@ -278,81 +249,24 @@ jobs:
       - if: always()
         name: Ensure fallback benchmark result exists
         run: |
-          python3 - <<'PY'
-          import json
-          import os
-          from pathlib import Path
-
-          results_dir = Path(os.environ["BENCH_RESULTS_DIR"])
-          result_path = results_dir / "result.json"
-          if result_path.exists():
-            raise SystemExit(0)
-
-          results_dir.mkdir(parents=True, exist_ok=True)
-          target_eps = int(os.environ.get("BENCH_EPS_PER_POD", "0") or 0) * int(os.environ.get("BENCH_PODS", "1") or 1)
-          fallback = {
-            "benchmark_id": "missing-result",
-            "timestamp_utc": "",
-            "phase": "smoke",
-            "benchmark_mode": "baseline-pass-through",
-            "cluster": "kind",
-            "cluster_name": os.environ.get("CLUSTER_NAME", ""),
-            "namespace": "bench",
-            "collector": os.environ.get("BENCH_COLLECTOR", "unknown"),
-            "protocol": "otlp_http",
-            "ingest_mode": os.environ.get("BENCH_INGEST_MODE", "unknown"),
-            "cpu_profile": os.environ.get("BENCH_CPU_PROFILE", "unknown"),
-            "cluster_cpu_limit_cores": None,
-            "collector_batch_target_bytes": int(os.environ["BENCH_COLLECTOR_BATCH_TARGET_BYTES"]) if os.environ.get("BENCH_COLLECTOR_BATCH_TARGET_BYTES") else None,
-            "pods": int(os.environ.get("BENCH_PODS", "1") or 1),
-            "target_eps_per_pod": int(os.environ.get("BENCH_EPS_PER_POD", "0") or 0),
-            "total_target_eps": target_eps,
-            "warmup_sec": None,
-            "measure_sec": None,
-            "cooldown_sec": None,
-            "sink_lines_total": 0,
-            "emitter_reported_events_total": None,
-            "sink_reported_events_total": 0,
-            "captured_rows_total": None,
-            "source_rows_total": None,
-            "missing_source_count": None,
-            "missing_event_count": None,
-            "unexpected_event_count": None,
-            "sink_lines_per_sec_avg": 0.0,
-            "sink_lines_per_sec_p50": None,
-            "sink_lines_per_sec_p95": None,
-            "sink_lines_per_sec_p99": None,
-            "drop_estimate": None,
-            "dup_estimate": None,
-            "rejected_batches_total": None,
-            "http_413_count": None,
-            "rejected_rows_estimate": None,
-            "rejected_bytes_estimate": None,
-            "backpressure_warning_count": None,
-            "collector_dropped_batches_total": None,
-            "latency_ms_p50": None,
-            "latency_ms_p95": None,
-            "latency_ms_p99": None,
-            "collector_cpu_cores_avg": None,
-            "collector_cpu_cores_p95": None,
-            "generator_cpu_cores_avg": None,
-            "generator_cpu_cores_p95": None,
-            "collector_rss_mb_avg": None,
-            "collector_rss_mb_p95": None,
-            "cluster_ready": False,
-            "sink_ready": False,
-            "status": "fail",
-            "notes": "kind benchmark harness exited before writing result.json",
-          }
-          result_path.write_text(json.dumps(fallback, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-          (results_dir / "summary.md").write_text(
-            "# Benchmark result missing\n\n"
-            "- status: `fail`\n"
-            "- notes: kind benchmark harness exited before writing result.json\n",
-            encoding="utf-8",
-          )
-          print(f"wrote fallback result at {result_path}")
-          PY
+          if [[ -f "${BENCH_RESULTS_DIR}/result.json" ]]; then
+            exit 0
+          fi
+          set -- \
+            --output-dir "${BENCH_RESULTS_DIR}" \
+            --cluster "kind-single-node" \
+            --cluster-name "${CLUSTER_NAME}" \
+            --namespace "memagent-bench" \
+            --collector "${BENCH_COLLECTOR}" \
+            --ingest-mode "${BENCH_INGEST_MODE}" \
+            --cpu-profile "${BENCH_CPU_PROFILE}" \
+            --pods "${BENCH_PODS}" \
+            --target-eps-per-pod "${BENCH_EPS_PER_POD}" \
+            --notes "kind benchmark harness exited before writing result.json"
+          if [[ -n "${BENCH_COLLECTOR_BATCH_TARGET_BYTES}" ]]; then
+            set -- "$@" --collector-batch-target-bytes "${BENCH_COLLECTOR_BATCH_TARGET_BYTES}"
+          fi
+          python3 bench/lib/write_missing_result.py "$@"
       - if: env.PERSIST_BENCH_DATA == 'true'
         name: Stash jitter
         shell: bash
@@ -383,7 +297,7 @@ jobs:
           retention-days: 7
 
   summarize:
-    if: always() && github.event_name != 'pull_request'
+    if: always()
     needs:
       - plan
       - kind-bench-smoke

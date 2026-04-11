@@ -29,12 +29,18 @@ Each phase can be implemented in one of two ways:
 - an explicit `<phase>.sh` file inside the scenario directory
 - a documented family default supplied by `tests/e2e/lib/common.sh`
 
-Today only the `compose` family has defaults for:
+Today the `compose` family has defaults for:
 
 - `up`
 - `down`
 - `collect`
 - `verify`
+
+The `otlp` family has defaults for:
+
+- `up`
+- `down`
+- `collect`
 
 That means a normal compose scenario only needs:
 

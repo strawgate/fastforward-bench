@@ -101,7 +101,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           path: artifacts
       - name: Render suite summary
@@ -116,7 +116,7 @@ jobs:
             --output-json suite-summary.json
       - name: Publish suite summary
         run: cat suite-summary.md >>"$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: e2e-nightly-summary
           path: |

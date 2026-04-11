@@ -10,6 +10,7 @@ on:
       - '.github/workflows/_scenario-*.yml'
       - '.github/actions/collect-e2e-artifacts/**'
       - '.github/actions/publish-e2e-summary/**'
+      - '.github/actions/checkout-memagent/**'
       - '.github/actions/setup-compose/**'
       - '.github/actions/setup-kind/**'
       - '.github/actions/setup-memagent-build/**'

@@ -1,0 +1,57 @@
+name: Checkout Memagent
+description: Checkout memagent with fallback clone logic for branch or SHA refs
+
+inputs:
+  memagent-ref:
+    description: Memagent branch, tag, or SHA under test
+    required: false
+    default: main
+  memagent-path:
+    description: Destination path for the checked out memagent repository
+    required: false
+    default: memagent
+  memagent-repository:
+    description: GitHub repository to clone when checkout fallback is needed
+    required: false
+    default: strawgate/memagent
+
+runs:
+  using: composite
+  steps:
+    - id: checkout_memagent
+      continue-on-error: true
+      uses: actions/checkout@v6
+      with:
+        repository: ${{ inputs.memagent-repository }}
+        ref: ${{ inputs.memagent-ref }}
+        path: ${{ inputs.memagent-path }}
+        persist-credentials: false
+    - if: steps.checkout_memagent.outcome == 'failure'
+      name: Fallback clone memagent checkout
+      shell: bash
+      run: |
+        set -euo pipefail
+        repo_url="https://github.com/${{ inputs.memagent-repository }}.git"
+        ref="${{ inputs.memagent-ref }}"
+        path="${{ inputs.memagent-path }}"
+        rm -rf "$path"
+        for attempt in 1 2 3; do
+          echo "Fallback clone attempt ${attempt}/3 for ref ${ref}"
+          if [[ "$ref" =~ ^[0-9a-f]{40}$ ]]; then
+            if git clone --no-tags --depth 1 "$repo_url" "$path" \
+              && git -C "$path" fetch --no-tags --depth 1 origin "$ref" \
+              && git -C "$path" checkout --detach FETCH_HEAD; then
+              break
+            fi
+          else
+            if git clone --no-tags --depth 1 --branch "$ref" "$repo_url" "$path"; then
+              break
+            fi
+          fi
+          rm -rf "$path"
+          if [[ "$attempt" -eq 3 ]]; then
+            echo "Failed to clone memagent ref ${ref} after retries" >&2
+            exit 1
+          fi
+          sleep $((attempt * 5))
+        done

@@ -25,12 +25,14 @@ if str(KIND_LIB) not in sys.path:
 from measure import (  # noqa: E402
     StatsSample,
     avg,
+    cpu_cores_series,
     diff_output_lines,
     fetch_capture_stats,
     fetch_stats,
     fetch_text,
     lines_per_sec_series,
     percentile,
+    rss_mb_series,
 )
 from profiles import PROFILES, Profile  # noqa: E402
 from results import BenchmarkResult, write_result_files  # noqa: E402
@@ -881,6 +883,18 @@ def count_rows_with_rollovers(base_file_path: Path) -> int:
     return sum(count_ndjson_rows(path) for path in files)
 
 
+def remove_rollover_files(base_file_path: Path) -> None:
+    parent = base_file_path.parent
+    base_name = base_file_path.name
+    for path in parent.glob(f"{base_name}*"):
+        if not path.is_file():
+            continue
+        try:
+            path.unlink()
+        except OSError:
+            continue
+
+
 def max_seq_with_rollovers(base_file_path: Path) -> int:
     parent = base_file_path.parent
     base_name = base_file_path.name
@@ -955,10 +969,9 @@ def main() -> int:
     ensure_world_writable_dir(runtime_dir / "collector")
     artifacts_dir.mkdir(parents=True, exist_ok=True)
 
-    # Remove stale runtime files from prior local reruns.
-    for stale_file in (runtime_dir / "events.ndjson", runtime_dir / "capture.ndjson"):
-        if stale_file.exists():
-            stale_file.unlink()
+    # Remove stale runtime files (including rollover segments) from prior local reruns.
+    for stale_base_file in (runtime_dir / "events.ndjson", runtime_dir / "capture.ndjson"):
+        remove_rollover_files(stale_base_file)
 
     compose_file = rendered_dir / "compose.yaml"
     write_text(compose_file, build_compose_yaml())
@@ -1079,6 +1092,7 @@ def main() -> int:
     sink_samples: list[StatsSample] = []
     collector_cpu_samples: list[float] = []
     collector_rss_samples: list[float] = []
+    collector_resource_samples: list[dict[str, float]] = []
     generator_cpu_samples: list[float] = []
     capture_file_path = runtime_dir / "capture.ndjson"
     events_file_path = runtime_dir / "events.ndjson"
@@ -1116,6 +1130,13 @@ def main() -> int:
                     cpu_cores, rss_mb = resource_sample
                     collector_cpu_samples.append(cpu_cores)
                     collector_rss_samples.append(rss_mb)
+                    collector_resource_samples.append(
+                        {
+                            "timestamp": time.time(),
+                            "cpu_cores": cpu_cores,
+                            "rss_mb": rss_mb,
+                        }
+                    )
             if generator_container_id:
                 resource_sample = read_container_resource_sample(generator_container_id)
                 if resource_sample is not None:
@@ -1184,6 +1205,14 @@ def main() -> int:
         result.sink_lines_per_sec_p50 = percentile(sink_series, 0.50)
         result.sink_lines_per_sec_p95 = percentile(sink_series, 0.95)
         result.sink_lines_per_sec_p99 = percentile(sink_series, 0.99)
+        sink_cpu_series = cpu_cores_series(sink_samples)
+        sink_rss_series = rss_mb_series(sink_samples)
+        if sink_cpu_series and any(sample.cpu_total_ms > 0 for sample in sink_samples):
+            result.sink_cpu_cores_avg = avg(sink_cpu_series)
+            result.sink_cpu_cores_p95 = percentile(sink_cpu_series, 0.95)
+        if sink_rss_series and any(sample.rss_bytes > 0 for sample in sink_samples):
+            result.sink_rss_mb_avg = avg(sink_rss_series)
+            result.sink_rss_mb_p95 = percentile(sink_rss_series, 0.95)
 
         estimated_throughput = False
         if (
@@ -1274,7 +1303,7 @@ def main() -> int:
         result.notes = f"compose benchmark failed before completion: {exc}"
     finally:
         write_samples(results_dir / "sink-samples.json", sink_samples)
-        write_json(results_dir / "collector-samples.json", [])
+        write_json(results_dir / "collector-samples.json", collector_resource_samples)
         write_json(
             results_dir / "ports.json",
             {

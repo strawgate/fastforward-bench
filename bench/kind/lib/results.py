@@ -109,6 +109,16 @@ def _otlp_metric(
     }
 
 
+def _benchmark_family(cluster: str) -> str:
+    if cluster == "docker-compose":
+        return "compose"
+    return "kind"
+
+
+def _scope_name(family: str) -> str:
+    return f"memagent-e2e.{family}-bench"
+
+
 def _metric_specs(result: BenchmarkResult) -> list[tuple[str, float | int | None, str, str, str]]:
     return [
         ("sink_lines_total", result.sink_lines_total, "events", "bigger_is_better", "outcome"),
@@ -190,7 +200,8 @@ def build_otlp_result_payload(
         if value:
             resource_attrs.append(_otlp_attr(key, value))
 
-    scenario = f"kind/{result.phase}/{result.benchmark_mode}/{result.ingest_mode}"
+    family = _benchmark_family(result.cluster)
+    scenario = f"{family}/{result.phase}/{result.benchmark_mode}/{result.ingest_mode}"
     tags = {
         "benchkit.impl": result.collector,
         "benchkit.protocol": result.protocol,
@@ -232,7 +243,7 @@ def build_otlp_result_payload(
                 "scopeMetrics": [
                     {
                         "scope": {
-                            "name": "memagent-e2e.kind-bench",
+                            "name": _scope_name(family),
                         },
                         "metrics": metrics,
                     }
@@ -282,7 +293,8 @@ def build_otlp_phase_signal_payload(
         if value:
             resource_attrs.append(_otlp_attr(key, value))
 
-    scenario = f"kind/{result.phase}/{result.benchmark_mode}/{result.ingest_mode}"
+    family = _benchmark_family(result.cluster)
+    scenario = f"{family}/{result.phase}/{result.benchmark_mode}/{result.ingest_mode}"
     tags = {
         "benchkit.impl": result.collector,
         "benchkit.protocol": result.protocol,
@@ -320,7 +332,7 @@ def build_otlp_phase_signal_payload(
                 "scopeMetrics": [
                     {
                         "scope": {
-                            "name": "memagent-e2e.kind-bench",
+                            "name": _scope_name(family),
                         },
                         "metrics": [metric],
                     }
@@ -413,7 +425,7 @@ def render_summary(result: BenchmarkResult) -> str:
         return "n/a" if value is None else str(value)
 
     lines = [
-        f"# KIND Benchmark / {result.phase}",
+        f"# {result.cluster} Benchmark / {result.phase}",
         "",
         f"- Status: `{status}`",
         f"- Benchmark ID: `{result.benchmark_id}`",
