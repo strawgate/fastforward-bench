@@ -1,0 +1,78 @@
+{
+  "resourceMetrics": [
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "benchkit.run_id",
+            "value": {
+              "stringValue": "24288179122-1--compose-bench-smoke-file-tmax-single-logfwd"
+            }
+          },
+          {
+            "key": "benchkit.kind",
+            "value": {
+              "stringValue": "hybrid"
+            }
+          },
+          {
+            "key": "benchkit.source_format",
+            "value": {
+              "stringValue": "otlp"
+            }
+          },
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "memagent-e2e.compose-bench"
+            }
+          },
+          {
+            "key": "benchkit.ref",
+            "value": {
+              "stringValue": "main"
+            }
+          },
+          {
+            "key": "benchkit.commit",
+            "value": {
+              "stringValue": "b7cfae07e7f91b3c8a29d8c0e4231273d696c644"
+            }
+          },
+          {
+            "key": "benchkit.workflow",
+            "value": {
+              "stringValue": "Bench / compose smoke"
+            }
+          },
+          {
+            "key": "benchkit.job",
+            "value": {
+              "stringValue": "compose-bench-smoke"
+            }
+          },
+          {
+            "key": "benchkit.run_attempt",
+            "value": {
+              "stringValue": "1"
+            }
+          },
+          {
+            "key": "benchkit.runner",
+            "value": {
+              "stringValue": "GitHub Actions 1000155065"
+            }
+          }
+        ]
+      },
+      "scopeMetrics": [
+        {
+          "metrics": [],
+          "scope": {
+            "name": "memagent-e2e.compose-bench"
+          }
+        }
+      ]
+    }
+  ]
+}
