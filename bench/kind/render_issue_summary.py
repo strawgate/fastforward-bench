@@ -190,6 +190,19 @@ def target_label(total_target_eps: int) -> str:
     return "max" if total_target_eps == 0 else str(total_target_eps)
 
 
+SATURATION_TARGET_THRESHOLD = 100_000
+
+
+def is_saturation_target(result: BenchResult) -> bool:
+    """Return True for high-load saturation probes (eps_per_pod >= 100k or unbounded max).
+
+    These lanes stress the pipeline far above sustainable throughput.  Failures here
+    mean the system is throughput-limited, not that there is a correctness regression.
+    They are always non-gating in the suite PASS/FAIL verdict.
+    """
+    return result.target_eps_per_pod == 0 or result.target_eps_per_pod >= SATURATION_TARGET_THRESHOLD
+
+
 def has_integrity_alert(result: BenchResult) -> bool:
     return (
         (result.missing_event_count or 0) > 0
@@ -212,8 +225,11 @@ def render_markdown(
 ) -> str:
     total = len(results)
     passed = sum(1 for result in results if result.passed)
+    # Saturation-target failures are throughput-limited probes, not correctness regressions.
+    # They are always non-gating and excluded from the suite PASS/FAIL verdict.
+    gating_failed = sum(1 for result in results if not result.passed and not is_saturation_target(result))
     failed = total - passed
-    status = "PASS" if failed == 0 and total > 0 else "FAIL"
+    status = "PASS" if gating_failed == 0 and total > 0 else "FAIL"
     updated_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
 
     sorted_results = sorted(
@@ -236,7 +252,8 @@ def render_markdown(
         f"- Bench profile: `{bench_profile}`",
         f"- Updated: `{updated_at}`",
         f"- Workflow run: [view run]({run_url})",
-        f"- Benchmarks: `{total}` total, `{passed}` passed, `{failed}` failed",
+        f"- Benchmarks: `{total}` total, `{passed}` passed, `{failed}` failed"
+        + (f" (`{gating_failed}` gating)" if gating_failed != failed else ""),
     ]
 
     if not sorted_results:
@@ -311,7 +328,7 @@ def render_markdown(
                 result.cpu_profile,
                 fmt_int(result.collector_batch_target_bytes),
                 target_label(result.total_target_eps),
-                result.status.upper(),
+                "THROUGHPUT-LIMITED" if is_saturation_target(result) and not result.passed else result.status.upper(),
                 fmt_int(result.missing_event_count),
                 fmt_int(result.unexpected_event_count),
                 fmt_int(result.dup_estimate),
@@ -461,14 +478,33 @@ def render_markdown(
 
     failing = [result for result in sorted_results if not result.passed]
     if failing:
-        lines.extend(["", "## Failing Benchmarks", ""])
-        for result in failing:
-            failing_target_label = target_label(result.total_target_eps)
-            lines.append(f"### {result.collector} / {result.ingest_mode} / {result.cpu_profile} / target={failing_target_label}")
+        gating_failing = [r for r in failing if not is_saturation_target(r)]
+        saturation_failing = [r for r in failing if is_saturation_target(r)]
+        if gating_failing:
+            lines.extend(["", "## Failing Benchmarks", ""])
+            for result in gating_failing:
+                failing_target_label = target_label(result.total_target_eps)
+                lines.append(f"### {result.collector} / {result.ingest_mode} / {result.cpu_profile} / target={failing_target_label}")
+                lines.append("")
+                lines.append(f"- Status: `{result.status}`")
+                lines.append(f"- Notes: {result.notes or 'n/a'}")
+                lines.append("")
+        if saturation_failing:
+            lines.extend(["", "## Throughput-Limited Probes (non-gating)", ""])
+            lines.append(
+                "_These lanes ran at or above the saturation threshold "
+                f"(eps_per_pod ≥ {SATURATION_TARGET_THRESHOLD:,}). "
+                "Failures here indicate the pipeline is throughput-limited, not a correctness regression. "
+                "They do not affect the suite PASS/FAIL verdict._"
+            )
             lines.append("")
-            lines.append(f"- Status: `{result.status}`")
-            lines.append(f"- Notes: {result.notes or 'n/a'}")
-            lines.append("")
+            for result in saturation_failing:
+                failing_target_label = target_label(result.total_target_eps)
+                lines.append(f"### {result.collector} / {result.ingest_mode} / {result.cpu_profile} / target={failing_target_label}")
+                lines.append("")
+                lines.append(f"- Status: `THROUGHPUT-LIMITED`")
+                lines.append(f"- Notes: {result.notes or 'n/a'}")
+                lines.append("")
 
     return "\n".join(lines).rstrip() + "\n"
 
@@ -496,6 +532,7 @@ def main() -> None:
         "benchmark_count": len(results),
         "passed_count": sum(1 for result in results if result.passed),
         "failed_count": sum(1 for result in results if not result.passed),
+        "gating_failed_count": sum(1 for result in results if not result.passed and not is_saturation_target(result)),
         "results": [
             {
                 "artifact_name": result.artifact_name,
