@@ -2,7 +2,7 @@ name: Bench / kind smoke
 
 on:
   pull_request:
-    branches: [master]
+    branches: [main]
     paths:
       - 'bench/kind/**'
       - 'bench/lib/**'

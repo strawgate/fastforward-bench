@@ -2,7 +2,7 @@ name: Bench / compose smoke
 
 on:
   pull_request:
-    branches: [master]
+    branches: [main]
     paths:
       - 'bench/compose/**'
       - 'bench/lib/**'
