@@ -2,7 +2,7 @@ name: E2E / smoke suite
 
 on:
   pull_request:
-    branches: [master]
+    branches: [main]
     types: [opened, synchronize, reopened, ready_for_review]
     paths:
       - 'tests/e2e/**'
