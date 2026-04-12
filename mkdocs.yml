@@ -1,0 +1,12 @@
+site_name: memagent-e2e
+site_url: https://strawgate.com/memagent-e2e/
+repo_url: https://github.com/strawgate/memagent-e2e
+repo_name: strawgate/memagent-e2e
+
+theme:
+  name: mkdocs
+
+nav:
+  - Home: index.md
+  - Scenario Platform: SCENARIO_PLATFORM.md
+
