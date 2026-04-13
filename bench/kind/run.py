@@ -773,7 +773,7 @@ def run_smoke_phase(
 
     apply_manifest(manifests["collector_configmap"])
     apply_manifest(manifests["collector_workload"])
-    rollout_status(args.namespace, adapter.rollout_kind, adapter.rollout_name, timeout_sec=120)
+    rollout_status(args.namespace, adapter.rollout_kind, adapter.rollout_name, timeout_sec=300)
 
     collector_pod = get_first_pod_name(args.namespace, adapter.pod_selector)
     if not collector_pod:

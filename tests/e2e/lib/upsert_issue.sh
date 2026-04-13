@@ -51,7 +51,11 @@ from pathlib import Path
 
 path = Path(sys.argv[1])
 payload = json.loads(path.read_text(encoding="utf-8"))
-failed = payload.get("failed_count")
+# Prefer gating_failed_count when present (saturation-target failures are non-gating
+# and should not drive the PASS/FAIL verdict).
+failed = payload.get("gating_failed_count")
+if failed is None:
+    failed = payload.get("failed_count")
 total = payload.get("scenario_count")
 if total is None:
     total = payload.get("benchmark_count")
@@ -68,9 +72,13 @@ if isinstance(failed, int):
         else:
             detail = f"{failed} failing"
     else:
+        total_failed = payload.get("failed_count", 0) or 0
         if isinstance(total, int) and total > 0:
             status = "PASS"
-            detail = f"all {total} passing"
+            if total_failed > 0:
+                detail = f"{total_failed} non-gating, {total - total_failed} passing"
+            else:
+                detail = f"all {total} passing"
         else:
             status = "FAIL"
             detail = "no results"
