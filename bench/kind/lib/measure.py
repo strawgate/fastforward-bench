@@ -333,6 +333,11 @@ def _sample_from_vector_prometheus(body: str) -> StatsSample:
             ["process_resident_memory_bytes", "vector_process_resident_memory_bytes"],
         )
     )
+    # If both process-level metrics are absent the endpoint is returning only
+    # component-level metrics (no process CPU/RSS). Raise so the caller treats
+    # this sample as unavailable rather than recording misleading zeros.
+    if process_cpu_seconds == 0.0 and rss_bytes == 0:
+        raise ValueError("vector process metrics (CPU/RSS) not present in prometheus output")
     return StatsSample(
         timestamp=time.time(),
         output_lines=int(sent_logs),
