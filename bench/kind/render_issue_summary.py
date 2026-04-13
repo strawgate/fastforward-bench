@@ -506,6 +506,24 @@ def render_markdown(
                 lines.append(f"- Notes: {result.notes or 'n/a'}")
                 lines.append("")
 
+    # Add telemetry notes for known collection gaps
+    collectors_in_results = {r.collector for r in sorted_results}
+    if "vector" in collectors_in_results:
+        has_vector_cpu_na = any(
+            r.collector == "vector" and r.collector_cpu_cores_avg is None
+            for r in sorted_results
+        )
+        if has_vector_cpu_na:
+            lines.extend([
+                "",
+                "---",
+                "",
+                "**Telemetry Note:** Vector `Collector CPU Avg` shows `n/a` because vector's "
+                "`internal_metrics` source does not expose process-level CPU/RSS metrics in the "
+                "prometheus output captured by this harness. Throughput (EPS) measurements are "
+                "unaffected — they are derived from sink capture counts.",
+            ])
+
     return "\n".join(lines).rstrip() + "\n"
 
 
