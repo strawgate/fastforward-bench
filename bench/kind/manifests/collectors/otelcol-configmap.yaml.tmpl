@@ -23,7 +23,7 @@ data:
               - merge_maps(attributes, ParseJSON(body), "upsert") where IsMatch(body, "^\\{")
       batch:
         send_batch_size: 1024
-        timeout: 1s
+        timeout: 200ms
 
     exporters:
       otlphttp:
