@@ -360,27 +360,7 @@ def render_markdown(
                 )
             )
             lines.append("")
-            # Explain drain-window artifact: at low EPS targets, collectors with
-            # slow flush cycles (e.g. otelcol) may not finish delivering all
-            # buffered events before the drain timeout expires.  The missing count
-            # is proportional to eps_per_pod (≈ drain_timeout_sec × eps_per_pod)
-            # and is a structural artifact, not data loss.
-            has_drain_window_artifact = any(
-                r.collector != "logfwd"
-                and r.passed
-                and (r.missing_event_count or 0) > 0
-                and not is_saturation_target(r)
-                for r in sorted_results
-            )
-            if has_drain_window_artifact:
-                lines.append(
-                    "_Note: `Missing` counts on PASS rows at low EPS targets reflect a "
-                    "drain-window artifact — the collector's flush cycle extends beyond the "
-                    "10 s drain timeout, so events buffered at measurement end arrive after "
-                    "the source oracle snapshot is taken. The count scales with "
-                    "`eps_per_pod × drain_timeout_sec` and does not indicate data loss._"
-                )
-                lines.append("")
+
 
         for cpu_profile in cpu_profiles:
             lines.extend(["", f"## CPU: `{cpu_profile}`", ""])
