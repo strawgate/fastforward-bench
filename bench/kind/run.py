@@ -266,9 +266,9 @@ def build_resource_plan(
 
     capacity_probe = eps_per_pod >= 10_000 or unbounded_generator
     if capacity_probe:
-        # For ladder/max capacity probes, use an explicit CPU envelope:
-        # generator total = 1 core, sink pod total = 1 core, collector = 1 or 2 cores.
-        # Keep smoke profile lightweight.
+        # For ladder/max capacity probes, give the generator and collector more
+        # CPU headroom.  Both single and multi use a 3-core cluster budget so
+        # that all jobs fit on ubuntu-latest (2 physical CPUs + Docker quota).
         if cpu_profile.name == "single":
             node_budget_mcpu = 3000
             sink_mcpu = 900
@@ -276,11 +276,12 @@ def build_resource_plan(
             collector_mcpu_min = 1000
             collector_mcpu_target = 1000
         else:
-            node_budget_mcpu = 4000
-            # 4-core GH runners have tighter allocatable CPU than nominal.
-            # Keep multi-lane capacity probes on a proven schedulable envelope.
-            sink_mcpu = 850
-            capture_reader_mcpu = 50
+            # Multi capacity probes: keep the 3-core budget so the emitter pod
+            # can schedule on a 2-core GH runner.  Sink/capture stay lean;
+            # collector gets the remaining ~1960 m (≈ 2 cores).
+            node_budget_mcpu = 3000
+            sink_mcpu = 120
+            capture_reader_mcpu = 20
             collector_mcpu_min = 1400
             collector_mcpu_target = 2000
 
@@ -309,7 +310,7 @@ def build_resource_plan(
 
     emitter_request_mcpu = emitter_mcpu
     if capacity_probe and cpu_profile.name == "multi":
-        # Keep max-mode emitter schedulable on 4-core runners while preserving
+        # Cap request to keep the emitter schedulable; the limit still allows
         # burst headroom under the configured CPU limit.
         emitter_request_mcpu = min(emitter_mcpu, 300)
 
