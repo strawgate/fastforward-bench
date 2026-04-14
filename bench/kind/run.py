@@ -524,9 +524,10 @@ def filter_rows_to_emitter_snapshot(
     seq_bounds_by_pod: dict[str, tuple[int, int]] = {}
     for row in rows:
         pod_name = row.get("pod_name")
-        seq = row.get("seq")
-        if not isinstance(pod_name, str) or not isinstance(seq, int):
+        seq_raw = row.get("seq")
+        if not isinstance(pod_name, str) or not isinstance(seq_raw, (int, float)):
             continue
+        seq = int(seq_raw)
         bounds = seq_bounds_by_pod.get(pod_name)
         if bounds is None:
             seq_bounds_by_pod[pod_name] = (seq, seq)
@@ -538,7 +539,7 @@ def filter_rows_to_emitter_snapshot(
     for stat in emitter_reported_stats:
         pod_name = stat.get("pod_name")
         output_lines = stat.get("output_lines")
-        if isinstance(pod_name, str) and isinstance(output_lines, int):
+        if isinstance(pod_name, str) and isinstance(output_lines, (int, float)):
             bounds = seq_bounds_by_pod.get(pod_name)
             if bounds is None:
                 continue
@@ -546,14 +547,15 @@ def filter_rows_to_emitter_snapshot(
             # `output_lines` is a count, not an absolute sequence number.
             # Sequence values can begin well above 1, so anchor the cutoff to
             # the first observed sequence for this benchmark snapshot.
-            cutoff_by_pod[pod_name] = min_seq + max(0, output_lines - 1)
+            cutoff_by_pod[pod_name] = min_seq + max(0, int(output_lines) - 1)
 
     filtered: list[dict[str, object]] = []
     for row in rows:
         pod_name = row.get("pod_name")
-        seq = row.get("seq")
-        if not isinstance(pod_name, str) or not isinstance(seq, int):
+        seq_raw = row.get("seq")
+        if not isinstance(pod_name, str) or not isinstance(seq_raw, (int, float)):
             continue
+        seq = int(seq_raw)
         cutoff = cutoff_by_pod.get(pod_name)
         if cutoff is None or seq <= cutoff:
             filtered.append(row)
