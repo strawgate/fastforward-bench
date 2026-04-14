@@ -785,7 +785,7 @@ def run_smoke_phase(
 
     apply_manifest(manifests["emitter_configmap"])
     apply_manifest(manifests["emitter_statefulset"])
-    emitter_rollout_timeout = max(120, profile.pods * 12)
+    emitter_rollout_timeout = max(300, profile.pods * 12)
     rollout_status(args.namespace, "statefulset", "log-emitter", timeout_sec=emitter_rollout_timeout)
     emitter_pods = get_pod_names(args.namespace, "app.kubernetes.io/name=log-emitter")
     collector_restart_before, collector_reasons_before = collector_runtime_snapshot(args.namespace, collector_pod)
