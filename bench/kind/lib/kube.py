@@ -159,16 +159,16 @@ def send_signal_to_pod(namespace: str, pod_name: str, signal: str) -> None:
     )
 
 
-def collect_flamegraph_from_pod(namespace: str, pod_name: str, dest: Path) -> None:
-    """Copy flamegraph.svg from a pod to a local path via kubectl cp."""
+def collect_pprof_from_pod(namespace: str, pod_name: str, dest: Path) -> None:
+    """Copy profile.pb.gz from a pod to a local path via kubectl cp."""
     completed = subprocess.run(
-        ["kubectl", "-n", namespace, "cp", f"{pod_name}:/flamegraph.svg", str(dest)],
+        ["kubectl", "-n", namespace, "cp", f"{pod_name}:/profile.pb.gz", str(dest)],
         check=False,
         capture_output=True,
         text=True,
     )
     if completed.returncode != 0:
-        raise CommandError(f"kubectl cp flamegraph failed: {completed.stderr.strip()}")
+        raise CommandError(f"kubectl cp pprof failed: {completed.stderr.strip()}")
 
 
 def wait_for_namespace(namespace: str, timeout_sec: int = 15) -> None:
