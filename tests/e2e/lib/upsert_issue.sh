@@ -51,8 +51,6 @@ from pathlib import Path
 
 path = Path(sys.argv[1])
 payload = json.loads(path.read_text(encoding="utf-8"))
-# Prefer gating_failed_count when present (saturation-target failures are non-gating
-# and should not drive the PASS/FAIL verdict).
 failed = payload.get("gating_failed_count")
 if failed is None:
     failed = payload.get("failed_count")
@@ -115,30 +113,19 @@ for raw_label in "${raw_labels[@]}"; do
             --repo "${GITHUB_REPOSITORY}" \
             --color "0E8A16" \
             --description "Live suite reporting issue" \
-            --force >/dev/null
+            --force >/dev/null 2>&1 || true
     fi
 done
 
 marker="live-suite-key:${ISSUE_SUITE_KEY}"
-existing_issue_numbers=()
-while IFS= read -r issue_number; do
-    issue_number="$(trim "${issue_number}")"
-    if [[ -n "${issue_number}" ]]; then
-        existing_issue_numbers+=("${issue_number}")
-    fi
-done < <(
+existing_issue_number="$(
     gh issue list \
         --repo "${GITHUB_REPOSITORY}" \
         --state open \
         --search "\"${marker}\" in:body" \
         --json number \
-        --jq '.[].number'
-)
-
-existing_issue_count=0
-for _issue in "${existing_issue_numbers[@]-}"; do
-    existing_issue_count=$((existing_issue_count + 1))
-done
+        --jq '.[0].number // empty'
+)"
 
 issue_body_with_meta="$(mktemp)"
 trap 'rm -f "${issue_body_with_meta}"' EXIT
@@ -148,10 +135,6 @@ trap 'rm -f "${issue_body_with_meta}"' EXIT
     echo "<!-- live-suite-status:${issue_status} -->"
     echo "<!-- live-suite-updated:${GITHUB_RUN_ID:-unknown} -->"
     echo ""
-    if [[ "${existing_issue_count}" -gt 0 ]]; then
-        echo "Supersedes: $(printf '#%s ' "${existing_issue_numbers[@]-}" | sed 's/[[:space:]]$//')"
-        echo ""
-    fi
     cat "${ISSUE_BODY_FILE}"
 } >"${issue_body_with_meta}"
 
@@ -160,25 +143,22 @@ for label in "${labels[@]}"; do
     label_args+=(--label "${label}")
 done
 
-new_issue_url="$(
-    gh issue create \
+if [[ -n "${existing_issue_number}" ]]; then
+    echo "Updating existing issue #${existing_issue_number}..."
+    gh issue edit "${existing_issue_number}" \
         --repo "${GITHUB_REPOSITORY}" \
         --title "${issue_title}" \
         --body-file "${issue_body_with_meta}" \
-        "${label_args[@]}"
-)"
-new_issue_number="${new_issue_url##*/}"
-
-for old_issue in "${existing_issue_numbers[@]-}"; do
-    if [[ -z "${old_issue}" ]]; then
-        continue
-    fi
-    if [[ "${old_issue}" == "${new_issue_number}" ]]; then
-        continue
-    fi
-    gh issue close "${old_issue}" \
-        --repo "${GITHUB_REPOSITORY}" \
-        --comment "Superseded by #${new_issue_number} (${new_issue_url})."
-done
-
-echo "Created live issue #${new_issue_number}: ${new_issue_url}"
+        "${label_args[@]}" >/dev/null
+    echo "Updated live issue #${existing_issue_number}"
+else
+    echo "Creating new issue..."
+    new_issue_url="$(
+        gh issue create \
+            --repo "${GITHUB_REPOSITORY}" \
+            --title "${issue_title}" \
+            --body-file "${issue_body_with_meta}" \
+            "${label_args[@]}"
+    )"
+    echo "Created live issue: ${new_issue_url}"
+fi

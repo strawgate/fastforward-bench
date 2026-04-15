@@ -1,0 +1,97 @@
+name: Report Dashboard
+
+on:
+  schedule:
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["Cloud-Native Scalability (K8s)", "Local Throughput (Docker)", "Core Service Integrity (Smoke)", "Full Service Integrity (Nightly)"]
+    types: [completed]
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  dashboard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Generate Dashboard
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "# System Dashboard: Performance & Integrity" > dashboard.md
+          echo "" >> dashboard.md
+          echo "Last updated: $(date -u)" >> dashboard.md
+          echo "" >> dashboard.md
+          
+          echo "### ⚡ Performance & Scale" >> dashboard.md
+          echo "| Benchmark Suite | Status | Latest Report | Updated |" >> dashboard.md
+          echo "| :--- | :--- | :--- | :--- |" >> dashboard.md
+
+          # Function to extract issue info
+          extract_issue() {
+            local key="$1"
+            local label="$2"
+            gh issue list --label "$label" --state open --search "live-suite-key:$key" --json number,title,url,body --jq '.[0] | "\(.number)|\(.title)|\(.url)|\(.body)"'
+          }
+
+          perf_suites=(
+            "bench-nightly-eps|report:bench-nightly-eps"
+            "bench-compose-nightly-eps|report:bench-compose-nightly-eps"
+          )
+
+          for suite in "${perf_suites[@]}"; do
+            key="${suite%%|*}"
+            label="${suite##*|}"
+            info=$(extract_issue "$key" "$label")
+            if [[ -n "$info" ]]; then
+              number=$(echo "$info" | cut -d'|' -f1)
+              title=$(echo "$info" | cut -d'|' -f2)
+              url=$(echo "$info" | cut -d'|' -f3)
+              body=$(echo "$info" | cut -d'|' -f4)
+              status=$(echo "$body" | grep -o "live-suite-status:[A-Z]*" | cut -d':' -f2 || echo "UNKNOWN")
+              clean_title=$(echo "$title" | sed -E 's/\[[A-Z]+\] //')
+              echo "| $clean_title | \`$status\` | [#$number]($url) | $(date -u) |" >> dashboard.md
+            fi
+          done
+
+          echo "" >> dashboard.md
+          echo "### ✅ Service Integrity" >> dashboard.md
+          echo "| Integrity Suite | Status | Latest Report | Updated |" >> dashboard.md
+          echo "| :--- | :--- | :--- | :--- |" >> dashboard.md
+
+          integ_suites=(
+            "e2e-smoke|report:e2e-smoke"
+            "e2e-nightly|report:e2e-nightly"
+          )
+
+          for suite in "${integ_suites[@]}"; do
+            key="${suite%%|*}"
+            label="${suite##*|}"
+            info=$(extract_issue "$key" "$label")
+            if [[ -n "$info" ]]; then
+              number=$(echo "$info" | cut -d'|' -f1)
+              title=$(echo "$info" | cut -d'|' -f2)
+              url=$(echo "$info" | cut -d'|' -f3)
+              body=$(echo "$info" | cut -d'|' -f4)
+              status=$(echo "$body" | grep -o "live-suite-status:[A-Z]*" | cut -d':' -f2 || echo "UNKNOWN")
+              clean_title=$(echo "$title" | sed -E 's/\[[A-Z]+\] //')
+              echo "| $clean_title | \`$status\` | [#$number]($url) | $(date -u) |" >> dashboard.md
+            fi
+          done
+
+          echo "" >> dashboard.md
+          echo "---" >> dashboard.md
+          echo "### Resources" >> dashboard.md
+          echo "- **Core Smoke Test**: Singular KIND-based E2E in [strawgate/memagent](https://github.com/strawgate/memagent/actions/workflows/e2e.yml)." >> dashboard.md
+
+      - name: Upsert Dashboard Issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_TITLE_BASE: "System Dashboard: Performance & Integrity"
+          ISSUE_BODY_FILE: dashboard.md
+          ISSUE_SUITE_KEY: master-dashboard
+          ISSUE_LABELS: dashboard,report:master
+        run: bash tests/e2e/lib/upsert_issue.sh

@@ -1,4 +1,4 @@
-name: Bench / kind smoke
+name: Cloud-Native Scalability (K8s)
 
 on:
   pull_request:
@@ -39,6 +39,7 @@ on:
           - ladder
           - ladder_and_max
           - max
+          - logfwd_max
       collector:
         description: collector adapter to benchmark
         required: false
@@ -142,7 +143,7 @@ jobs:
                 echo 'workloads=[{"label":"t1","pods":1,"eps_per_pod":1},{"label":"t10","pods":1,"eps_per_pod":10},{"label":"t100","pods":1,"eps_per_pod":100},{"label":"t1k","pods":1,"eps_per_pod":1000},{"label":"t10k","pods":1,"eps_per_pod":10000},{"label":"t100k","pods":1,"eps_per_pod":100000},{"label":"t1m","pods":1,"eps_per_pod":1000000},{"label":"tmax","pods":1,"eps_per_pod":0}]' >>"$GITHUB_OUTPUT"
               fi
               ;;
-            max)
+            max|logfwd_max)
               echo 'workloads=[{"label":"tmax","pods":1,"eps_per_pod":0}]' >>"$GITHUB_OUTPUT"
               ;;
             *)
@@ -151,26 +152,22 @@ jobs:
               ;;
           esac
 
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${INPUT_COLLECTOR}" != "all" ]]; then
+          if [[ "${TARGET_SET}" == "logfwd_max" ]]; then
+            echo 'collectors=["logfwd"]' >>"$GITHUB_OUTPUT"
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" && "${INPUT_COLLECTOR}" != "all" ]]; then
             echo "collectors=[\"${INPUT_COLLECTOR}\"]" >>"$GITHUB_OUTPUT"
           else
             echo 'collectors=["logfwd","otelcol","vector"]' >>"$GITHUB_OUTPUT"
           fi
-          if [[ "${{ github.event_name }}" == "schedule" ]]; then
-            echo 'cpu_profiles=["single","multi"]' >>"$GITHUB_OUTPUT"
-          elif [[ "${{ github.event_name }}" == "workflow_dispatch" && "${INPUT_CPU_PROFILE}" != "all" ]]; then
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${INPUT_CPU_PROFILE}" != "all" ]]; then
             echo "cpu_profiles=[\"${INPUT_CPU_PROFILE}\"]" >>"$GITHUB_OUTPUT"
           else
             echo 'cpu_profiles=["single","multi"]' >>"$GITHUB_OUTPUT"
           fi
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            if [[ "${INPUT_INGEST_MODE}" != "all" ]]; then
-              echo "ingest_modes=[\"${INPUT_INGEST_MODE}\"]" >>"$GITHUB_OUTPUT"
-            else
-              echo 'ingest_modes=["file","otlp"]' >>"$GITHUB_OUTPUT"
-            fi
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${INPUT_INGEST_MODE}" != "all" ]]; then
+            echo "ingest_modes=[\"${INPUT_INGEST_MODE}\"]" >>"$GITHUB_OUTPUT"
           else
-            echo 'ingest_modes=["file"]' >>"$GITHUB_OUTPUT"
+            echo 'ingest_modes=["file","otlp"]' >>"$GITHUB_OUTPUT"
           fi
 
   kind-bench-smoke:
@@ -188,19 +185,59 @@ jobs:
         exclude:
           - ingest_mode: otlp
             collector: vector
+          # Skip ladder/profile runs for 3rd party collectors - only run 'tmax'
+          - collector: otelcol
+            workload: {label: "profile-smoke"}
+          - collector: otelcol
+            workload: {label: "profile-quick"}
+          - collector: otelcol
+            workload: {label: "profile-default"}
+          - collector: otelcol
+            workload: {label: "t1"}
+          - collector: otelcol
+            workload: {label: "t10"}
+          - collector: otelcol
+            workload: {label: "t100"}
+          - collector: otelcol
+            workload: {label: "t1k"}
+          - collector: otelcol
+            workload: {label: "t10k"}
+          - collector: otelcol
+            workload: {label: "t100k"}
+          - collector: otelcol
+            workload: {label: "t1m"}
+          - collector: vector
+            workload: {label: "profile-smoke"}
+          - collector: vector
+            workload: {label: "profile-quick"}
+          - collector: vector
+            workload: {label: "profile-default"}
+          - collector: vector
+            workload: {label: "t1"}
+          - collector: vector
+            workload: {label: "t10"}
+          - collector: vector
+            workload: {label: "t100"}
+          - collector: vector
+            workload: {label: "t1k"}
+          - collector: vector
+            workload: {label: "t10k"}
+          - collector: vector
+            workload: {label: "t100k"}
+          - collector: vector
+            workload: {label: "t1m"}
     env:
       MEMAGENT_REPO_ROOT: ${{ github.workspace }}/memagent
       BENCH_PROFILE: ${{ needs.plan.outputs.bench_profile }}
       BENCH_RESULTS_DIR: ${{ github.workspace }}/bench/kind/results/${{ needs.plan.outputs.bench_profile }}/${{ matrix.ingest_mode }}/${{ matrix.workload.label }}/${{ matrix.cpu_profile }}/${{ matrix.collector }}
-      CLUSTER_NAME: b-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.ingest_mode }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}-${{ matrix.workload.label }}
       BENCH_COLLECTOR: ${{ matrix.collector }}
       BENCH_INGEST_MODE: ${{ matrix.ingest_mode }}
       BENCH_CPU_PROFILE: ${{ matrix.cpu_profile }}
       BENCH_WORKLOAD_LABEL: ${{ matrix.workload.label }}
       BENCH_PODS: ${{ matrix.workload.pods }}
       BENCH_EPS_PER_POD: ${{ matrix.workload.eps_per_pod }}
-      BENCH_COLLECTOR_BATCH_TARGET_BYTES: ${{ inputs.collector_batch_target_bytes || '' }}
       BENCHKIT_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}--kind-bench-${{ needs.plan.outputs.bench_profile }}-${{ matrix.ingest_mode }}-${{ matrix.workload.label }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}
+      CLUSTER_NAME: b-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.ingest_mode }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}-${{ matrix.workload.label }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -213,6 +250,10 @@ jobs:
         with:
           memagent-repo-root: memagent
           memagent-ref: ${{ env.MEMAGENT_REF }}
+      - uses: ./.github/actions/setup-kind
+        with:
+          cluster-name: ${{ env.CLUSTER_NAME }}
+          results-dir: ${{ env.BENCH_RESULTS_DIR }}
       - if: env.PERSIST_BENCH_DATA == 'true'
         name: Start Octo11y monitor
         id: monitor
@@ -221,34 +262,24 @@ jobs:
           run-id: ${{ env.BENCHKIT_RUN_ID }}
           scrape-interval: 1s
           metric-sets: cpu,memory,load,process
-      - name: Install KIND
-        run: |
-          if ! command -v kind >/dev/null 2>&1; then
-            KIND_VERSION="v0.24.0"
-            curl -Lo ./kind "https://kind.sigs.k8s.io/dl/${KIND_VERSION}/kind-linux-amd64"
-            chmod +x ./kind
-            sudo mv ./kind /usr/local/bin/kind
-          fi
-      - name: Run benchmark harness
-        continue-on-error: ${{ github.event_name == 'schedule' || matrix.collector == 'vector' || matrix.workload.label == 'tmax' || matrix.workload.eps_per_pod >= 10000 }}
+      - name: Run kind benchmark harness
+        continue-on-error: ${{ github.event_name == 'schedule' || matrix.workload.label == 'tmax' || matrix.workload.eps_per_pod >= 10000 }}
         run: |
           set -euo pipefail
           mkdir -p "${BENCH_RESULTS_DIR}"
           HARNESS_LOG="${BENCH_RESULTS_DIR}/harness.log"
           if ! python3 bench/kind/run.py \
-            --phase smoke \
-            --profile "${BENCH_PROFILE}" \
-            --pods "${BENCH_PODS}" \
-            --eps-per-pod "${BENCH_EPS_PER_POD}" \
+            --cluster-name "${CLUSTER_NAME}" \
             --collector "${BENCH_COLLECTOR}" \
             --ingest-mode "${BENCH_INGEST_MODE}" \
+            --profile "${BENCH_PROFILE}" \
             --cpu-profile "${BENCH_CPU_PROFILE}" \
-            --protocol otlp_http \
-            --cluster-name "${CLUSTER_NAME}" \
+            --pods "${BENCH_PODS}" \
+            --eps-per-pod "${BENCH_EPS_PER_POD}" \
             --benchkit-run-id "${BENCHKIT_RUN_ID}" \
             --benchkit-kind "hybrid" \
-            --benchkit-otlp-http-endpoint "${{ steps.monitor.outputs.otlp-http-endpoint }}" \
             --results-dir "${BENCH_RESULTS_DIR}" \
+            --collector-batch-target-bytes "${{ inputs.collector_batch_target_bytes }}" \
             >"${HARNESS_LOG}" 2>&1; then
             echo "kind harness failed, tailing ${HARNESS_LOG}"
             tail -n 200 "${HARNESS_LOG}" || true
@@ -261,21 +292,17 @@ jobs:
           if [[ -f "${BENCH_RESULTS_DIR}/result.json" ]]; then
             exit 0
           fi
-          set -- \
+          python3 bench/lib/write_missing_result.py \
             --output-dir "${BENCH_RESULTS_DIR}" \
-            --cluster "kind-single-node" \
+            --cluster "kind" \
             --cluster-name "${CLUSTER_NAME}" \
-            --namespace "memagent-bench" \
+            --namespace "benchkit" \
             --collector "${BENCH_COLLECTOR}" \
             --ingest-mode "${BENCH_INGEST_MODE}" \
             --cpu-profile "${BENCH_CPU_PROFILE}" \
             --pods "${BENCH_PODS}" \
             --target-eps-per-pod "${BENCH_EPS_PER_POD}" \
             --notes "kind benchmark harness exited before writing result.json"
-          if [[ -n "${BENCH_COLLECTOR_BATCH_TARGET_BYTES}" ]]; then
-            set -- "$@" --collector-batch-target-bytes "${BENCH_COLLECTOR_BATCH_TARGET_BYTES}"
-          fi
-          python3 bench/lib/write_missing_result.py "$@"
       - if: env.PERSIST_BENCH_DATA == 'true'
         name: Stash jitter
         shell: bash
@@ -315,7 +342,7 @@ jobs:
           path: artifacts
       - name: Render benchmark summary
         env:
-          SUITE_NAME: ${{ github.event_name == 'schedule' && 'Bench Nightly EPS' || 'Bench Competitive Benchmarks' }}
+          SUITE_NAME: ${{ github.event_name == 'schedule' && 'Cloud-Native Scalability (K8s) - Nightly' || 'Cloud-Native Scalability (K8s) - Competitive' }}
         run: |
           python3 bench/kind/render_issue_summary.py \
             --artifacts-root artifacts \
@@ -347,14 +374,14 @@ jobs:
         run: |
           if [[ "${GITHUB_EVENT_NAME}" == "schedule" ]]; then
             {
-              echo "title_base=Bench Nightly EPS Report"
+              echo "title_base=Cloud-Native Scalability (K8s) Report"
               echo "suite_key=bench-nightly-eps"
               echo "labels=live-suite-report,report:bench,report:bench-nightly-eps"
             } >>"$GITHUB_OUTPUT"
           else
             target_set="${{ needs.plan.outputs.target_set }}"
             {
-              echo "title_base=Bench Competitive Benchmarks Report (${target_set})"
+              echo "title_base=Cloud-Native Scalability (K8s) Competitive Report (${target_set})"
               echo "suite_key=bench-competitive-${target_set}"
               echo "labels=live-suite-report,report:bench,report:bench-competitive"
             } >>"$GITHUB_OUTPUT"
@@ -399,9 +426,20 @@ jobs:
           ingest_modes = json.loads(os.environ["EXPECTED_INGEST_MODES"])
           workloads = json.loads(os.environ["EXPECTED_WORKLOADS"])
 
-          expected = len(collectors) * len(cpu_profiles) * len(ingest_modes) * len(workloads)
-          if "vector" in collectors and "otlp" in ingest_modes:
-            expected -= len(cpu_profiles) * len(workloads)
+          # Calculate expected count taking into account exclusions
+          def is_excluded(c, cp, i, w):
+            if i == "otlp" and c == "vector": return True
+            if c in ("otelcol", "vector"):
+              if w["label"] != "tmax": return True
+            return False
+
+          expected = 0
+          for c in collectors:
+            for cp in cpu_profiles:
+              for i in ingest_modes:
+                for w in workloads:
+                  if not is_excluded(c, cp, i, w):
+                    expected += 1
 
           print(
             f"expected={expected} benchmark_count={benchmark_count} failed_count={failed_count}"
