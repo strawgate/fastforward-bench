@@ -43,6 +43,8 @@ class BenchResult:
     sink_cpu_cores_avg: float | None
     collector_cpu_cores_avg: float | None
     generator_cpu_cores_avg: float | None
+    collector_rss_mb_avg: float | None
+    sink_rss_mb_avg: float | None
     notes: str
 
     @property
@@ -118,6 +120,8 @@ def load_result(path: Path, artifact_name: str) -> BenchResult:
         sink_cpu_cores_avg=as_float(payload.get("sink_cpu_cores_avg")),
         collector_cpu_cores_avg=as_float(payload.get("collector_cpu_cores_avg")),
         generator_cpu_cores_avg=as_float(payload.get("generator_cpu_cores_avg")),
+        collector_rss_mb_avg=as_float(payload.get("collector_rss_mb_avg")),
+        sink_rss_mb_avg=as_float(payload.get("sink_rss_mb_avg")),
         notes=str(payload.get("notes") or ""),
     )
 
@@ -142,6 +146,24 @@ def fmt_float(value: float | None, digits: int = 2) -> str:
     if value is None:
         return "n/a"
     return f"{value:.{digits}f}"
+
+
+def fmt_eps(value: float | None) -> str:
+    """Format an EPS value compactly: sub-1 with 2 dp, <1000 with 1 dp, >=1000 as k."""
+    if value is None:
+        return "n/a"
+    if value < 1.0:
+        return f"{value:.2f}"
+    if value < 1_000.0:
+        return f"{value:.1f}"
+    return f"{value / 1_000.0:.1f}k"
+
+
+def fmt_mb(value: float | None) -> str:
+    """Format a memory value in MB, rounded to the nearest integer."""
+    if value is None:
+        return "n/a"
+    return f"{value:.0f} MB"
 
 
 def fmt_int(value: int | None) -> str:
@@ -287,19 +309,15 @@ def render_markdown(
                             subset,
                             key=lambda item: item.sink_lines_per_sec_avg or -1.0,
                         )
-                    pct_of_target = None
-                    if chosen.total_target_eps > 0 and chosen.sink_lines_per_sec_avg is not None:
-                        pct_of_target = chosen.sink_lines_per_sec_avg / chosen.total_target_eps
                     max_snapshot_rows.append(
                         [
                             collector,
                             ingest_mode,
                             cpu_profile,
-                            fmt_float(chosen.sink_lines_per_sec_avg),
+                            fmt_eps(chosen.sink_lines_per_sec_avg),
                             fmt_float(chosen.collector_cpu_cores_avg),
                             fmt_float(chosen.generator_cpu_cores_avg),
-                            fmt_percent(pct_of_target),
-                            target_label(chosen.total_target_eps),
+                            fmt_float(chosen.sink_cpu_cores_avg),
                         ]
                     )
         lines.extend(["", "## Max EPS Snapshot", ""])
@@ -312,11 +330,10 @@ def render_markdown(
                     "Max EPS",
                     "Collector CPU Avg",
                     "Generator CPU Avg",
-                    "% of Target",
-                    "Source Target",
+                    "Sink CPU Avg",
                 ],
                 rows=max_snapshot_rows,
-                align=["left", "left", "left", "right", "right", "right", "right", "left"],
+                align=["left", "left", "left", "right", "right", "right", "right"],
             )
         )
         lines.append("")
@@ -390,10 +407,12 @@ def render_markdown(
                             result.collector,
                             target_label(result.total_target_eps),
                             result.status.upper(),
-                            fmt_float(result.sink_lines_per_sec_avg),
+                            fmt_eps(result.sink_lines_per_sec_avg),
                             fmt_float(result.collector_cpu_cores_avg),
+                            fmt_mb(result.collector_rss_mb_avg),
                             fmt_float(result.generator_cpu_cores_avg),
                             fmt_float(result.sink_cpu_cores_avg),
+                            fmt_mb(result.sink_rss_mb_avg),
                             fmt_percent(eps_ratio),
                         ]
                     )
@@ -423,12 +442,14 @@ def render_markdown(
                             "Status",
                             "EPS Avg",
                             "Collector CPU Avg",
+                            "Collector RSS",
                             "Generator CPU Avg",
                             "Sink CPU Avg",
+                            "Sink RSS",
                             "% of Target",
                         ],
                         rows=summary_rows,
-                        align=["left", "right", "left", "right", "right", "right", "right", "right"],
+                        align=["left", "right", "left", "right", "right", "right", "right", "right", "right", "right"],
                     )
                 )
                 lines.extend(
@@ -578,6 +599,8 @@ def main() -> None:
                 "sink_cpu_cores_avg": result.sink_cpu_cores_avg,
                 "collector_cpu_cores_avg": result.collector_cpu_cores_avg,
                 "generator_cpu_cores_avg": result.generator_cpu_cores_avg,
+                "collector_rss_mb_avg": result.collector_rss_mb_avg,
+                "sink_rss_mb_avg": result.sink_rss_mb_avg,
                 "notes": result.notes,
             }
             for result in results
