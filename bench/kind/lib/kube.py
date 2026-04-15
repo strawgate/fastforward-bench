@@ -149,6 +149,28 @@ def collect_debug_artifacts(
                 (artifacts_dir / suffix).write_text(output, encoding="utf-8")
 
 
+def send_signal_to_pod(namespace: str, pod_name: str, signal: str) -> None:
+    """Send a signal to PID 1 in a running pod via kubectl exec."""
+    subprocess.run(
+        ["kubectl", "-n", namespace, "exec", pod_name, "--", "kill", f"-{signal}", "1"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+
+def collect_pprof_from_pod(namespace: str, pod_name: str, dest: Path) -> None:
+    """Copy profile.pb.gz from a pod to a local path via kubectl cp."""
+    completed = subprocess.run(
+        ["kubectl", "-n", namespace, "cp", f"{pod_name}:/profile.pb.gz", str(dest)],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if completed.returncode != 0:
+        raise CommandError(f"kubectl cp pprof failed: {completed.stderr.strip()}")
+
+
 def wait_for_namespace(namespace: str, timeout_sec: int = 15) -> None:
     deadline = time.time() + timeout_sec
     while time.time() < deadline:

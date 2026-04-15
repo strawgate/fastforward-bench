@@ -34,9 +34,11 @@ from lib.diagnostics import analyze_delivery_diagnostics
 from lib.kube import (
     apply_manifest,
     collect_debug_artifacts,
+    collect_pprof_from_pod,
     get_first_pod_name,
     get_pod_names,
     rollout_status,
+    send_signal_to_pod,
     wait_for_deployment,
     wait_for_namespace,
 )
@@ -964,6 +966,19 @@ def run_smoke_phase(
         )
     except Exception as exc:  # noqa: BLE001
         append_artifact_note(results_dir, "collector-status-error.txt", str(exc))
+    # Collect a pprof profile from the collector pod.
+    # Sending SIGUSR1 triggers logfwd to write profile.pb.gz then begin graceful shutdown.
+    # We copy the file in the short window between write and process exit.
+    try:
+        send_signal_to_pod(args.namespace, collector_pod_after, "USR1")
+        time.sleep(2)
+        collect_pprof_from_pod(
+            args.namespace,
+            collector_pod_after,
+            artifacts_dir / "collector-pprof.pb.gz",
+        )
+    except Exception as exc:  # noqa: BLE001
+        append_artifact_note(results_dir, "collector-pprof-error.txt", str(exc))
     collect_pod_logs(
         namespace=args.namespace,
         pod_names=[sink_pod],
