@@ -38,7 +38,14 @@ class ScenarioResult:
     source_extra_count: int
     source_null_field_violations: int
     reason: str | None
+    compare_keys: list[str]
+    identity_keys: list[str]
+    expected_preview: list[dict[str, Any]]
+    actual_preview: list[dict[str, Any]]
     missing_preview: list[dict[str, Any]]
+    duplicate_preview: list[dict[str, Any]]
+    extra_preview: list[dict[str, Any]]
+    null_field_preview: list[dict[str, Any]]
 
 
 def parse_args() -> argparse.Namespace:
@@ -75,7 +82,14 @@ def load_result(path: Path, artifact_name: str) -> ScenarioResult:
         source_extra_count=int(payload.get("source_extra_count", 0)),
         source_null_field_violations=int(payload.get("source_null_field_violations", 0)),
         reason=payload.get("reason"),
+        compare_keys=payload.get("compare_keys") or [],
+        identity_keys=payload.get("identity_keys") or [],
+        expected_preview=payload.get("expected_preview") or [],
+        actual_preview=payload.get("actual_preview") or [],
         missing_preview=payload.get("missing_preview") or [],
+        duplicate_preview=payload.get("duplicate_preview") or [],
+        extra_preview=payload.get("extra_preview") or [],
+        null_field_preview=payload.get("null_field_preview") or [],
     )
 
 
@@ -170,12 +184,26 @@ def render_markdown(
             lines.append(
                 f"- Duplicates / extras / order / nulls: `{result.duplicate_count}` / `{result.extra_count}` / `{result.order_violations}` / `{result.null_field_violations}`"
             )
+            if result.compare_keys:
+                lines.append(f"- Compare keys: `{', '.join(result.compare_keys)}`")
+            if result.identity_keys:
+                lines.append(f"- Identity keys: `{', '.join(result.identity_keys)}`")
             if result.source_checked:
                 lines.append(
                     f"- Source evidence: `{'PASS' if result.source_passed else 'FAIL'}` with missing / duplicates / extras / nulls `{result.source_missing_count}` / `{result.source_duplicate_count}` / `{result.source_extra_count}` / `{result.source_null_field_violations}`"
                 )
+            if result.expected_preview:
+                lines.extend(["", "**Expected rows (sample):**", "", "```json", json.dumps(result.expected_preview[:3], indent=2, sort_keys=True), "```"])
+            if result.actual_preview:
+                lines.extend(["", "**Actual rows (sample):**", "", "```json", json.dumps(result.actual_preview[:3], indent=2, sort_keys=True), "```"])
             if result.missing_preview:
-                lines.extend(["", "Missing preview:", "", "```json", json.dumps(result.missing_preview[:5], indent=2, sort_keys=True), "```"])
+                lines.extend(["", "**Missing rows:**", "", "```json", json.dumps(result.missing_preview[:5], indent=2, sort_keys=True), "```"])
+            if result.extra_preview:
+                lines.extend(["", "**Unexpected rows:**", "", "```json", json.dumps(result.extra_preview[:5], indent=2, sort_keys=True), "```"])
+            if result.duplicate_preview:
+                lines.extend(["", "**Duplicate rows:**", "", "```json", json.dumps(result.duplicate_preview[:5], indent=2, sort_keys=True), "```"])
+            if result.null_field_preview:
+                lines.extend(["", "**Null field violations:**", "", "```json", json.dumps(result.null_field_preview[:5], indent=2, sort_keys=True), "```"])
             lines.append("")
 
     return "\n".join(lines).rstrip() + "\n"
@@ -214,7 +242,14 @@ def main() -> None:
                 "source_extra_count": result.source_extra_count,
                 "source_null_field_violations": result.source_null_field_violations,
                 "reason": result.reason,
+                "compare_keys": result.compare_keys,
+                "identity_keys": result.identity_keys,
+                "expected_preview": result.expected_preview,
+                "actual_preview": result.actual_preview,
                 "missing_preview": result.missing_preview,
+                "duplicate_preview": result.duplicate_preview,
+                "extra_preview": result.extra_preview,
+                "null_field_preview": result.null_field_preview,
             }
             for result in results
         ],

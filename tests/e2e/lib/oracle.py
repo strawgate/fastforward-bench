@@ -248,6 +248,8 @@ def main() -> None:
         "duplicate_preview": sink_eval["duplicate_preview"][:10],
         "extra_preview": sink_eval["extra_rows"][:10],
         "null_field_preview": sink_eval["null_field_preview"][:10],
+        "expected_preview": sink_eval["projected_expected"][:3],
+        "actual_preview": sink_eval["projected_actual"][:3],
         "source_checked": source_eval is not None,
         "source_passed": source_eval["passed"] if source_eval else None,
         "source_policy": source_policy if source_eval else None,
