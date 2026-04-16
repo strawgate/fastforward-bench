@@ -46,3 +46,4 @@ data:
     output:
       type: otlp
       endpoint: http://bench-collector.${NAMESPACE}.svc.cluster.local:4318/v1/logs
+      batch_target_bytes: 4194304
