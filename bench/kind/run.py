@@ -142,6 +142,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--profile", choices=sorted(PROFILES), default="smoke")
     parser.add_argument("--collector", default="logfwd")
     parser.add_argument("--ingest-mode", choices=["file", "otlp"], default="file")
+    parser.add_argument("--ingest-label", type=lambda v: v or None, default=None, help="Label stored in result.json for ingest config (defaults to --ingest-mode)")
+    parser.add_argument(
+        "--emitter-batch-target-bytes",
+        type=lambda v: int(v) if v else None,
+        default=None,
+        help="Target batch size in bytes for OTLP emitter output. Sets EMITTER_BATCH_TARGET_BYTES_YAML in manifests.",
+    )
     parser.add_argument("--protocol", default="otlp_http")
     parser.add_argument("--cluster-name", default="memagent-bench")
     parser.add_argument("--namespace", default="memagent-bench")
@@ -713,6 +720,10 @@ def render_manifests(
     if collector_batch_target_bytes is not None:
         collector_batch_target_yaml = f"        batch_target_bytes: {collector_batch_target_bytes}"
 
+    emitter_batch_target_yaml = ""
+    if args.emitter_batch_target_bytes is not None:
+        emitter_batch_target_yaml = f"        batch_target_bytes: {args.emitter_batch_target_bytes}"
+
     substitutions = {
         "NAMESPACE": args.namespace,
         "MEMAGENT_IMAGE": args.memagent_image,
@@ -738,6 +749,7 @@ def render_manifests(
         "CAPTURE_READER_MEMORY_REQUEST": resource_plan.capture_reader_memory,
         "CAPTURE_READER_MEMORY_LIMIT": resource_plan.capture_reader_memory,
         "COLLECTOR_BATCH_TARGET_BYTES_YAML": collector_batch_target_yaml,
+        "EMITTER_BATCH_TARGET_BYTES_YAML": emitter_batch_target_yaml,
     }
     manifests = {
         "namespace": rendered_dir / "namespace.yaml",
@@ -1336,7 +1348,7 @@ def main() -> int:
         namespace=args.namespace,
         collector=args.collector,
         protocol=adapter.sink_transport if args.protocol == "otlp_http" else args.protocol,
-        ingest_mode=args.ingest_mode,
+        ingest_mode=args.ingest_label or args.ingest_mode,
         cpu_profile=args.cpu_profile,
         cluster_cpu_limit_cores=resource_plan.cluster_cpu_cores,
         collector_batch_target_bytes=collector_batch_target_bytes,
