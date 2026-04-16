@@ -198,7 +198,7 @@ def cpu_rank(name: str) -> tuple[int, str]:
 
 
 def ingest_rank(name: str) -> tuple[int, str]:
-    order = {"file": 0, "otlp": 1}
+    order = {"file": 0, "otlp": 1, "otlp-100k": 1, "otlp-4m": 2}
     return (order.get(name, 99), name)
 
 

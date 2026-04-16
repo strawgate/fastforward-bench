@@ -99,7 +99,7 @@ jobs:
       target_set: ${{ steps.plan.outputs.target_set }}
       collectors: ${{ steps.plan.outputs.collectors }}
       cpu_profiles: ${{ steps.plan.outputs.cpu_profiles }}
-      ingest_modes: ${{ steps.plan.outputs.ingest_modes }}
+      ingest_configs: ${{ steps.plan.outputs.ingest_configs }}
       workloads: ${{ steps.plan.outputs.workloads }}
     steps:
       - id: plan
@@ -163,14 +163,18 @@ jobs:
           else
             echo 'cpu_profiles=["single","multi"]' >>"$GITHUB_OUTPUT"
           fi
+          OTLP_CONFIGS='[{"mode":"otlp","label":"otlp-100k","batch_bytes":"102400"},{"mode":"otlp","label":"otlp-4m","batch_bytes":"4194304"}]'
+          FILE_CONFIG='[{"mode":"file","label":"file","batch_bytes":""}]'
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            if [[ "${INPUT_INGEST_MODE}" != "all" ]]; then
-              echo "ingest_modes=[\"${INPUT_INGEST_MODE}\"]" >>"$GITHUB_OUTPUT"
+            if [[ "${INPUT_INGEST_MODE}" == "file" ]]; then
+              echo "ingest_configs=${FILE_CONFIG}" >>"$GITHUB_OUTPUT"
+            elif [[ "${INPUT_INGEST_MODE}" == "otlp" ]]; then
+              echo "ingest_configs=${OTLP_CONFIGS}" >>"$GITHUB_OUTPUT"
             else
-              echo 'ingest_modes=["file","otlp"]' >>"$GITHUB_OUTPUT"
+              echo "ingest_configs=$(echo "${FILE_CONFIG}${OTLP_CONFIGS}" | python3 -c 'import sys,json; a,b=sys.stdin.read().split("]["); print(json.dumps(json.loads(a+"]")+json.loads("["+b)))')" >>"$GITHUB_OUTPUT"
             fi
           else
-            echo 'ingest_modes=["file"]' >>"$GITHUB_OUTPUT"
+            echo "ingest_configs=${FILE_CONFIG}" >>"$GITHUB_OUTPUT"
           fi
 
   kind-bench-smoke:
@@ -181,26 +185,30 @@ jobs:
       fail-fast: false
       max-parallel: 16
       matrix:
-        ingest_mode: ${{ fromJSON(needs.plan.outputs.ingest_modes) }}
+        ingest_config: ${{ fromJSON(needs.plan.outputs.ingest_configs) }}
         collector: ${{ fromJSON(needs.plan.outputs.collectors) }}
         cpu_profile: ${{ fromJSON(needs.plan.outputs.cpu_profiles) }}
         workload: ${{ fromJSON(needs.plan.outputs.workloads) }}
         exclude:
-          - ingest_mode: otlp
+          - ingest_config: {"mode":"otlp","label":"otlp-100k","batch_bytes":"102400"}
+            collector: vector
+          - ingest_config: {"mode":"otlp","label":"otlp-4m","batch_bytes":"4194304"}
             collector: vector
     env:
       MEMAGENT_REPO_ROOT: ${{ github.workspace }}/memagent
       BENCH_PROFILE: ${{ needs.plan.outputs.bench_profile }}
-      BENCH_RESULTS_DIR: ${{ github.workspace }}/bench/kind/results/${{ needs.plan.outputs.bench_profile }}/${{ matrix.ingest_mode }}/${{ matrix.workload.label }}/${{ matrix.cpu_profile }}/${{ matrix.collector }}
-      CLUSTER_NAME: b-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.ingest_mode }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}-${{ matrix.workload.label }}
+      BENCH_RESULTS_DIR: ${{ github.workspace }}/bench/kind/results/${{ needs.plan.outputs.bench_profile }}/${{ matrix.ingest_config.label }}/${{ matrix.workload.label }}/${{ matrix.cpu_profile }}/${{ matrix.collector }}
+      CLUSTER_NAME: b-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.ingest_config.label }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}-${{ matrix.workload.label }}
       BENCH_COLLECTOR: ${{ matrix.collector }}
-      BENCH_INGEST_MODE: ${{ matrix.ingest_mode }}
+      BENCH_INGEST_MODE: ${{ matrix.ingest_config.mode }}
+      BENCH_INGEST_LABEL: ${{ matrix.ingest_config.label }}
+      BENCH_EMITTER_BATCH_TARGET_BYTES: ${{ matrix.ingest_config.batch_bytes }}
       BENCH_CPU_PROFILE: ${{ matrix.cpu_profile }}
       BENCH_WORKLOAD_LABEL: ${{ matrix.workload.label }}
       BENCH_PODS: ${{ matrix.workload.pods }}
       BENCH_EPS_PER_POD: ${{ matrix.workload.eps_per_pod }}
       BENCH_COLLECTOR_BATCH_TARGET_BYTES: ${{ inputs.collector_batch_target_bytes || '' }}
-      BENCHKIT_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}--kind-bench-${{ needs.plan.outputs.bench_profile }}-${{ matrix.ingest_mode }}-${{ matrix.workload.label }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}
+      BENCHKIT_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}--kind-bench-${{ needs.plan.outputs.bench_profile }}-${{ matrix.ingest_config.label }}-${{ matrix.workload.label }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -242,6 +250,8 @@ jobs:
             --eps-per-pod "${BENCH_EPS_PER_POD}" \
             --collector "${BENCH_COLLECTOR}" \
             --ingest-mode "${BENCH_INGEST_MODE}" \
+            --ingest-label "${BENCH_INGEST_LABEL}" \
+            --emitter-batch-target-bytes "${BENCH_EMITTER_BATCH_TARGET_BYTES}" \
             --cpu-profile "${BENCH_CPU_PROFILE}" \
             --protocol otlp_http \
             --cluster-name "${CLUSTER_NAME}" \
@@ -268,6 +278,7 @@ jobs:
             --namespace "memagent-bench" \
             --collector "${BENCH_COLLECTOR}" \
             --ingest-mode "${BENCH_INGEST_MODE}" \
+            --ingest-label "${BENCH_INGEST_LABEL}" \
             --cpu-profile "${BENCH_CPU_PROFILE}" \
             --pods "${BENCH_PODS}" \
             --target-eps-per-pod "${BENCH_EPS_PER_POD}" \
@@ -298,7 +309,7 @@ jobs:
       - if: always()
         uses: actions/upload-artifact@v5
         with:
-          name: kind-bench-${{ needs.plan.outputs.bench_profile }}-${{ matrix.ingest_mode }}-${{ matrix.workload.label }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}
+          name: kind-bench-${{ needs.plan.outputs.bench_profile }}-${{ matrix.ingest_config.label }}-${{ matrix.workload.label }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}
           path: ${{ env.BENCH_RESULTS_DIR }}
           retention-days: 7
 
@@ -374,7 +385,7 @@ jobs:
         env:
           EXPECTED_COLLECTORS: ${{ needs.plan.outputs.collectors }}
           EXPECTED_CPU_PROFILES: ${{ needs.plan.outputs.cpu_profiles }}
-          EXPECTED_INGEST_MODES: ${{ needs.plan.outputs.ingest_modes }}
+          EXPECTED_INGEST_CONFIGS: ${{ needs.plan.outputs.ingest_configs }}
           EXPECTED_WORKLOADS: ${{ needs.plan.outputs.workloads }}
           NON_GATING_COLLECTORS: '["vector"]'
           NON_GATING_EPS_MIN: "10000"
@@ -396,12 +407,13 @@ jobs:
 
           collectors = json.loads(os.environ["EXPECTED_COLLECTORS"])
           cpu_profiles = json.loads(os.environ["EXPECTED_CPU_PROFILES"])
-          ingest_modes = json.loads(os.environ["EXPECTED_INGEST_MODES"])
+          ingest_configs = json.loads(os.environ["EXPECTED_INGEST_CONFIGS"])
           workloads = json.loads(os.environ["EXPECTED_WORKLOADS"])
 
-          expected = len(collectors) * len(cpu_profiles) * len(ingest_modes) * len(workloads)
-          if "vector" in collectors and "otlp" in ingest_modes:
-            expected -= len(cpu_profiles) * len(workloads)
+          expected = len(collectors) * len(cpu_profiles) * len(ingest_configs) * len(workloads)
+          otlp_configs = [c for c in ingest_configs if c["mode"] == "otlp"]
+          if "vector" in collectors and otlp_configs:
+            expected -= len(cpu_profiles) * len(workloads) * len(otlp_configs)
 
           print(
             f"expected={expected} benchmark_count={benchmark_count} failed_count={failed_count}"

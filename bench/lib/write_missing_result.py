@@ -23,6 +23,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--namespace", required=True)
     parser.add_argument("--collector", required=True)
     parser.add_argument("--ingest-mode", required=True)
+    parser.add_argument("--ingest-label", default=None, help="Label stored in result.json for ingest config (defaults to --ingest-mode)")
     parser.add_argument("--cpu-profile", required=True)
     parser.add_argument("--pods", type=int, required=True)
     parser.add_argument("--target-eps-per-pod", type=int, required=True)
@@ -63,7 +64,7 @@ def main() -> None:
             "namespace": args.namespace,
             "collector": args.collector,
             "protocol": infer_protocol(cluster=args.cluster, collector=args.collector),
-            "ingest_mode": args.ingest_mode,
+            "ingest_mode": args.ingest_label or args.ingest_mode,
             "cpu_profile": args.cpu_profile,
             "cluster_cpu_limit_cores": None,
             "collector_batch_target_bytes": args.collector_batch_target_bytes,
