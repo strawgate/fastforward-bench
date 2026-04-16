@@ -722,7 +722,7 @@ def render_manifests(
 
     emitter_batch_target_yaml = ""
     if args.emitter_batch_target_bytes is not None:
-        emitter_batch_target_yaml = f"batch_target_bytes: {args.emitter_batch_target_bytes}"
+        emitter_batch_target_yaml = f"        batch_target_bytes: {args.emitter_batch_target_bytes}"
 
     substitutions = {
         "NAMESPACE": args.namespace,
