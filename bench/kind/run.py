@@ -121,7 +121,7 @@ CPU_PROFILES: dict[str, CpuProfile] = {
     "multi": CpuProfile(
         name="multi",
         # 3.0 cores gives the collector exactly 2 cores at all EPS targets:
-        # 3000m - 120m(sink) - 20m(capture) - 5×60m(emitters) = 2560m → capped at 2000m.
+        # 3000m - 120m(sink) - 20m(capture) - emitter budget → collector gets remainder capped at 2000m.
         cluster_cpu_cores=3.0,
         collector_cpu_mcpu_min=1200,
         collector_cpu_mcpu_target=2000,
@@ -296,7 +296,7 @@ def build_resource_plan(
 
     reserved_mcpu = sink_mcpu + capture_reader_mcpu
     if capacity_probe:
-        emitter_total_budget_mcpu = 1000 if cpu_profile.name == "single" else 900
+        emitter_total_budget_mcpu = 1000
         emitter_mcpu = max(cpu_profile.emitter_cpu_mcpu_per_pod, emitter_total_budget_mcpu // emitter_pods)
     else:
         emitter_mcpu = cpu_profile.emitter_cpu_mcpu_per_pod
