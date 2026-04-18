@@ -161,10 +161,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--benchkit-otlp-http-endpoint", default=None)
     parser.add_argument("--cpu-profile", choices=sorted(CPU_PROFILES), default="single")
     parser.add_argument("--pods", type=int, default=None)
-    parser.add_argument("--eps-per-pod", type=int, default=None)
+    parser.add_argument("--eps-per-pod", type=optional_int, default=None)
     parser.add_argument(
         "--collector-batch-target-bytes",
-        type=int,
+        type=optional_int,
         default=None,
         help=(
             "Optional logfwd collector batch_target_bytes override for benchmark experiments. "
@@ -247,6 +247,13 @@ def resolve_optional_positive_int(cli_value: int | None, env_name: str) -> int |
     if value <= 0:
         raise ValueError(f"{env_name} must be > 0")
     return value
+
+
+def optional_int(value: str) -> int | None:
+    """Argparse type that treats empty strings as None."""
+    if value is None or value.strip() == "":
+        return None
+    return int(value)
 
 
 def format_cpu_quantity(mcpu: int) -> str:
