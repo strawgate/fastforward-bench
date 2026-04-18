@@ -1,4 +1,4 @@
-name: Bench / compose smoke
+name: Local Throughput (Docker)
 
 on:
   pull_request:
@@ -41,6 +41,7 @@ on:
           - ladder
           - ladder_and_max
           - max
+          - logfwd_max
       collector:
         description: collector adapter to benchmark
         required: false
@@ -140,7 +141,7 @@ jobs:
                 echo 'workloads=[{"label":"t1","eps_per_sec":1},{"label":"t10","eps_per_sec":10},{"label":"t100","eps_per_sec":100},{"label":"t1k","eps_per_sec":1000},{"label":"t10k","eps_per_sec":10000},{"label":"t100k","eps_per_sec":100000},{"label":"t1m","eps_per_sec":1000000},{"label":"tmax","eps_per_sec":0}]' >>"$GITHUB_OUTPUT"
               fi
               ;;
-            max)
+            max|logfwd_max)
               echo 'workloads=[{"label":"tmax","eps_per_sec":0}]' >>"$GITHUB_OUTPUT"
               ;;
             *)
@@ -149,7 +150,9 @@ jobs:
               ;;
           esac
 
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${INPUT_COLLECTOR}" != "all" ]]; then
+          if [[ "${TARGET_SET}" == "logfwd_max" ]]; then
+            echo 'collectors=["logfwd"]' >>"$GITHUB_OUTPUT"
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" && "${INPUT_COLLECTOR}" != "all" ]]; then
             echo "collectors=[\"${INPUT_COLLECTOR}\"]" >>"$GITHUB_OUTPUT"
           else
             echo 'collectors=["logfwd","otelcol","vector","filebeat"]' >>"$GITHUB_OUTPUT"
@@ -181,6 +184,67 @@ jobs:
             collector: vector
           - ingest_mode: otlp
             collector: filebeat
+          # Skip ladder/profile runs for 3rd party collectors - only run 'tmax'
+          - collector: otelcol
+            workload: {label: "profile-smoke"}
+          - collector: otelcol
+            workload: {label: "profile-quick"}
+          - collector: otelcol
+            workload: {label: "profile-default"}
+          - collector: otelcol
+            workload: {label: "t1"}
+          - collector: otelcol
+            workload: {label: "t10"}
+          - collector: otelcol
+            workload: {label: "t100"}
+          - collector: otelcol
+            workload: {label: "t1k"}
+          - collector: otelcol
+            workload: {label: "t10k"}
+          - collector: otelcol
+            workload: {label: "t100k"}
+          - collector: otelcol
+            workload: {label: "t1m"}
+          - collector: vector
+            workload: {label: "profile-smoke"}
+          - collector: vector
+            workload: {label: "profile-quick"}
+          - collector: vector
+            workload: {label: "profile-default"}
+          - collector: vector
+            workload: {label: "t1"}
+          - collector: vector
+            workload: {label: "t10"}
+          - collector: vector
+            workload: {label: "t100"}
+          - collector: vector
+            workload: {label: "t1k"}
+          - collector: vector
+            workload: {label: "t10k"}
+          - collector: vector
+            workload: {label: "t100k"}
+          - collector: vector
+            workload: {label: "t1m"}
+          - collector: filebeat
+            workload: {label: "profile-smoke"}
+          - collector: filebeat
+            workload: {label: "profile-quick"}
+          - collector: filebeat
+            workload: {label: "profile-default"}
+          - collector: filebeat
+            workload: {label: "t1"}
+          - collector: filebeat
+            workload: {label: "t10"}
+          - collector: filebeat
+            workload: {label: "t100"}
+          - collector: filebeat
+            workload: {label: "t1k"}
+          - collector: filebeat
+            workload: {label: "t10k"}
+          - collector: filebeat
+            workload: {label: "t100k"}
+          - collector: filebeat
+            workload: {label: "t1m"}
     env:
       MEMAGENT_REPO_ROOT: ${{ github.workspace }}/memagent
       BENCH_PROFILE: ${{ needs.plan.outputs.bench_profile }}
@@ -291,7 +355,7 @@ jobs:
           path: artifacts
       - name: Render benchmark summary
         env:
-          SUITE_NAME: ${{ github.event_name == 'schedule' && 'Bench Compose Nightly EPS' || 'Bench Compose Competitive Benchmarks' }}
+          SUITE_NAME: ${{ github.event_name == 'schedule' && 'Local Throughput (Docker) - Nightly' || 'Local Throughput (Docker) - Competitive' }}
         run: |
           python3 bench/kind/render_issue_summary.py \
             --artifacts-root artifacts \
@@ -323,14 +387,14 @@ jobs:
         run: |
           if [[ "${GITHUB_EVENT_NAME}" == "schedule" ]]; then
             {
-              echo "title_base=Bench Compose Nightly EPS Report"
+              echo "title_base=Local Throughput (Docker) Report"
               echo "suite_key=bench-compose-nightly-eps"
               echo "labels=live-suite-report,report:bench,report:bench-compose,report:bench-compose-nightly-eps"
             } >>"$GITHUB_OUTPUT"
           else
             target_set="${{ needs.plan.outputs.target_set }}"
             {
-              echo "title_base=Bench Compose Competitive Benchmarks Report (${target_set})"
+              echo "title_base=Local Throughput (Docker) Competitive Report (${target_set})"
               echo "suite_key=bench-compose-competitive-${target_set}"
               echo "labels=live-suite-report,report:bench,report:bench-compose,report:bench-compose-competitive"
             } >>"$GITHUB_OUTPUT"
@@ -373,11 +437,21 @@ jobs:
           ingest_modes = json.loads(os.environ["EXPECTED_INGEST_MODES"])
           workloads = json.loads(os.environ["EXPECTED_WORKLOADS"])
 
-          expected = len(collectors) * len(cpu_profiles) * len(ingest_modes) * len(workloads)
-          if "vector" in collectors and "otlp" in ingest_modes:
-            expected -= len(cpu_profiles) * len(workloads)
-          if "filebeat" in collectors and "otlp" in ingest_modes:
-            expected -= len(cpu_profiles) * len(workloads)
+          # Calculate expected count taking into account exclusions
+          def is_excluded(c, cp, i, w):
+            if i == "otlp" and c == "vector": return True
+            if i == "otlp" and c == "filebeat": return True
+            if c in ("otelcol", "vector", "filebeat"):
+              if w["label"] != "tmax": return True
+            return False
+
+          expected = 0
+          for c in collectors:
+            for cp in cpu_profiles:
+              for i in ingest_modes:
+                for w in workloads:
+                  if not is_excluded(c, cp, i, w):
+                    expected += 1
 
           print(
             f"expected={expected} benchmark_count={benchmark_count} failed_count={failed_count}"
