@@ -957,6 +957,15 @@ def main() -> int:
     if eps_per_sec < 0:
         raise ValueError("eps-per-sec must be >= 0")
 
+    # File output has no natural backpressure (unlike OTLP HTTP), so unlimited
+    # mode (eps_per_sec=0) causes the generator to spin at 100% CPU writing
+    # faster than any collector reads.  Cap at 400k EPS — well above what any
+    # single-core collector can consume, but low enough that the generator's
+    # built-in rate limiter keeps CPU usage reasonable.
+    FILE_INGEST_MAX_EPS = 400_000
+    if args.ingest_mode == "file" and eps_per_sec == 0:
+        eps_per_sec = FILE_INGEST_MAX_EPS
+
     benchmark_id = str(uuid.uuid4())
     timestamp_utc = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
@@ -1103,7 +1112,7 @@ def main() -> int:
     measure_completed_at: float | None = None
     capture_file_path = runtime_dir / "capture.ndjson"
     events_file_path = runtime_dir / "events.ndjson"
-    max_throughput_mode = eps_per_sec == 0
+    max_throughput_mode = eps_per_sec == 0 or (args.ingest_mode == "file" and base_profile.eps_per_pod == 0)
 
     try:
         run(compose + ["--profile", adapter.name, "up", "-d", "sink", "capture-reader", adapter.service_name], env=env)
