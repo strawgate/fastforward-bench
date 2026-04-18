@@ -327,6 +327,7 @@ output:
   type: file
   path: /runtime/events.ndjson
   format: json
+  max_file_size_bytes: 209715200
 """
         )
     return (
