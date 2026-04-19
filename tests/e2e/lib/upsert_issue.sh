@@ -138,9 +138,11 @@ trap 'rm -f "${issue_body_with_meta}"' EXIT
     cat "${ISSUE_BODY_FILE}"
 } >"${issue_body_with_meta}"
 
-label_args=()
+create_label_args=()
+edit_label_args=()
 for label in "${labels[@]}"; do
-    label_args+=(--label "${label}")
+    create_label_args+=(--label "${label}")
+    edit_label_args+=(--add-label "${label}")
 done
 
 if [[ -n "${existing_issue_number}" ]]; then
@@ -149,7 +151,7 @@ if [[ -n "${existing_issue_number}" ]]; then
         --repo "${GITHUB_REPOSITORY}" \
         --title "${issue_title}" \
         --body-file "${issue_body_with_meta}" \
-        "${label_args[@]}" >/dev/null
+        "${edit_label_args[@]}" >/dev/null
     echo "Updated live issue #${existing_issue_number}"
 else
     echo "Creating new issue..."
@@ -158,7 +160,7 @@ else
             --repo "${GITHUB_REPOSITORY}" \
             --title "${issue_title}" \
             --body-file "${issue_body_with_meta}" \
-            "${label_args[@]}"
+            "${create_label_args[@]}"
     )"
     echo "Created live issue: ${new_issue_url}"
 fi
