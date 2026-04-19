@@ -340,28 +340,16 @@ jobs:
       - uses: actions/download-artifact@v5
         with:
           path: artifacts
-      - name: Render benchmark summary
-        env:
-          SUITE_NAME: ${{ github.event_name == 'schedule' && 'Competitive Throughput (K8s) - Nightly' || 'Competitive Throughput (K8s)' }}
-        run: |
-          python3 bench/kind/render_issue_summary.py \
-            --artifacts-root artifacts \
-            --suite-name "${SUITE_NAME}" \
-            --suite-key kind-bench-${{ needs.plan.outputs.bench_profile }}-${{ needs.plan.outputs.target_set }} \
-            --memagent-ref "${MEMAGENT_REF}" \
-            --bench-profile "${{ needs.plan.outputs.bench_profile }}" \
-            --run-url "https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
-            --output-markdown bench-summary.md \
-            --output-json bench-summary.json
-      - name: Publish benchmark summary
-        run: cat bench-summary.md >>"$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@v5
+      - name: Summarize and report
+        uses: ./.github/actions/summarize-and-report
         with:
-          name: bench-kind-summary
-          path: |
-            bench-summary.md
-            bench-summary.json
-          retention-days: 7
+          render-script: bench/kind/render_issue_summary.py
+          suite-name: ${{ github.event_name == 'schedule' && 'Competitive Throughput (K8s) - Nightly' || 'Competitive Throughput (K8s)' }}
+          suite-key: kind-bench-${{ needs.plan.outputs.bench_profile }}-${{ needs.plan.outputs.target_set }}
+          memagent-ref: ${{ env.MEMAGENT_REF }}
+          extra-render-args: --bench-profile "${{ needs.plan.outputs.bench_profile }}"
+          summary-prefix: bench-summary
+          artifact-name: bench-kind-summary
       - if: env.PERSIST_BENCH_DATA == 'true'
         name: Trigger aggregate
         continue-on-error: true

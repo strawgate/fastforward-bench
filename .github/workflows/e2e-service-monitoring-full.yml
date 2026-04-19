@@ -97,31 +97,15 @@ jobs:
       - uses: actions/download-artifact@v5
         with:
           path: artifacts
-      - name: Render suite summary
-        run: |
-          python3 tests/e2e/lib/render_issue_summary.py \
-            --artifacts-root artifacts \
-            --suite-name "E2E / Service Monitoring (Full)" \
-            --suite-key nightly \
-            --memagent-ref "${MEMAGENT_REF}" \
-            --run-url "https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
-            --output-markdown suite-summary.md \
-            --output-json suite-summary.json
-      - name: Publish suite summary
-        run: cat suite-summary.md >>"$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@v5
+      - name: Summarize and report
+        uses: ./.github/actions/summarize-and-report
         with:
-          name: e2e-nightly-summary
-          path: |
-            suite-summary.md
-            suite-summary.json
-          retention-days: 7
-      - name: Upsert suite issue
-        env:
-          GH_TOKEN: ${{ github.token }}
-          ISSUE_TITLE_BASE: E2E / Service Monitoring (Full) Report
-          ISSUE_BODY_FILE: ${{ github.workspace }}/suite-summary.md
-          ISSUE_SUMMARY_JSON_FILE: ${{ github.workspace }}/suite-summary.json
-          ISSUE_SUITE_KEY: e2e-nightly
-          ISSUE_LABELS: live-suite-report,report:e2e,report:e2e-nightly
-        run: tests/e2e/lib/upsert_issue.sh
+          render-script: tests/e2e/lib/render_issue_summary.py
+          suite-name: E2E / Service Monitoring (Full)
+          suite-key: nightly
+          memagent-ref: ${{ env.MEMAGENT_REF }}
+          artifact-name: e2e-nightly-summary
+          issue-title-base: E2E / Service Monitoring (Full) Report
+          issue-suite-key: e2e-nightly
+          issue-labels: live-suite-report,report:e2e,report:e2e-nightly
+          github-token: ${{ github.token }}
