@@ -1,4 +1,4 @@
-name: E2E / smoke suite
+name: E2E / Service Monitoring (Smoke)
 
 on:
   pull_request:
@@ -80,32 +80,15 @@ jobs:
       - uses: actions/download-artifact@v5
         with:
           path: artifacts
-      - name: Render suite summary
-        run: |
-          python3 tests/e2e/lib/render_issue_summary.py \
-            --artifacts-root artifacts \
-            --suite-name "E2E Smoke Suite" \
-            --suite-key smoke \
-            --memagent-ref "${MEMAGENT_REF}" \
-            --run-url "https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
-            --output-markdown suite-summary.md \
-            --output-json suite-summary.json
-      - name: Publish suite summary
-        run: cat suite-summary.md >>"$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@v5
+      - name: Summarize and report
+        uses: ./.github/actions/summarize-and-report
         with:
-          name: e2e-smoke-summary
-          path: |
-            suite-summary.md
-            suite-summary.json
-          retention-days: 7
-      - name: Upsert suite issue
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
-        env:
-          GH_TOKEN: ${{ github.token }}
-          ISSUE_TITLE_BASE: E2E Smoke Suite Report
-          ISSUE_BODY_FILE: ${{ github.workspace }}/suite-summary.md
-          ISSUE_SUMMARY_JSON_FILE: ${{ github.workspace }}/suite-summary.json
-          ISSUE_SUITE_KEY: e2e-smoke
-          ISSUE_LABELS: live-suite-report,report:e2e,report:e2e-smoke
-        run: tests/e2e/lib/upsert_issue.sh
+          render-script: tests/e2e/lib/render_issue_summary.py
+          suite-name: E2E / Service Monitoring (Smoke)
+          suite-key: smoke
+          memagent-ref: ${{ env.MEMAGENT_REF }}
+          artifact-name: e2e-smoke-summary
+          issue-title-base: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false) && 'E2E / Service Monitoring (Smoke) Report' || '' }}
+          issue-suite-key: e2e-smoke
+          issue-labels: live-suite-report,report:e2e,report:e2e-smoke
+          github-token: ${{ github.token }}

@@ -168,5 +168,5 @@ It checks:
 2. Keep only files that are truly scenario-specific.
 3. Prefer family defaults instead of re-copying identical `up.sh`, `down.sh`, `collect.sh`, or `verify.sh`.
 4. Add the named workflow wrapper `e2e-<scenario-id>.yml`.
-5. Wire that named workflow into `e2e-smoke.yml` or `e2e-nightly.yml` when appropriate.
+5. Wire that named workflow into `e2e-service-monitoring-smoke.yml` or `e2e-service-monitoring-full.yml` when appropriate.
 6. Run the validator and then run the scenario directly.

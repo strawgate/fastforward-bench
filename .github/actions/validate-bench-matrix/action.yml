@@ -1,0 +1,61 @@
+name: Validate Bench Matrix
+description: >
+  Enforce benchmark matrix truthfulness — verify all expected benchmarks ran,
+  classify gating vs non-gating failures, check data integrity, and enforce
+  single-CPU envelope constraints.
+
+inputs:
+  summary-json:
+    description: Path to the bench-summary.json file
+    required: false
+    default: bench-summary.json
+  expected-collectors:
+    description: JSON array of expected collector names
+    required: true
+  expected-cpu-profiles:
+    description: JSON array of expected CPU profile names
+    required: true
+  expected-ingest-modes:
+    description: JSON array of expected ingest mode names
+    required: true
+  expected-workloads:
+    description: JSON array of expected workload objects (each with a "label" key)
+    required: true
+  otlp-excluded-collectors:
+    description: JSON array of collectors excluded from OTLP ingest mode
+    required: false
+    default: '[]'
+  tmax-only-collectors:
+    description: JSON array of collectors that only run tmax workload
+    required: false
+    default: '[]'
+  non-gating-collectors:
+    description: JSON array of collectors whose failures are tolerated
+    required: false
+    default: '[]'
+  non-gating-eps-min:
+    description: EPS threshold above which failures are tolerated
+    required: false
+    default: '10000'
+  single-cpu-avg-max:
+    description: Maximum average CPU cores allowed for single-cpu profile
+    required: false
+    default: '1.05'
+
+runs:
+  using: composite
+  steps:
+    - name: Validate benchmark matrix
+      shell: bash
+      env:
+        SUMMARY_JSON: ${{ inputs.summary-json }}
+        EXPECTED_COLLECTORS: ${{ inputs.expected-collectors }}
+        EXPECTED_CPU_PROFILES: ${{ inputs.expected-cpu-profiles }}
+        EXPECTED_INGEST_MODES: ${{ inputs.expected-ingest-modes }}
+        EXPECTED_WORKLOADS: ${{ inputs.expected-workloads }}
+        OTLP_EXCLUDED_COLLECTORS: ${{ inputs.otlp-excluded-collectors }}
+        TMAX_ONLY_COLLECTORS: ${{ inputs.tmax-only-collectors }}
+        NON_GATING_COLLECTORS: ${{ inputs.non-gating-collectors }}
+        NON_GATING_EPS_MIN: ${{ inputs.non-gating-eps-min }}
+        SINGLE_CPU_AVG_MAX: ${{ inputs.single-cpu-avg-max }}
+      run: python3 tests/bench/validate_matrix.py

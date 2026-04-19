@@ -1,0 +1,95 @@
+name: Summarize and Report
+description: >
+  Render a suite/bench summary, publish to step summary, upload artifact,
+  and optionally upsert a GitHub issue.
+
+inputs:
+  render-script:
+    description: Path to the Python render script
+    required: true
+  suite-name:
+    description: Human-readable suite name for the report
+    required: true
+  suite-key:
+    description: Machine key used to identify this suite run
+    required: true
+  memagent-ref:
+    description: The memagent ref (branch/tag/SHA) under test
+    required: true
+  extra-render-args:
+    description: Additional CLI args appended to the render script invocation
+    required: false
+    default: ''
+  summary-prefix:
+    description: Filename prefix for summary files (e.g. "suite-summary" or "bench-summary")
+    required: false
+    default: suite-summary
+  artifact-name:
+    description: Name for the uploaded summary artifact
+    required: true
+  issue-title-base:
+    description: Base title for the upserted issue. Leave empty to skip issue upsert.
+    required: false
+    default: ''
+  issue-suite-key:
+    description: Suite key for matching existing issues
+    required: false
+    default: ''
+  issue-labels:
+    description: Comma-separated labels for the issue
+    required: false
+    default: ''
+  github-token:
+    description: GitHub token for issue upsert (required if issue-title-base is set)
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Render summary
+      shell: bash
+      env:
+        RENDER_SCRIPT: ${{ inputs.render-script }}
+        SUITE_NAME: ${{ inputs.suite-name }}
+        SUITE_KEY: ${{ inputs.suite-key }}
+        MEMAGENT_REF: ${{ inputs.memagent-ref }}
+        EXTRA_ARGS: ${{ inputs.extra-render-args }}
+        SUMMARY_PREFIX: ${{ inputs.summary-prefix }}
+      run: |
+        python3 "${RENDER_SCRIPT}" \
+          --artifacts-root artifacts \
+          --suite-name "${SUITE_NAME}" \
+          --suite-key "${SUITE_KEY}" \
+          --memagent-ref "${MEMAGENT_REF}" \
+          --run-url "https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+          --output-markdown "${SUMMARY_PREFIX}.md" \
+          --output-json "${SUMMARY_PREFIX}.json" \
+          ${EXTRA_ARGS}
+
+    - name: Publish to step summary
+      shell: bash
+      env:
+        SUMMARY_PREFIX: ${{ inputs.summary-prefix }}
+      run: cat "${SUMMARY_PREFIX}.md" >>"$GITHUB_STEP_SUMMARY"
+
+    - name: Upload summary artifact
+      uses: actions/upload-artifact@v5
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: |
+          ${{ inputs.summary-prefix }}.md
+          ${{ inputs.summary-prefix }}.json
+        retention-days: 7
+
+    - name: Upsert suite issue
+      if: inputs.issue-title-base != ''
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        ISSUE_TITLE_BASE: ${{ inputs.issue-title-base }}
+        ISSUE_BODY_FILE: ${{ github.workspace }}/${{ inputs.summary-prefix }}.md
+        ISSUE_SUMMARY_JSON_FILE: ${{ github.workspace }}/${{ inputs.summary-prefix }}.json
+        ISSUE_SUITE_KEY: ${{ inputs.issue-suite-key }}
+        ISSUE_LABELS: ${{ inputs.issue-labels }}
+      run: tests/e2e/lib/upsert_issue.sh

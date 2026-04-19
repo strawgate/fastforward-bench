@@ -1,10 +1,10 @@
-name: Bench / kind aggregate
+name: Aggregate Benchmark Data
 
 on:
   workflow_dispatch:
 
 concurrency:
-  group: bench-kind-aggregate
+  group: aggregate-benchmark-data
   cancel-in-progress: false
 
 permissions:

@@ -1,4 +1,4 @@
-name: Bench / kind smoke
+name: Bench / Competitive Throughput (K8s)
 
 on:
   pull_request:
@@ -7,8 +7,8 @@ on:
       - 'bench/kind/**'
       - 'bench/lib/**'
       - 'reporting/**'
-      - '.github/workflows/bench-kind-smoke.yml'
-      - '.github/workflows/bench-kind-aggregate.yml'
+      - '.github/workflows/bench-competitive-k8s.yml'
+      - '.github/workflows/aggregate-benchmark-data.yml'
       - '.github/actions/setup-memagent-build/**'
       - '.github/actions/checkout-memagent/**'
   schedule:
@@ -39,6 +39,7 @@ on:
           - ladder
           - ladder_and_max
           - max
+          - logfwd_max
       collector:
         description: collector adapter to benchmark
         required: false
@@ -99,7 +100,7 @@ jobs:
       target_set: ${{ steps.plan.outputs.target_set }}
       collectors: ${{ steps.plan.outputs.collectors }}
       cpu_profiles: ${{ steps.plan.outputs.cpu_profiles }}
-      ingest_configs: ${{ steps.plan.outputs.ingest_configs }}
+      ingest_modes: ${{ steps.plan.outputs.ingest_modes }}
       workloads: ${{ steps.plan.outputs.workloads }}
     steps:
       - id: plan
@@ -142,7 +143,7 @@ jobs:
                 echo 'workloads=[{"label":"t1","pods":1,"eps_per_pod":1},{"label":"t10","pods":1,"eps_per_pod":10},{"label":"t100","pods":1,"eps_per_pod":100},{"label":"t1k","pods":1,"eps_per_pod":1000},{"label":"t10k","pods":1,"eps_per_pod":10000},{"label":"t100k","pods":1,"eps_per_pod":100000},{"label":"t1m","pods":1,"eps_per_pod":1000000},{"label":"tmax","pods":1,"eps_per_pod":0}]' >>"$GITHUB_OUTPUT"
               fi
               ;;
-            max)
+            max|logfwd_max)
               echo 'workloads=[{"label":"tmax","pods":1,"eps_per_pod":0}]' >>"$GITHUB_OUTPUT"
               ;;
             *)
@@ -151,30 +152,22 @@ jobs:
               ;;
           esac
 
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${INPUT_COLLECTOR}" != "all" ]]; then
+          if [[ "${TARGET_SET}" == "logfwd_max" ]]; then
+            echo 'collectors=["logfwd"]' >>"$GITHUB_OUTPUT"
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" && "${INPUT_COLLECTOR}" != "all" ]]; then
             echo "collectors=[\"${INPUT_COLLECTOR}\"]" >>"$GITHUB_OUTPUT"
           else
             echo 'collectors=["logfwd","otelcol","vector"]' >>"$GITHUB_OUTPUT"
           fi
-          if [[ "${{ github.event_name }}" == "schedule" ]]; then
-            echo 'cpu_profiles=["single","multi"]' >>"$GITHUB_OUTPUT"
-          elif [[ "${{ github.event_name }}" == "workflow_dispatch" && "${INPUT_CPU_PROFILE}" != "all" ]]; then
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${INPUT_CPU_PROFILE}" != "all" ]]; then
             echo "cpu_profiles=[\"${INPUT_CPU_PROFILE}\"]" >>"$GITHUB_OUTPUT"
           else
             echo 'cpu_profiles=["single","multi"]' >>"$GITHUB_OUTPUT"
           fi
-          OTLP_CONFIGS='[{"mode":"otlp","label":"otlp-100k","batch_bytes":"102400"},{"mode":"otlp","label":"otlp-4m","batch_bytes":"4194304"}]'
-          FILE_CONFIG='[{"mode":"file","label":"file","batch_bytes":""}]'
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            if [[ "${INPUT_INGEST_MODE}" == "file" ]]; then
-              echo "ingest_configs=${FILE_CONFIG}" >>"$GITHUB_OUTPUT"
-            elif [[ "${INPUT_INGEST_MODE}" == "otlp" ]]; then
-              echo "ingest_configs=${OTLP_CONFIGS}" >>"$GITHUB_OUTPUT"
-            else
-              echo "ingest_configs=$(echo "${FILE_CONFIG}${OTLP_CONFIGS}" | python3 -c 'import sys,json; a,b=sys.stdin.read().split("]["); print(json.dumps(json.loads(a+"]")+json.loads("["+b)))')" >>"$GITHUB_OUTPUT"
-            fi
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${INPUT_INGEST_MODE}" != "all" ]]; then
+            echo "ingest_modes=[\"${INPUT_INGEST_MODE}\"]" >>"$GITHUB_OUTPUT"
           else
-            echo "ingest_configs=${FILE_CONFIG}" >>"$GITHUB_OUTPUT"
+            echo 'ingest_modes=["file","otlp"]' >>"$GITHUB_OUTPUT"
           fi
 
   kind-bench-smoke:
@@ -185,30 +178,66 @@ jobs:
       fail-fast: false
       max-parallel: 16
       matrix:
-        ingest_config: ${{ fromJSON(needs.plan.outputs.ingest_configs) }}
+        ingest_mode: ${{ fromJSON(needs.plan.outputs.ingest_modes) }}
         collector: ${{ fromJSON(needs.plan.outputs.collectors) }}
         cpu_profile: ${{ fromJSON(needs.plan.outputs.cpu_profiles) }}
         workload: ${{ fromJSON(needs.plan.outputs.workloads) }}
         exclude:
-          - ingest_config: {"mode":"otlp","label":"otlp-100k","batch_bytes":"102400"}
+          - ingest_mode: otlp
             collector: vector
-          - ingest_config: {"mode":"otlp","label":"otlp-4m","batch_bytes":"4194304"}
-            collector: vector
+          # Skip ladder/profile runs for 3rd party collectors - only run 'tmax'
+          - collector: otelcol
+            workload: {label: "profile-smoke"}
+          - collector: otelcol
+            workload: {label: "profile-quick"}
+          - collector: otelcol
+            workload: {label: "profile-default"}
+          - collector: otelcol
+            workload: {label: "t1"}
+          - collector: otelcol
+            workload: {label: "t10"}
+          - collector: otelcol
+            workload: {label: "t100"}
+          - collector: otelcol
+            workload: {label: "t1k"}
+          - collector: otelcol
+            workload: {label: "t10k"}
+          - collector: otelcol
+            workload: {label: "t100k"}
+          - collector: otelcol
+            workload: {label: "t1m"}
+          - collector: vector
+            workload: {label: "profile-smoke"}
+          - collector: vector
+            workload: {label: "profile-quick"}
+          - collector: vector
+            workload: {label: "profile-default"}
+          - collector: vector
+            workload: {label: "t1"}
+          - collector: vector
+            workload: {label: "t10"}
+          - collector: vector
+            workload: {label: "t100"}
+          - collector: vector
+            workload: {label: "t1k"}
+          - collector: vector
+            workload: {label: "t10k"}
+          - collector: vector
+            workload: {label: "t100k"}
+          - collector: vector
+            workload: {label: "t1m"}
     env:
       MEMAGENT_REPO_ROOT: ${{ github.workspace }}/memagent
       BENCH_PROFILE: ${{ needs.plan.outputs.bench_profile }}
-      BENCH_RESULTS_DIR: ${{ github.workspace }}/bench/kind/results/${{ needs.plan.outputs.bench_profile }}/${{ matrix.ingest_config.label }}/${{ matrix.workload.label }}/${{ matrix.cpu_profile }}/${{ matrix.collector }}
-      CLUSTER_NAME: b-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.ingest_config.label }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}-${{ matrix.workload.label }}
+      BENCH_RESULTS_DIR: ${{ github.workspace }}/bench/kind/results/${{ needs.plan.outputs.bench_profile }}/${{ matrix.ingest_mode }}/${{ matrix.workload.label }}/${{ matrix.cpu_profile }}/${{ matrix.collector }}
+      CLUSTER_NAME: b-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.ingest_mode }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}-${{ matrix.workload.label }}
       BENCH_COLLECTOR: ${{ matrix.collector }}
-      BENCH_INGEST_MODE: ${{ matrix.ingest_config.mode }}
-      BENCH_INGEST_LABEL: ${{ matrix.ingest_config.label }}
-      BENCH_EMITTER_BATCH_TARGET_BYTES: ${{ matrix.ingest_config.batch_bytes }}
+      BENCH_INGEST_MODE: ${{ matrix.ingest_mode }}
       BENCH_CPU_PROFILE: ${{ matrix.cpu_profile }}
       BENCH_WORKLOAD_LABEL: ${{ matrix.workload.label }}
       BENCH_PODS: ${{ matrix.workload.pods }}
       BENCH_EPS_PER_POD: ${{ matrix.workload.eps_per_pod }}
-      BENCH_COLLECTOR_BATCH_TARGET_BYTES: ${{ inputs.collector_batch_target_bytes || '' }}
-      BENCHKIT_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}--kind-bench-${{ needs.plan.outputs.bench_profile }}-${{ matrix.ingest_config.label }}-${{ matrix.workload.label }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}
+      BENCHKIT_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}--kind-bench-${{ needs.plan.outputs.bench_profile }}-${{ matrix.ingest_mode }}-${{ matrix.workload.label }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -221,6 +250,10 @@ jobs:
         with:
           memagent-repo-root: memagent
           memagent-ref: ${{ env.MEMAGENT_REF }}
+      - uses: ./.github/actions/setup-kind
+        with:
+          cluster-name: ${{ env.CLUSTER_NAME }}
+          results-dir: ${{ env.BENCH_RESULTS_DIR }}
       - if: env.PERSIST_BENCH_DATA == 'true'
         name: Start Octo11y monitor
         id: monitor
@@ -229,36 +262,24 @@ jobs:
           run-id: ${{ env.BENCHKIT_RUN_ID }}
           scrape-interval: 1s
           metric-sets: cpu,memory,load,process
-      - name: Install KIND
-        run: |
-          if ! command -v kind >/dev/null 2>&1; then
-            KIND_VERSION="v0.24.0"
-            curl -Lo ./kind "https://kind.sigs.k8s.io/dl/${KIND_VERSION}/kind-linux-amd64"
-            chmod +x ./kind
-            sudo mv ./kind /usr/local/bin/kind
-          fi
       - name: Run benchmark harness
-        continue-on-error: ${{ github.event_name == 'schedule' || matrix.collector == 'vector' || matrix.workload.label == 'tmax' || matrix.workload.eps_per_pod >= 10000 }}
+        continue-on-error: ${{ github.event_name == 'schedule' || matrix.workload.label == 'tmax' || matrix.workload.eps_per_pod >= 10000 }}
         run: |
           set -euo pipefail
           mkdir -p "${BENCH_RESULTS_DIR}"
           HARNESS_LOG="${BENCH_RESULTS_DIR}/harness.log"
           if ! python3 bench/kind/run.py \
-            --phase smoke \
-            --profile "${BENCH_PROFILE}" \
-            --pods "${BENCH_PODS}" \
-            --eps-per-pod "${BENCH_EPS_PER_POD}" \
+            --cluster-name "${CLUSTER_NAME}" \
             --collector "${BENCH_COLLECTOR}" \
             --ingest-mode "${BENCH_INGEST_MODE}" \
-            --ingest-label "${BENCH_INGEST_LABEL}" \
-            --emitter-batch-target-bytes "${BENCH_EMITTER_BATCH_TARGET_BYTES}" \
+            --profile "${BENCH_PROFILE}" \
             --cpu-profile "${BENCH_CPU_PROFILE}" \
-            --protocol otlp_http \
-            --cluster-name "${CLUSTER_NAME}" \
+            --pods "${BENCH_PODS}" \
+            --eps-per-pod "${BENCH_EPS_PER_POD}" \
             --benchkit-run-id "${BENCHKIT_RUN_ID}" \
             --benchkit-kind "hybrid" \
-            --benchkit-otlp-http-endpoint "${{ steps.monitor.outputs.otlp-http-endpoint }}" \
             --results-dir "${BENCH_RESULTS_DIR}" \
+            --collector-batch-target-bytes "${{ inputs.collector_batch_target_bytes }}" \
             >"${HARNESS_LOG}" 2>&1; then
             echo "kind harness failed, tailing ${HARNESS_LOG}"
             tail -n 200 "${HARNESS_LOG}" || true
@@ -271,22 +292,17 @@ jobs:
           if [[ -f "${BENCH_RESULTS_DIR}/result.json" ]]; then
             exit 0
           fi
-          set -- \
+          python3 bench/lib/write_missing_result.py \
             --output-dir "${BENCH_RESULTS_DIR}" \
-            --cluster "kind-single-node" \
+            --cluster "kind" \
             --cluster-name "${CLUSTER_NAME}" \
-            --namespace "memagent-bench" \
+            --namespace "benchkit" \
             --collector "${BENCH_COLLECTOR}" \
             --ingest-mode "${BENCH_INGEST_MODE}" \
-            --ingest-label "${BENCH_INGEST_LABEL}" \
             --cpu-profile "${BENCH_CPU_PROFILE}" \
             --pods "${BENCH_PODS}" \
             --target-eps-per-pod "${BENCH_EPS_PER_POD}" \
             --notes "kind benchmark harness exited before writing result.json"
-          if [[ -n "${BENCH_COLLECTOR_BATCH_TARGET_BYTES}" ]]; then
-            set -- "$@" --collector-batch-target-bytes "${BENCH_COLLECTOR_BATCH_TARGET_BYTES}"
-          fi
-          python3 bench/lib/write_missing_result.py "$@"
       - if: env.PERSIST_BENCH_DATA == 'true'
         name: Stash jitter
         shell: bash
@@ -309,7 +325,7 @@ jobs:
       - if: always()
         uses: actions/upload-artifact@v5
         with:
-          name: kind-bench-${{ needs.plan.outputs.bench_profile }}-${{ matrix.ingest_config.label }}-${{ matrix.workload.label }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}
+          name: kind-bench-${{ needs.plan.outputs.bench_profile }}-${{ matrix.ingest_mode }}-${{ matrix.workload.label }}-${{ matrix.cpu_profile }}-${{ matrix.collector }}
           path: ${{ env.BENCH_RESULTS_DIR }}
           retention-days: 7
 
@@ -324,48 +340,36 @@ jobs:
       - uses: actions/download-artifact@v5
         with:
           path: artifacts
-      - name: Render benchmark summary
-        env:
-          SUITE_NAME: ${{ github.event_name == 'schedule' && 'Bench Nightly EPS' || 'Bench Competitive Benchmarks' }}
-        run: |
-          python3 bench/kind/render_issue_summary.py \
-            --artifacts-root artifacts \
-            --suite-name "${SUITE_NAME}" \
-            --suite-key kind-bench-${{ needs.plan.outputs.bench_profile }}-${{ needs.plan.outputs.target_set }} \
-            --memagent-ref "${MEMAGENT_REF}" \
-            --bench-profile "${{ needs.plan.outputs.bench_profile }}" \
-            --run-url "https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
-            --output-markdown bench-summary.md \
-            --output-json bench-summary.json
-      - name: Publish benchmark summary
-        run: cat bench-summary.md >>"$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@v5
+      - name: Summarize and report
+        uses: ./.github/actions/summarize-and-report
         with:
-          name: bench-kind-summary
-          path: |
-            bench-summary.md
-            bench-summary.json
-          retention-days: 7
+          render-script: bench/kind/render_issue_summary.py
+          suite-name: ${{ github.event_name == 'schedule' && 'Competitive Throughput (K8s) - Nightly' || 'Competitive Throughput (K8s)' }}
+          suite-key: kind-bench-${{ needs.plan.outputs.bench_profile }}-${{ needs.plan.outputs.target_set }}
+          memagent-ref: ${{ env.MEMAGENT_REF }}
+          extra-render-args: --bench-profile "${{ needs.plan.outputs.bench_profile }}"
+          summary-prefix: bench-summary
+          artifact-name: bench-kind-summary
       - if: env.PERSIST_BENCH_DATA == 'true'
         name: Trigger aggregate
         continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh workflow run bench-kind-aggregate.yml --repo ${{ github.repository }}
+        run: gh workflow run aggregate-benchmark-data.yml --repo ${{ github.repository }}
       - if: github.event_name != 'pull_request'
         id: issue_meta
         name: Compute benchmark issue metadata
         run: |
           if [[ "${GITHUB_EVENT_NAME}" == "schedule" ]]; then
             {
-              echo "title_base=Bench Nightly EPS Report"
+              echo "title_base=Competitive Throughput (K8s) Report"
               echo "suite_key=bench-nightly-eps"
               echo "labels=live-suite-report,report:bench,report:bench-nightly-eps"
             } >>"$GITHUB_OUTPUT"
           else
             target_set="${{ needs.plan.outputs.target_set }}"
             {
-              echo "title_base=Bench Competitive Benchmarks Report (${target_set})"
+              echo "title_base=Competitive Throughput (K8s) Report (${target_set})"
               echo "suite_key=bench-competitive-${target_set}"
               echo "labels=live-suite-report,report:bench,report:bench-competitive"
             } >>"$GITHUB_OUTPUT"
@@ -382,150 +386,12 @@ jobs:
         run: tests/e2e/lib/upsert_issue.sh
       - if: always()
         name: Enforce benchmark matrix truthfulness
-        env:
-          EXPECTED_COLLECTORS: ${{ needs.plan.outputs.collectors }}
-          EXPECTED_CPU_PROFILES: ${{ needs.plan.outputs.cpu_profiles }}
-          EXPECTED_INGEST_CONFIGS: ${{ needs.plan.outputs.ingest_configs }}
-          EXPECTED_WORKLOADS: ${{ needs.plan.outputs.workloads }}
-          NON_GATING_COLLECTORS: '["vector"]'
-          NON_GATING_EPS_MIN: "10000"
-          SINGLE_CPU_AVG_MAX: "1.05"
-        run: |
-          python3 - <<'PY'
-          import json
-          import os
-          import sys
-
-          with open("bench-summary.json", "r", encoding="utf-8") as handle:
-            summary = json.load(handle)
-
-          benchmark_count = int(summary.get("benchmark_count", 0))
-          failed_count = int(summary.get("failed_count", 0))
-          non_gating_eps_min = int(os.environ.get("NON_GATING_EPS_MIN", "10000"))
-          single_cpu_avg_max = float(os.environ.get("SINGLE_CPU_AVG_MAX", "1.05"))
-          non_gating_collectors = set(json.loads(os.environ.get("NON_GATING_COLLECTORS", "[]")))
-
-          collectors = json.loads(os.environ["EXPECTED_COLLECTORS"])
-          cpu_profiles = json.loads(os.environ["EXPECTED_CPU_PROFILES"])
-          ingest_configs = json.loads(os.environ["EXPECTED_INGEST_CONFIGS"])
-          workloads = json.loads(os.environ["EXPECTED_WORKLOADS"])
-
-          expected = len(collectors) * len(cpu_profiles) * len(ingest_configs) * len(workloads)
-          otlp_configs = [c for c in ingest_configs if c["mode"] == "otlp"]
-          if "vector" in collectors and otlp_configs:
-            expected -= len(cpu_profiles) * len(workloads) * len(otlp_configs)
-
-          print(
-            f"expected={expected} benchmark_count={benchmark_count} failed_count={failed_count}"
-          )
-
-          if benchmark_count < expected:
-            print(
-              f"missing benchmark artifacts: expected {expected}, got {benchmark_count}",
-              file=sys.stderr,
-            )
-            sys.exit(1)
-
-          gating_failures = []
-          tolerated_failures = []
-          for row in summary.get("results", []):
-            status = str(row.get("status") or "fail").lower()
-            collector = str(row.get("collector") or "")
-            target_eps = int(row.get("total_target_eps", 0) or 0)
-            non_gating = (
-              collector in non_gating_collectors
-              or target_eps == 0
-              or target_eps >= non_gating_eps_min
-            )
-            if status == "pass":
-              continue
-            if non_gating:
-              tolerated_failures.append(
-                {
-                  "artifact": row.get("artifact_name"),
-                  "collector": collector,
-                  "ingest_mode": row.get("ingest_mode"),
-                  "cpu_profile": row.get("cpu_profile"),
-                  "target_eps": target_eps,
-                  "status": status,
-                }
-              )
-            else:
-              gating_failures.append(
-                {
-                  "artifact": row.get("artifact_name"),
-                  "collector": collector,
-                  "ingest_mode": row.get("ingest_mode"),
-                  "cpu_profile": row.get("cpu_profile"),
-                  "target_eps": target_eps,
-                  "status": status,
-                }
-              )
-
-          if tolerated_failures:
-            print(f"tolerating {len(tolerated_failures)} non-gating failures")
-            for row in tolerated_failures[:20]:
-              print(row)
-          if gating_failures:
-            print("gating benchmark failures detected:", file=sys.stderr)
-            for row in gating_failures[:20]:
-              print(row, file=sys.stderr)
-            sys.exit(1)
-
-          integrity_violations = []
-          for row in summary.get("results", []):
-            collector = str(row.get("collector") or "")
-            target_eps = int(row.get("total_target_eps", 0) or 0)
-            if (
-              collector in non_gating_collectors
-              or target_eps == 0
-              or target_eps >= non_gating_eps_min
-            ):
-              continue
-            missing = int(row.get("missing_event_count", 0) or 0)
-            unexpected = int(row.get("unexpected_event_count", 0) or 0)
-            dup = int(row.get("dup_estimate", 0) or 0)
-            drop = int(row.get("drop_estimate", 0) or 0)
-            if missing > 0 or unexpected > 0 or dup > 0 or drop > 0:
-              integrity_violations.append(
-                {
-                  "artifact": row.get("artifact_name"),
-                  "missing": missing,
-                  "unexpected": unexpected,
-                  "dup": dup,
-                  "drop": drop,
-                }
-              )
-
-          if integrity_violations:
-            print("diagnostic integrity deltas detected (non-gating):")
-            for violation in integrity_violations[:20]:
-              print(violation)
-
-          single_cpu_violations = []
-          for row in summary.get("results", []):
-            if str(row.get("cpu_profile") or "").lower() != "single":
-              continue
-            cpu_avg = row.get("collector_cpu_cores_avg")
-            if cpu_avg is None:
-              continue
-            if float(cpu_avg) > single_cpu_avg_max:
-              single_cpu_violations.append(
-                {
-                  "artifact": row.get("artifact_name"),
-                  "collector": row.get("collector"),
-                  "ingest_mode": row.get("ingest_mode"),
-                  "target_eps": row.get("total_target_eps"),
-                  "collector_cpu_cores_avg": cpu_avg,
-                }
-              )
-
-          if single_cpu_violations:
-            print(
-              f"single CPU envelope violations detected (> {single_cpu_avg_max} cores avg):",
-              file=sys.stderr,
-            )
-            for violation in single_cpu_violations[:20]:
-              print(violation, file=sys.stderr)
-            sys.exit(1)
-          PY
+        uses: ./.github/actions/validate-bench-matrix
+        with:
+          expected-collectors: ${{ needs.plan.outputs.collectors }}
+          expected-cpu-profiles: ${{ needs.plan.outputs.cpu_profiles }}
+          expected-ingest-modes: ${{ needs.plan.outputs.ingest_modes }}
+          expected-workloads: ${{ needs.plan.outputs.workloads }}
+          otlp-excluded-collectors: '["vector"]'
+          tmax-only-collectors: '["otelcol","vector"]'
+          non-gating-collectors: '["vector"]'
