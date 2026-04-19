@@ -1,4 +1,4 @@
-name: Full Service Integrity (Nightly)
+name: E2E / Service Monitoring (Full)
 
 on:
   schedule:
@@ -101,7 +101,7 @@ jobs:
         run: |
           python3 tests/e2e/lib/render_issue_summary.py \
             --artifacts-root artifacts \
-            --suite-name "Full Service Integrity (Nightly)" \
+            --suite-name "E2E / Service Monitoring (Full)" \
             --suite-key nightly \
             --memagent-ref "${MEMAGENT_REF}" \
             --run-url "https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
@@ -119,7 +119,7 @@ jobs:
       - name: Upsert suite issue
         env:
           GH_TOKEN: ${{ github.token }}
-          ISSUE_TITLE_BASE: Full Service Integrity (Nightly) Report
+          ISSUE_TITLE_BASE: E2E / Service Monitoring (Full) Report
           ISSUE_BODY_FILE: ${{ github.workspace }}/suite-summary.md
           ISSUE_SUMMARY_JSON_FILE: ${{ github.workspace }}/suite-summary.json
           ISSUE_SUITE_KEY: e2e-nightly

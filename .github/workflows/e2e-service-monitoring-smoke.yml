@@ -1,4 +1,4 @@
-name: Core Service Integrity (Smoke)
+name: E2E / Service Monitoring (Smoke)
 
 on:
   pull_request:
@@ -84,7 +84,7 @@ jobs:
         run: |
           python3 tests/e2e/lib/render_issue_summary.py \
             --artifacts-root artifacts \
-            --suite-name "Core Service Integrity (Smoke)" \
+            --suite-name "E2E / Service Monitoring (Smoke)" \
             --suite-key smoke \
             --memagent-ref "${MEMAGENT_REF}" \
             --run-url "https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
@@ -103,7 +103,7 @@ jobs:
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
         env:
           GH_TOKEN: ${{ github.token }}
-          ISSUE_TITLE_BASE: Core Service Integrity (Smoke) Report
+          ISSUE_TITLE_BASE: E2E / Service Monitoring (Smoke) Report
           ISSUE_BODY_FILE: ${{ github.workspace }}/suite-summary.md
           ISSUE_SUMMARY_JSON_FILE: ${{ github.workspace }}/suite-summary.json
           ISSUE_SUITE_KEY: e2e-smoke

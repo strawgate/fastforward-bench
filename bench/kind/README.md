@@ -191,7 +191,7 @@ for the row contract.
 ## Octo11y Integration
 
 The GitHub workflow at
-[bench-kind-smoke.yml](../../.github/workflows/bench-kind-smoke.yml)
+[bench-competitive-k8s.yml](../../.github/workflows/bench-competitive-k8s.yml)
 uses this OTLP run file in a Benchkit/Octo11y pipeline:
 
 - `actions/monitor` captures runner telemetry sidecars for persisted runs
@@ -201,7 +201,7 @@ uses this OTLP run file in a Benchkit/Octo11y pipeline:
   `measure`, `cooldown`, and final run completion
 - the harness writes `benchkit-run.otlp.json`
 - `actions/stash` stores the benchmark run on `bench-data`
-- [bench-kind-aggregate.yml](../../.github/workflows/bench-kind-aggregate.yml)
+- [aggregate-benchmark-data.yml](../../.github/workflows/aggregate-benchmark-data.yml)
   rebuilds the derived views
 
 Pull requests still use the same smoke harness, but only scheduled or manual
