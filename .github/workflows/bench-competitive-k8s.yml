@@ -82,6 +82,10 @@ on:
         type: string
         default: ''
 
+concurrency:
+  group: bench-competitive-k8s-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
   actions: write

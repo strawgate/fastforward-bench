@@ -80,6 +80,10 @@ on:
           - 'false'
           - 'true'
 
+concurrency:
+  group: bench-competitive-docker-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
   actions: write
