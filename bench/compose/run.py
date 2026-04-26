@@ -102,9 +102,10 @@ COLLECTORS: dict[str, CollectorAdapter] = {
 CPU_PROFILES: dict[str, CpuProfile] = {
     "single": CpuProfile(
         name="single",
+        # Allocator: collector=1.0, generator=1.2, sink=1.2 (3.4 cores total).
         collector_cpu="1.0",
-        generator_cpu="1.0",
-        sink_cpu="1.0",
+        generator_cpu="1.2",
+        sink_cpu="1.2",
         collector_memory="1g",
         generator_memory="1g",
         sink_memory="1g",
@@ -113,9 +114,11 @@ CPU_PROFILES: dict[str, CpuProfile] = {
     ),
     "multi": CpuProfile(
         name="multi",
-        collector_cpu="2.0",
-        generator_cpu="1.0",
-        sink_cpu="1.0",
+        # Same allocation as single (multi-core tests are disabled).
+        # Kept for CLI compatibility but uses identical CPU values.
+        collector_cpu="1.0",
+        generator_cpu="1.2",
+        sink_cpu="1.2",
         collector_memory="1g",
         generator_memory="1g",
         sink_memory="1g",
