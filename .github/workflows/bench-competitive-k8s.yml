@@ -162,7 +162,7 @@ jobs:
           if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${INPUT_CPU_PROFILE}" != "all" ]]; then
             echo "cpu_profiles=[\"${INPUT_CPU_PROFILE}\"]" >>"$GITHUB_OUTPUT"
           else
-            echo 'cpu_profiles=["single","multi"]' >>"$GITHUB_OUTPUT"
+            echo 'cpu_profiles=["single"]' >>"$GITHUB_OUTPUT"
           fi
           if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${INPUT_INGEST_MODE}" != "all" ]]; then
             echo "ingest_modes=[\"${INPUT_INGEST_MODE}\"]" >>"$GITHUB_OUTPUT"
