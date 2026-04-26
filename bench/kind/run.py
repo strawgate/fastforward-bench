@@ -292,18 +292,21 @@ def build_resource_plan(
             collector_mcpu_min = 1000
             collector_mcpu_target = 1000
         else:
-            # Multi capacity probes: keep the 3-core budget so the emitter pod
-            # can schedule on a 2-core GH runner.  Sink/capture stay lean;
-            # collector gets the remaining ~1960 m (≈ 2 cores).
-            node_budget_mcpu = 3000
-            sink_mcpu = 120
+            # Multi capacity probes: 3.4-core budget so emitter=1.2, collector=1.0,
+            # sink=1.2 (with 200m capture_reader reserved).  Fits GH runners that
+            # have 2 physical CPUs + sufficient Docker quota.
+            node_budget_mcpu = 3400
+            sink_mcpu = 1200
             capture_reader_mcpu = 20
-            collector_mcpu_min = 1400
-            collector_mcpu_target = 2000
+            collector_mcpu_min = 1000
+            collector_mcpu_target = 1000
 
     reserved_mcpu = sink_mcpu + capture_reader_mcpu
     if capacity_probe:
-        emitter_total_budget_mcpu = 1000
+        if cpu_profile.name == "multi":
+            emitter_total_budget_mcpu = 1200
+        else:
+            emitter_total_budget_mcpu = 1000
         emitter_mcpu = max(cpu_profile.emitter_cpu_mcpu_per_pod, emitter_total_budget_mcpu // emitter_pods)
     else:
         emitter_mcpu = cpu_profile.emitter_cpu_mcpu_per_pod
@@ -325,10 +328,6 @@ def build_resource_plan(
         )
 
     emitter_request_mcpu = emitter_mcpu
-    if capacity_probe and cpu_profile.name == "multi":
-        # Cap request to keep the emitter schedulable; the limit still allows
-        # burst headroom under the configured CPU limit.
-        emitter_request_mcpu = min(emitter_mcpu, 300)
 
     # Keep generator and sink memory fixed at 1Gi for benchmark stability.
     # This avoids memory-limit artifacts while we tune throughput behavior.
@@ -388,10 +387,11 @@ def emit_otlp_metrics(*, endpoint: str, payload: dict[str, object], timeout_sec:
         headers={"content-type": "application/json"},
         method="POST",
     )
-    with urllib.request.urlopen(request, timeout=timeout_sec) as response:
-        status = getattr(response, "status", 200)
-        if status >= 400:
-            raise RuntimeError(f"collector rejected OTLP metrics with HTTP {status}")
+    try:
+        with urllib.request.urlopen(request, timeout=timeout_sec) as response:
+            pass
+    except urllib.error.HTTPError as exc:
+        raise RuntimeError(f"collector rejected OTLP metrics with HTTP {exc.code}")
 
 
 def append_artifact_note(results_dir: Path, filename: str, message: str) -> None:

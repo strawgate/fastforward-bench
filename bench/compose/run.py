@@ -260,6 +260,8 @@ def write_json(path: Path, payload: object) -> None:
 
 def ensure_world_writable_dir(path: Path) -> None:
     path.mkdir(parents=True, exist_ok=True)
+    # Docker bind mounts require world-writable dirs when host and container
+    # users differ. This is a local-only benchmark harness, not production.
     os.chmod(path, 0o777)
 
 
@@ -701,7 +703,11 @@ def parse_byte_size(value: str) -> int:
     while index < len(raw) and (raw[index].isdigit() or raw[index] in ".-"):
         index += 1
     number = float(raw[:index] or "0")
+    if number < 0:
+        raise ValueError(f"byte size cannot be negative: {value}")
     unit = raw[index:].strip().lower()
+    if not unit:
+        return int(number)
     multiplier = units.get(unit, 1)
     return int(number * multiplier)
 
@@ -778,8 +784,7 @@ def wait_for_collector_ready(adapter: CollectorAdapter, port: int, timeout_sec: 
     raise RuntimeError("timed out waiting for collector readiness")
 
 
-def stats_sample_from_capture_file(capture_file_path: Path, benchmark_id: str) -> StatsSample:
-    del benchmark_id
+def stats_sample_from_capture_file(capture_file_path: Path) -> StatsSample:
     return StatsSample(
         timestamp=time.time(),
         output_lines=count_rows_with_rollovers(capture_file_path),
@@ -820,7 +825,7 @@ def sink_reported_events(
         payload = fetch_capture_stats(capture_stats_port)
         return int(payload.get("benchmark_rows_total", 0) or 0)
     if adapter.sink_stats_kind == "capture_file":
-        return int(stats_sample_from_capture_file(capture_file_path, benchmark_id).output_lines)
+        return int(stats_sample_from_capture_file(capture_file_path).output_lines)
     payload = fetch_stats(sink_diag_port)
     return int(payload.get("output_lines", 0) or 0)
 
@@ -845,7 +850,9 @@ def copy_with_cap(src: Path, dst: Path, *, max_bytes: int) -> None:
                 break
             dst_handle.write(chunk)
             remaining -= len(chunk)
-        truncated = src_handle.read(1)
+        truncated = False
+        if max_bytes > 0:
+            truncated = src_handle.read(1)
     if truncated:
         with dst.open("ab") as dst_handle:
             dst_handle.write(b"\n")
@@ -875,45 +882,89 @@ def count_ndjson_rows(path: Path) -> int:
     return rows
 
 
-def count_rows_with_rollovers(base_file_path: Path) -> int:
+def _rollover_files(base_file_path: Path) -> list[Path]:
+    """Return sorted list of rollover files matching base_file_path name."""
     parent = base_file_path.parent
     base_name = base_file_path.name
-    files = sorted(path for path in parent.glob(f"{base_name}*") if path.is_file())
+    return sorted(path for path in parent.glob(f"{base_name}*") if path.is_file())
+
+
+def count_rows_with_rollovers(base_file_path: Path) -> int:
+    files = _rollover_files(base_file_path)
     if not files:
         return 0
     return sum(count_ndjson_rows(path) for path in files)
 
 
 def remove_rollover_files(base_file_path: Path) -> None:
-    parent = base_file_path.parent
-    base_name = base_file_path.name
-    for path in parent.glob(f"{base_name}*"):
-        if not path.is_file():
-            continue
+    for path in _rollover_files(base_file_path):
         try:
             path.unlink()
         except OSError:
             continue
 
 
-def max_seq_with_rollovers(base_file_path: Path) -> int:
-    parent = base_file_path.parent
-    base_name = base_file_path.name
-    files = sorted(path for path in parent.glob(f"{base_name}*") if path.is_file())
+def scan_ndjson_seq(base_file_path: Path) -> tuple[int, int, int]:
+    """Scan NDJSON files and return (row_count, max_seq, duplicate_count)."""
+    files = _rollover_files(base_file_path)
+    row_count = 0
     max_seq = 0
+    seq_counts: dict[int, int] = {}
     for path in files:
         try:
             with path.open("rb") as handle:
                 for raw_line in handle:
+                    row_count += 1
                     match = SEQ_FIELD_RE.search(raw_line)
                     if match is None:
                         continue
-                    candidate = int(match.group(1))
-                    if candidate > max_seq:
-                        max_seq = candidate
+                    seq = int(match.group(1))
+                    if seq > max_seq:
+                        max_seq = seq
+                    seq_counts[seq] = seq_counts.get(seq, 0) + 1
         except OSError:
             continue
-    return max_seq
+    duplicate_count = sum(count - 1 for count in seq_counts.values() if count > 1)
+    return row_count, max_seq, duplicate_count
+
+
+def max_seq_with_rollovers(base_file_path: Path) -> int:
+    return scan_ndjson_seq(base_file_path)[1]
+
+
+def find_duplicate_seqs(base_file_path: Path) -> dict[str, object]:
+    """Return diagnostic info about duplicate seq values in an NDJSON file."""
+    files = _rollover_files(base_file_path)
+    seq_counts: dict[int, int] = {}
+    first_seq: int | None = None
+    last_seq: int | None = None
+    total_rows = 0
+    for path in files:
+        try:
+            with path.open("rb") as handle:
+                for raw_line in handle:
+                    total_rows += 1
+                    match = SEQ_FIELD_RE.search(raw_line)
+                    if match is None:
+                        continue
+                    seq = int(match.group(1))
+                    seq_counts[seq] = seq_counts.get(seq, 0) + 1
+                    if first_seq is None or seq < first_seq:
+                        first_seq = seq
+                    if last_seq is None or seq > last_seq:
+                        last_seq = seq
+        except OSError:
+            continue
+    duplicates = {seq: count for seq, count in seq_counts.items() if count > 1}
+    return {
+        "file": str(base_file_path),
+        "total_rows": total_rows,
+        "unique_seqs": len(seq_counts),
+        "first_seq": first_seq,
+        "last_seq": last_seq,
+        "duplicate_seqs": duplicates,
+        "duplicate_count": sum(count - 1 for count in duplicates.values()),
+    }
 
 
 def wait_for_sink_catch_up(
@@ -963,6 +1014,8 @@ def main() -> int:
     # single-core collector can consume, but low enough that the generator's
     # built-in rate limiter keeps CPU usage reasonable.
     FILE_INGEST_MAX_EPS = 400_000
+    # Time to wait after stopping collector before counting source file events.
+    COLLECTOR_FLUSH_SEC = 1.0
     if args.ingest_mode == "file" and eps_per_sec == 0:
         eps_per_sec = FILE_INGEST_MAX_EPS
 
@@ -1112,7 +1165,7 @@ def main() -> int:
     measure_completed_at: float | None = None
     capture_file_path = runtime_dir / "capture.ndjson"
     events_file_path = runtime_dir / "events.ndjson"
-    max_throughput_mode = eps_per_sec == 0 or (args.ingest_mode == "file" and base_profile.eps_per_pod == 0)
+    max_throughput_mode = args.ingest_mode == "file" and base_profile.eps_per_pod == 0
 
     try:
         run(compose + ["--profile", adapter.name, "up", "-d", "sink", "capture-reader", adapter.service_name], env=env)
@@ -1203,7 +1256,14 @@ def main() -> int:
             emitter_before_stop = None
 
         subprocess.run(compose + ["stop", "generator"], env=env, check=False)
+
         if args.ingest_mode == "file":
+            # Stop the collector so it finishes consuming events.ndjson before we
+            # count the source.  Otherwise the collector keeps reading and sending
+            # events to the sink after we count, causing sink > source (the 4-dup
+            # issue at 1 EPS in file mode).
+            subprocess.run(compose + ["stop", adapter.service_name], env=env, check=False)
+            time.sleep(COLLECTOR_FLUSH_SEC)
             source_rows_total = count_rows_with_rollovers(events_file_path)
             if source_rows_total > 0:
                 result.source_rows_total = source_rows_total
@@ -1212,6 +1272,7 @@ def main() -> int:
                 result.emitter_reported_events_total = emitter_before_stop
         else:
             result.emitter_reported_events_total = emitter_before_stop
+
         if result.emitter_reported_events_total is not None and result.emitter_reported_events_total > 0:
             result.sink_reported_events_total = wait_for_sink_catch_up(
                 adapter=adapter,
@@ -1231,15 +1292,11 @@ def main() -> int:
                 benchmark_id,
             )
 
-        subprocess.run(compose + ["stop", adapter.service_name], env=env, check=False)
-        time.sleep(1.0)
-
         # Final integrity counts should come from the sink capture file, not per-process
         # diagnostics counters, which can lag under sustained load.
-        exact_captured_rows = count_rows_with_rollovers(capture_file_path)
-        if exact_captured_rows > 0:
-            result.sink_reported_events_total = exact_captured_rows
-        captured_max_seq = max_seq_with_rollovers(capture_file_path)
+        captured_rows, captured_max_seq, _captured_dups = scan_ndjson_seq(capture_file_path)
+        if captured_rows > 0:
+            result.sink_reported_events_total = captured_rows
         if captured_max_seq > 0:
             result.source_rows_total = max(result.source_rows_total or 0, captured_max_seq)
             result.emitter_reported_events_total = max(result.emitter_reported_events_total or 0, captured_max_seq)
@@ -1327,6 +1384,18 @@ def main() -> int:
                 and (result.unexpected_event_count or 0) == 0
             )
         )
+        if args.ingest_mode == "file" and not integrity_clean:
+            source_dup_info = find_duplicate_seqs(events_file_path)
+            sink_dup_info = find_duplicate_seqs(capture_file_path)
+            write_json(
+                artifacts_dir / "seq-integrity-diagnostic.json",
+                {
+                    "source": source_dup_info,
+                    "sink": sink_dup_info,
+                    "emitter_reported_total": result.emitter_reported_events_total,
+                    "sink_reported_total": result.sink_reported_events_total,
+                },
+            )
         if (result.sink_reported_events_total or 0) > 0:
             result.status = "pass"
             if estimated_throughput:

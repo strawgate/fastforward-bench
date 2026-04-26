@@ -96,7 +96,7 @@ def _otlp_metric(
         "attributes": attributes,
     }
     if isinstance(value, int):
-        data_point["asInt"] = str(value)
+        data_point["asInt"] = value
     else:
         data_point["asDouble"] = value
 
