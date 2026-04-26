@@ -253,7 +253,6 @@ jobs:
       - uses: ./.github/actions/setup-kind
         with:
           cluster-name: ${{ env.CLUSTER_NAME }}
-          results-dir: ${{ env.BENCH_RESULTS_DIR }}
       - if: env.PERSIST_BENCH_DATA == 'true'
         name: Start Octo11y monitor
         id: monitor
