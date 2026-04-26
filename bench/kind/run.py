@@ -71,6 +71,12 @@ COMMON_MANIFESTS_ROOT = BENCH_ROOT / "manifests" / "common"
 COLLECTOR_MANIFESTS_ROOT = BENCH_ROOT / "manifests" / "collectors"
 WORKLOAD_MANIFESTS_ROOT = BENCH_ROOT / "manifests" / "workload"
 
+# Timeouts and limits used throughout the harness.
+EMITTER_ROLLOUT_SEC_PER_POD = 12
+DRAIN_TIMEOUT_NDJSON_SEC = 45
+DRAIN_TIMEOUT_OTLP_SEC = 10
+TAIL_ALL_LOGS = -1
+
 
 @dataclass(frozen=True)
 class CpuProfile:
@@ -809,7 +815,7 @@ def run_smoke_phase(
 
     apply_manifest(manifests["emitter_configmap"])
     apply_manifest(manifests["emitter_statefulset"])
-    emitter_rollout_timeout = max(300, profile.pods * 12)
+    emitter_rollout_timeout = max(300, profile.pods * EMITTER_ROLLOUT_SEC_PER_POD)
     rollout_status(args.namespace, "statefulset", "log-emitter", timeout_sec=emitter_rollout_timeout)
     emitter_pods = get_pod_names(args.namespace, "app.kubernetes.io/name=log-emitter")
     collector_restart_before, collector_reasons_before = collector_runtime_snapshot(args.namespace, collector_pod)
@@ -952,7 +958,7 @@ def run_smoke_phase(
 
     sink_stats_kind = "capture_reader" if adapter.sink_transport == "http_ndjson" else "logfwd"
     sink_stats_port = 8081 if adapter.sink_transport == "http_ndjson" else 9090
-    drain_timeout_sec = 45 if adapter.sink_transport == "http_ndjson" else 10
+    drain_timeout_sec = DRAIN_TIMEOUT_NDJSON_SEC if adapter.sink_transport == "http_ndjson" else DRAIN_TIMEOUT_OTLP_SEC
     sink_reported_stats = wait_for_sink_catch_up(
         namespace=args.namespace,
         sink_pod=sink_pod,
@@ -1002,7 +1008,7 @@ def run_smoke_phase(
         namespace=args.namespace,
         pod_names=[sink_pod],
         destination=artifacts_dir / "sink-logs.txt",
-        tail=-1,
+        tail=TAIL_ALL_LOGS,
     )
     sink_rows: list[dict[str, object]] = []
     if not max_throughput_mode and not saturation_target_mode:
@@ -1177,7 +1183,7 @@ def run_smoke_phase(
         namespace=args.namespace,
         pod_names=emitter_pods,
         destination=artifacts_dir / "emitter-logs.txt",
-        tail=-1,
+        tail=TAIL_ALL_LOGS,
     )
 
     collector_pods = get_pod_names(args.namespace, adapter.pod_selector)

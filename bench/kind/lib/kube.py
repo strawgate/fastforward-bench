@@ -92,6 +92,13 @@ def collect_debug_artifacts(
     artifacts_dir = results_dir / "artifacts"
     artifacts_dir.mkdir(parents=True, exist_ok=True)
 
+    def write_artifact(path: Path, command: list[str]) -> None:
+        completed = subprocess.run(command, text=True, capture_output=True, check=False)
+        output = completed.stdout if completed.stdout else completed.stderr
+        if completed.returncode != 0:
+            output = f"[command failed with exit code {completed.returncode}]\n{output}"
+        path.write_text(output, encoding="utf-8")
+
     commands = {
         "kubectl-get-all.txt": ["kubectl", "-n", namespace, "get", "all", "-o", "wide"],
         "kubectl-get-events.txt": ["kubectl", "-n", namespace, "get", "events", "--sort-by=.lastTimestamp"],
@@ -101,9 +108,7 @@ def collect_debug_artifacts(
     }
 
     for filename, command in commands.items():
-        completed = subprocess.run(command, text=True, capture_output=True, check=False)
-        output = completed.stdout if completed.stdout else completed.stderr
-        (artifacts_dir / filename).write_text(output, encoding="utf-8")
+        write_artifact(artifacts_dir / filename, command)
 
     pod_name = get_first_pod_name(namespace, selector)
     if pod_name:
@@ -111,9 +116,7 @@ def collect_debug_artifacts(
             "kubectl-describe-pod.txt": ["kubectl", "-n", namespace, "describe", "pod", pod_name],
             "sink-logs.txt": ["kubectl", "-n", namespace, "logs", pod_name, "--all-containers=true"],
         }.items():
-            completed = subprocess.run(command, text=True, capture_output=True, check=False)
-            output = completed.stdout if completed.stdout else completed.stderr
-            (artifacts_dir / suffix).write_text(output, encoding="utf-8")
+            write_artifact(artifacts_dir / suffix, command)
 
     if collector_selector:
         collector_pods = get_pod_names(namespace, collector_selector)
@@ -123,9 +126,7 @@ def collect_debug_artifacts(
                 f"collector-{slug}-describe.txt": ["kubectl", "-n", namespace, "describe", "pod", pod_name],
                 f"collector-{slug}-logs.txt": ["kubectl", "-n", namespace, "logs", pod_name, "--all-containers=true"],
             }.items():
-                completed = subprocess.run(command, text=True, capture_output=True, check=False)
-                output = completed.stdout if completed.stdout else completed.stderr
-                (artifacts_dir / suffix).write_text(output, encoding="utf-8")
+                write_artifact(artifacts_dir / suffix, command)
 
     if emitter_selector:
         emitter_pods = get_pod_names(namespace, emitter_selector)
@@ -144,9 +145,7 @@ def collect_debug_artifacts(
                     "--previous",
                 ],
             }.items():
-                completed = subprocess.run(command, text=True, capture_output=True, check=False)
-                output = completed.stdout if completed.stdout else completed.stderr
-                (artifacts_dir / suffix).write_text(output, encoding="utf-8")
+                write_artifact(artifacts_dir / suffix, command)
 
 
 def send_signal_to_pod(namespace: str, pod_name: str, signal: str) -> None:
