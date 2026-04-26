@@ -302,18 +302,20 @@ def build_resource_plan(
             collector_mcpu_min = 1000
             collector_mcpu_target = 1000
         else:
-            # Multi capacity probes: keep the 3-core budget so the emitter pod
-            # can schedule on a 2-core GH runner.  Sink/capture stay lean;
-            # collector gets the remaining ~1960 m (≈ 2 cores).
-            node_budget_mcpu = 3000
-            sink_mcpu = 120
+            # Multi capacity probes: emitter=1.2, collector=1.0, sink+capture=1.2
+            # Total: 3400m on a 4-core (4000m) node.
+            node_budget_mcpu = 3400
+            sink_mcpu = 1180
             capture_reader_mcpu = 20
-            collector_mcpu_min = 1400
-            collector_mcpu_target = 2000
+            collector_mcpu_min = 1000
+            collector_mcpu_target = 1000
 
     reserved_mcpu = sink_mcpu + capture_reader_mcpu
     if capacity_probe:
-        emitter_total_budget_mcpu = 1000
+        if cpu_profile.name == "multi":
+            emitter_total_budget_mcpu = 1200
+        else:
+            emitter_total_budget_mcpu = 1000
         emitter_mcpu = max(cpu_profile.emitter_cpu_mcpu_per_pod, emitter_total_budget_mcpu // emitter_pods)
     else:
         emitter_mcpu = cpu_profile.emitter_cpu_mcpu_per_pod
