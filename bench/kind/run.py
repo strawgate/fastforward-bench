@@ -36,6 +36,7 @@ from lib.kube import (
     collect_debug_artifacts,
     collect_pprof_from_pod,
     get_first_pod_name,
+    get_node_allocatable_cpu_mcpu,
     get_pod_names,
     rollout_status,
     send_signal_to_pod,
@@ -276,11 +277,14 @@ def build_resource_plan(
     emitter_pods: int,
     eps_per_pod: int,
     unbounded_generator: bool = False,
+    node_allocatable_mcpu: int | None = None,
 ) -> ResourcePlan:
     if emitter_pods <= 0:
         raise ValueError("emitter pod count must be > 0")
 
     node_budget_mcpu = int(cpu_profile.cluster_cpu_cores * 1000)
+    if node_allocatable_mcpu is not None:
+        node_budget_mcpu = min(node_budget_mcpu, node_allocatable_mcpu)
     sink_mcpu = cpu_profile.sink_cpu_mcpu
     capture_reader_mcpu = cpu_profile.capture_reader_cpu_mcpu
     collector_mcpu_min = cpu_profile.collector_cpu_mcpu_min
@@ -1330,11 +1334,13 @@ def main() -> int:
     if collector_batch_target_bytes is not None and adapter.name != "logfwd":
         raise ValueError("--collector-batch-target-bytes currently applies only to the logfwd collector adapter")
     cpu_profile = CPU_PROFILES[args.cpu_profile]
+    node_allocatable_mcpu = get_node_allocatable_cpu_mcpu()
     resource_plan = build_resource_plan(
         cpu_profile=cpu_profile,
         emitter_pods=profile.pods,
         eps_per_pod=profile.eps_per_pod,
         unbounded_generator=profile.eps_per_pod == 0,
+        node_allocatable_mcpu=node_allocatable_mcpu,
     )
     resource_plan = adjust_resource_plan_for_adapter(
         resource_plan=resource_plan,

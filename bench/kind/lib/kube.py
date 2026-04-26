@@ -32,6 +32,24 @@ def wait_for_deployment(namespace: str, name: str, timeout_sec: int) -> None:
     )
 
 
+def get_node_allocatable_cpu_mcpu() -> int:
+    completed = kubectl(
+        [
+            "get",
+            "nodes",
+            "-o",
+            "jsonpath={.items[0].status.allocatable.cpu}",
+        ],
+        capture=True,
+    )
+    cpu_str = completed.stdout.strip()
+    if not cpu_str:
+        raise CommandError("failed to query node allocatable CPU")
+    if cpu_str.endswith("m"):
+        return int(cpu_str[:-1])
+    return int(float(cpu_str) * 1000)
+
+
 def rollout_status(namespace: str, kind: str, name: str, timeout_sec: int) -> None:
     kubectl(
         [
