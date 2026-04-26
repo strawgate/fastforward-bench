@@ -8,7 +8,7 @@ inputs:
   image:
     description: Docker image to load into the cluster
     required: false
-    default: logfwd:e2e
+    default: fastforward:e2e
 
 runs:
   using: composite

@@ -22,7 +22,7 @@ land. Fields that are not collected in a phase are emitted as `null`.
 | `ingest_mode` | string | Collector input mode: `file` or `otlp` |
 | `cpu_profile` | string | CPU shaping profile, currently `single` or `multi` |
 | `cluster_cpu_limit_cores` | number | CPU cap applied to the KIND control-plane container |
-| `collector_batch_target_bytes` | integer or null | Optional logfwd collector `batch_target_bytes` override used for payload-size experiments |
+| `collector_batch_target_bytes` | integer or null | Optional fastforward collector `batch_target_bytes` override used for payload-size experiments |
 | `pods` | integer | Target emitter pod count for the profile |
 | `target_eps_per_pod` | integer | Target rate for the profile |
 | `total_target_eps` | integer | `pods * target_eps_per_pod` |
@@ -30,8 +30,8 @@ land. Fields that are not collected in a phase are emitted as `null`.
 | `measure_sec` | integer | Profile knob |
 | `cooldown_sec` | integer | Profile knob |
 | `sink_lines_total` | integer or null | Steady-state delta from sink diagnostics during the measured window |
-| `emitter_reported_events_total` | integer or null | Sum of emitter-side reported totals collected from each emitter pod's `logfwd` `/admin/v1/stats` diagnostics (legacy `/api/stats` fallback) |
-| `sink_reported_events_total` | integer or null | Sink-side reported total collected from the sink `logfwd` `/admin/v1/stats` diagnostics (legacy `/api/stats` fallback) |
+| `emitter_reported_events_total` | integer or null | Sum of emitter-side reported totals collected from each emitter pod's `fastforward` `/admin/v1/stats` diagnostics (legacy `/api/stats` fallback) |
+| `sink_reported_events_total` | integer or null | Sink-side reported total collected from the sink `fastforward` `/admin/v1/stats` diagnostics (legacy `/api/stats` fallback) |
 | `captured_rows_total` | integer or null | Full count of captured benchmark rows observed in sink artifacts |
 | `source_rows_total` | integer or null | Full count of benchmark rows observed in emitter artifacts |
 | `missing_source_count` | integer or null | Expected emitter pods absent from sink artifacts |
@@ -78,7 +78,7 @@ All source-vs-sink and steady-state throughput fields remain `null`.
 
 The smoke phase currently runs one narrow benchmark mode:
 
-- collectors: `logfwd`, `otelcol`, `vector`
+- collectors: `fastforward`, `otelcol`, `vector`
 - mode: `baseline-pass-through`
 - oracle: compare benchmark-tagged sink rows against the emitter logs captured
   from the source pods

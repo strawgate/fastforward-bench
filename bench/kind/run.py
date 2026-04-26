@@ -147,7 +147,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run the KIND competitive benchmark harness.")
     parser.add_argument("--phase", choices=["infra", "smoke"], default="smoke")
     parser.add_argument("--profile", choices=sorted(PROFILES), default="smoke")
-    parser.add_argument("--collector", default="logfwd")
+    parser.add_argument("--collector", default="fastforward")
     parser.add_argument("--ingest-mode", choices=["file", "otlp"], default="file")
     parser.add_argument("--ingest-label", type=lambda v: v or None, default=None, help="Label stored in result.json for ingest config (defaults to --ingest-mode)")
     parser.add_argument(
@@ -159,7 +159,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--protocol", default="otlp_http")
     parser.add_argument("--cluster-name", default="memagent-bench")
     parser.add_argument("--namespace", default="memagent-bench")
-    parser.add_argument("--memagent-image", default="logfwd:e2e")
+    parser.add_argument("--memagent-image", default="fastforward:e2e")
     parser.add_argument("--collector-image", default=None)
     parser.add_argument("--results-dir", default=None)
     parser.add_argument("--benchkit-run-id", default=None)
@@ -174,7 +174,7 @@ def parse_args() -> argparse.Namespace:
         type=optional_int,
         default=None,
         help=(
-            "Optional logfwd collector batch_target_bytes override for benchmark experiments. "
+            "Optional fastforward collector batch_target_bytes override for benchmark experiments. "
             "Can also be set with BENCH_COLLECTOR_BATCH_TARGET_BYTES."
         ),
     )
@@ -499,7 +499,7 @@ def collect_collector_status_artifact(
     adapter: CollectorAdapter,
     destination: Path,
 ) -> None:
-    if adapter.collector_stats_kind != "logfwd":
+    if adapter.collector_stats_kind != "fastforward":
         return
     local_port = reserve_local_port()
     with PortForward(namespace, f"pod/{pod_name}", local_port, adapter.collector_stats_port):
@@ -519,7 +519,7 @@ def collect_sink_capture(namespace: str, sink_pod: str, destination: Path) -> No
             sink_pod,
             "--",
             "cat",
-            "/var/lib/logfwd/capture.ndjson",
+            "/var/lib/fastforward/capture.ndjson",
         ],
         text=True,
         capture_output=True,
@@ -821,9 +821,9 @@ def run_smoke_phase(
     )
     sink_samples, collector_samples, emitter_samples = collect_bench_samples(
         args.namespace,
-        "deployment/logfwd-capture",
+        "deployment/fastforward-capture",
         adapter.diagnostics_target_format.format(pod_name=collector_pod),
-        sink_stats_kind="capture_reader" if adapter.sink_transport == "http_ndjson" else "logfwd",
+        sink_stats_kind="capture_reader" if adapter.sink_transport == "http_ndjson" else "fastforward",
         sink_stats_port=8081 if adapter.sink_transport == "http_ndjson" else 9090,
         collector_stats_kind=adapter.collector_stats_kind,
         collector_stats_port=adapter.collector_stats_port,
@@ -943,11 +943,11 @@ def run_smoke_phase(
     emitter_reported_total, emitter_reported_stats = collect_emitter_reported_total(args.namespace, emitter_pods)
     result.emitter_reported_events_total = emitter_reported_total
 
-    sink_pod = get_first_pod_name(args.namespace, "app.kubernetes.io/name=logfwd-capture")
+    sink_pod = get_first_pod_name(args.namespace, "app.kubernetes.io/name=fastforward-capture")
     if not sink_pod:
         raise CommandError("sink pod not found after rollout")
 
-    sink_stats_kind = "capture_reader" if adapter.sink_transport == "http_ndjson" else "logfwd"
+    sink_stats_kind = "capture_reader" if adapter.sink_transport == "http_ndjson" else "fastforward"
     sink_stats_port = 8081 if adapter.sink_transport == "http_ndjson" else 9090
     drain_timeout_sec = DRAIN_TIMEOUT_NDJSON_SEC if adapter.sink_transport == "http_ndjson" else DRAIN_TIMEOUT_OTLP_SEC
     sink_reported_stats = wait_for_sink_catch_up(
@@ -983,7 +983,7 @@ def run_smoke_phase(
     except Exception as exc:  # noqa: BLE001
         append_artifact_note(results_dir, "collector-status-error.txt", str(exc))
     # Collect a pprof profile from the collector pod.
-    # Sending SIGUSR1 triggers logfwd to write profile.pb.gz then begin graceful shutdown.
+    # Sending SIGUSR1 triggers fastforward to write profile.pb.gz then begin graceful shutdown.
     # We copy the file in the short window between write and process exit.
     try:
         send_signal_to_pod(args.namespace, collector_pod_after, "USR1")
@@ -1321,8 +1321,8 @@ def main() -> int:
         args.collector_batch_target_bytes,
         "BENCH_COLLECTOR_BATCH_TARGET_BYTES",
     )
-    if collector_batch_target_bytes is not None and adapter.name != "logfwd":
-        raise ValueError("--collector-batch-target-bytes currently applies only to the logfwd collector adapter")
+    if collector_batch_target_bytes is not None and adapter.name != "fastforward":
+        raise ValueError("--collector-batch-target-bytes currently applies only to the fastforward collector adapter")
     cpu_profile = CPU_PROFILES[args.cpu_profile]
     node_allocatable_mcpu = get_node_allocatable_cpu_mcpu()
     resource_plan = build_resource_plan(
@@ -1436,13 +1436,13 @@ def main() -> int:
         # Cold-start image pulls and CNI bring-up on shared runners can make
         # sink rollout occasionally exceed 90s; use a wider timeout to reduce
         # false negatives on low-EPS gating lanes.
-        wait_for_deployment(args.namespace, "logfwd-capture", timeout_sec=180)
+        wait_for_deployment(args.namespace, "fastforward-capture", timeout_sec=180)
         result.sink_ready = True
 
         if args.phase == "infra":
             result.status = "pass"
             result.notes = (
-                "infra-only benchmark run succeeded; cluster lifecycle and logfwd sink deployment are healthy. "
+                "infra-only benchmark run succeeded; cluster lifecycle and fastforward sink deployment are healthy. "
                 "Run --phase smoke to exercise the collector, emitters, and source-vs-sink oracle."
             )
             return_code = 0
@@ -1470,8 +1470,8 @@ def main() -> int:
             collect_debug_artifacts(
                 results_dir,
                 namespace=args.namespace,
-                deployment="logfwd-capture",
-                selector="app.kubernetes.io/name=logfwd-capture",
+                deployment="fastforward-capture",
+                selector="app.kubernetes.io/name=fastforward-capture",
                 collector_selector=adapter.pod_selector,
                 emitter_selector="app.kubernetes.io/name=log-emitter",
             )

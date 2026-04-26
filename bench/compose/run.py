@@ -68,19 +68,19 @@ class CpuProfile:
 
 
 COLLECTORS: dict[str, CollectorAdapter] = {
-    "logfwd": CollectorAdapter(
-        name="logfwd",
-        service_name="collector-logfwd",
+    "fastforward": CollectorAdapter(
+        name="fastforward",
+        service_name="collector-fastforward",
         image=None,
-        diagnostics_kind="logfwd",
-        sink_stats_kind="logfwd",
+        diagnostics_kind="fastforward",
+        sink_stats_kind="fastforward",
     ),
     "otelcol": CollectorAdapter(
         name="otelcol",
         service_name="collector-otelcol",
         image="otel/opentelemetry-collector-contrib:0.148.0",
         diagnostics_kind="prometheus",
-        sink_stats_kind="logfwd",
+        sink_stats_kind="fastforward",
     ),
     "vector": CollectorAdapter(
         name="vector",
@@ -203,12 +203,12 @@ server.serve_forever()
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run non-KIND compose benchmark harness.")
     parser.add_argument("--results-dir", type=Path, required=True)
-    parser.add_argument("--collector", choices=sorted(COLLECTORS), default="logfwd")
+    parser.add_argument("--collector", choices=sorted(COLLECTORS), default="fastforward")
     parser.add_argument("--ingest-mode", choices=["file", "otlp"], default="file")
     parser.add_argument("--profile", choices=sorted(PROFILES), default="smoke")
     parser.add_argument("--cpu-profile", choices=sorted(CPU_PROFILES), default="single")
     parser.add_argument("--eps-per-sec", type=int, default=None)
-    parser.add_argument("--memagent-image", default="logfwd:e2e")
+    parser.add_argument("--memagent-image", default="fastforward:e2e")
     parser.add_argument("--benchkit-run-id", default=None)
     parser.add_argument("--benchkit-kind", choices=["workflow", "hybrid"], default="workflow")
     parser.add_argument("--benchkit-service-name", default="memagent-e2e.compose-bench")
@@ -362,7 +362,7 @@ pipelines:
 """
 
 
-def build_logfwd_collector_config(benchmark_id: str, *, ingest_mode: str) -> str:
+def build_fastforward_collector_config(benchmark_id: str, *, ingest_mode: str) -> str:
     input_block = (
         """\
 input:
@@ -620,10 +620,10 @@ services:
     cpus: "${GENERATOR_CPUS}"
     mem_limit: "${GENERATOR_MEMORY}"
 
-  collector-logfwd:
-    profiles: ["logfwd"]
-    image: ${LOGFWD_COLLECTOR_IMAGE}
-    command: ["run", "--config", "/config/collector-logfwd.yaml"]
+  collector-fastforward:
+    profiles: ["fastforward"]
+    image: ${FASTFORWARD_COLLECTOR_IMAGE}
+    command: ["run", "--config", "/config/collector-fastforward.yaml"]
     volumes:
       - ${BENCH_RESULTS_RUNTIME_DIR}:/runtime
       - ${BENCH_RESULTS_RENDERED_DIR}:/config:ro
@@ -738,7 +738,7 @@ def read_container_resource_sample(container_id: str) -> tuple[float, float] | N
         return None
 
 
-def stats_sample_from_logfwd(port: int) -> StatsSample:
+def stats_sample_from_fastforward(port: int) -> StatsSample:
     payload = fetch_stats(port)
     return StatsSample(
         timestamp=time.time(),
@@ -773,7 +773,7 @@ def wait_for_collector_ready(adapter: CollectorAdapter, port: int, timeout_sec: 
     deadline = time.time() + timeout_sec
     while time.time() < deadline:
         try:
-            if adapter.diagnostics_kind == "logfwd":
+            if adapter.diagnostics_kind == "fastforward":
                 fetch_stats(port)
             elif adapter.diagnostics_kind == "prometheus":
                 fetch_text(port, "/metrics")
@@ -807,8 +807,8 @@ def sample_sink(
     capture_file_path: Path,
     benchmark_id: str,
 ) -> StatsSample:
-    if adapter.sink_stats_kind == "logfwd":
-        return stats_sample_from_logfwd(sink_diag_port)
+    if adapter.sink_stats_kind == "fastforward":
+        return stats_sample_from_fastforward(sink_diag_port)
     if adapter.sink_stats_kind == "capture_reader":
         return stats_sample_from_capture_reader(capture_stats_port)
     if adapter.sink_stats_kind == "capture_file":
@@ -1052,8 +1052,8 @@ def main() -> int:
     )
     write_text(rendered_dir / "sink.yaml", build_sink_config())
     write_text(
-        rendered_dir / "collector-logfwd.yaml",
-        build_logfwd_collector_config(benchmark_id, ingest_mode=args.ingest_mode),
+        rendered_dir / "collector-fastforward.yaml",
+        build_fastforward_collector_config(benchmark_id, ingest_mode=args.ingest_mode),
     )
     write_text(rendered_dir / "collector-otelcol.yaml", build_otel_collector_config(ingest_mode=args.ingest_mode))
     write_text(rendered_dir / "collector-vector.yaml", build_vector_collector_config())
@@ -1073,7 +1073,7 @@ def main() -> int:
     env.update(
         {
             "MEMAGENT_IMAGE": args.memagent_image,
-            "LOGFWD_COLLECTOR_IMAGE": args.memagent_image,
+            "FASTFORWARD_COLLECTOR_IMAGE": args.memagent_image,
             "OTELCOL_COLLECTOR_IMAGE": COLLECTORS["otelcol"].image or "",
             "VECTOR_COLLECTOR_IMAGE": COLLECTORS["vector"].image or "",
             "FILEBEAT_COLLECTOR_IMAGE": COLLECTORS["filebeat"].image or "",

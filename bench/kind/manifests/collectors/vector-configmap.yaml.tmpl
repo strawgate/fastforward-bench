@@ -44,7 +44,7 @@ data:
       bench_out:
         type: http
         inputs: ["bench_parse"]
-        uri: http://logfwd-capture.${NAMESPACE}.svc.cluster.local:8081/ingest
+        uri: http://fastforward-capture.${NAMESPACE}.svc.cluster.local:8081/ingest
         method: post
         encoding:
           codec: json

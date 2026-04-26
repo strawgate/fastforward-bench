@@ -39,7 +39,7 @@ on:
           - ladder
           - ladder_and_max
           - max
-          - logfwd_max
+          - fastforward_max
       collector:
         description: collector adapter to benchmark
         required: false
@@ -47,7 +47,7 @@ on:
         default: all
         options:
           - all
-          - logfwd
+          - fastforward
           - otelcol
           - vector
       cpu_profile:
@@ -77,7 +77,7 @@ on:
           - 'false'
           - 'true'
       collector_batch_target_bytes:
-        description: optional logfwd collector batch_target_bytes override
+        description: optional fastforward collector batch_target_bytes override
         required: false
         type: string
         default: ''
@@ -143,7 +143,7 @@ jobs:
                 echo 'workloads=[{"label":"t1","pods":1,"eps_per_pod":1},{"label":"t10","pods":1,"eps_per_pod":10},{"label":"t100","pods":1,"eps_per_pod":100},{"label":"t1k","pods":1,"eps_per_pod":1000},{"label":"t10k","pods":1,"eps_per_pod":10000},{"label":"t100k","pods":1,"eps_per_pod":100000},{"label":"t1m","pods":1,"eps_per_pod":1000000},{"label":"tmax","pods":1,"eps_per_pod":0}]' >>"$GITHUB_OUTPUT"
               fi
               ;;
-            max|logfwd_max)
+            max|fastforward_max)
               echo 'workloads=[{"label":"tmax","pods":1,"eps_per_pod":0}]' >>"$GITHUB_OUTPUT"
               ;;
             *)
@@ -152,12 +152,10 @@ jobs:
               ;;
           esac
 
-          if [[ "${TARGET_SET}" == "logfwd_max" ]]; then
-            echo 'collectors=["logfwd"]' >>"$GITHUB_OUTPUT"
-          elif [[ "${{ github.event_name }}" == "workflow_dispatch" && "${INPUT_COLLECTOR}" != "all" ]]; then
-            echo "collectors=[\"${INPUT_COLLECTOR}\"]" >>"$GITHUB_OUTPUT"
+          if [[ "${TARGET_SET}" == "fastforward_max" ]]; then
+            echo 'collectors=["fastforward"]' >>"$GITHUB_OUTPUT"
           else
-            echo 'collectors=["logfwd","otelcol","vector"]' >>"$GITHUB_OUTPUT"
+            echo 'collectors=["fastforward","otelcol","vector"]' >>"$GITHUB_OUTPUT"
           fi
           if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${INPUT_CPU_PROFILE}" != "all" ]]; then
             echo "cpu_profiles=[\"${INPUT_CPU_PROFILE}\"]" >>"$GITHUB_OUTPUT"

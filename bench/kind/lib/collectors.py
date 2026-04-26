@@ -16,7 +16,7 @@ class CollectorAdapter:
     otlp_config_template: str | None = None
     otlp_workload_template: str | None = None
     collector_image: str | None = None
-    collector_stats_kind: str = "logfwd"
+    collector_stats_kind: str = "fastforward"
     collector_stats_port: int = 9090
     sink_transport: str = "otlp_http"
 
@@ -37,16 +37,16 @@ class CollectorAdapter:
         raise ValueError(f"unsupported ingest mode: {ingest_mode}")
 
 
-LOGFWD_COLLECTOR = CollectorAdapter(
-    name="logfwd",
+FASTFORWARD_COLLECTOR = CollectorAdapter(
+    name="fastforward",
     benchmark_mode="baseline-pass-through",
-    file_config_template="collectors/logfwd-configmap.yaml.tmpl",
-    file_workload_template="collectors/logfwd-daemonset.yaml.tmpl",
-    otlp_config_template="collectors/logfwd-otlp-configmap.yaml.tmpl",
-    otlp_workload_template="collectors/logfwd-otlp-daemonset.yaml.tmpl",
+    file_config_template="collectors/fastforward-configmap.yaml.tmpl",
+    file_workload_template="collectors/fastforward-daemonset.yaml.tmpl",
+    otlp_config_template="collectors/fastforward-otlp-configmap.yaml.tmpl",
+    otlp_workload_template="collectors/fastforward-otlp-daemonset.yaml.tmpl",
     rollout_kind="daemonset",
-    rollout_name="logfwd-bench-collector",
-    pod_selector="app.kubernetes.io/name=logfwd-bench-collector",
+    rollout_name="fastforward-bench-collector",
+    pod_selector="app.kubernetes.io/name=fastforward-bench-collector",
     diagnostics_target_format="pod/{pod_name}",
 )
 
@@ -83,8 +83,8 @@ VECTOR_COLLECTOR = CollectorAdapter(
 
 
 def get_collector_adapter(name: str) -> CollectorAdapter:
-    if name == LOGFWD_COLLECTOR.name:
-        return LOGFWD_COLLECTOR
+    if name == FASTFORWARD_COLLECTOR.name:
+        return FASTFORWARD_COLLECTOR
     if name == OTELCOL_COLLECTOR.name:
         return OTELCOL_COLLECTOR
     if name == VECTOR_COLLECTOR.name:

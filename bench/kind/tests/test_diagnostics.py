@@ -17,7 +17,7 @@ class DeliveryDiagnosticsTest(unittest.TestCase):
     def test_structured_log_rejection_counts_rows_bytes_and_413s(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             artifacts = Path(tmp)
-            (artifacts / "collector-logfwd-logs.txt").write_text(
+            (artifacts / "collector-fastforward-logs.txt").write_text(
                 json.dumps(
                     {
                         "fields": {

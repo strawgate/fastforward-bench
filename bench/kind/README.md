@@ -16,7 +16,7 @@ The harness currently supports two phases:
 
 - `infra`
   - deterministic KIND cluster lifecycle
-  - `logfwd` capture sink deployment
+  - `fastforward` capture sink deployment
   - canonical run metadata, summary markdown, and artifact collection
 - `smoke`
   - all `infra` behavior
@@ -27,13 +27,13 @@ The harness currently supports two phases:
 
 The current smoke implementation is intentionally narrow:
 
-- collector support: `logfwd`, `otelcol`, `vector`
+- collector support: `fastforward`, `otelcol`, `vector`
 - ingest modes:
   - `file` (collector tails emitter pod/container logs from node filesystem)
   - `otlp` (emitters send OTLP directly to the collector service)
 - benchmark mode: `baseline-pass-through`
 - sink transport:
-  - `logfwd`/`otelcol`: OTLP/HTTP into a `logfwd` capture sink
+  - `fastforward`/`otelcol`: OTLP/HTTP into a `fastforward` capture sink
   - `vector`: HTTP NDJSON into the same capture sink
 
 That means the current scores are useful for benchmarking discovery, framing,
@@ -43,12 +43,12 @@ scores yet.
 ## Design Choices
 
 - Harness runtime: Python 3, standard library only.
-- Generator: `logfwd` itself running the `generator.profile=record` source and
+- Generator: `fastforward` itself running the `generator.profile=record` source and
   shaping the benchmark envelope in SQL before writing to stdout.
-- Sink: `logfwd` configured as a dumb capture sink writing JSON lines to a file.
+- Sink: `fastforward` configured as a dumb capture sink writing JSON lines to a file.
 - Producer counters:
-  - emitters expose `logfwd` diagnostics via `/admin/v1/stats` (with legacy `/api/stats` fallback)
-  - the sink exposes `logfwd` diagnostics via `/admin/v1/stats` (with legacy `/api/stats` fallback)
+  - emitters expose `fastforward` diagnostics via `/admin/v1/stats` (with legacy `/api/stats` fallback)
+  - the sink exposes `fastforward` diagnostics via `/admin/v1/stats` (with legacy `/api/stats` fallback)
 - Benchmark artifacts: JSON row, JSONL stream, summary markdown, rendered
   manifests, and `kubectl` debug output.
 - Reporting integration: `benchkit-run.otlp.json` for Octo11y
@@ -99,7 +99,7 @@ These timing windows now have real runtime meaning in the harness:
 - `kind`
 - `kubectl`
 - Python 3
-- a local `logfwd:e2e` image, or a workflow step that builds/tags it first
+- a local `fastforward:e2e` image, or a workflow step that builds/tags it first
 
 ## Quickstart
 
@@ -109,10 +109,10 @@ Run the real smoke benchmark:
 python3 bench/kind/run.py \
   --phase smoke \
   --profile smoke \
-  --collector logfwd \
+  --collector fastforward \
   --cpu-profile single \
   --cluster-name memagent-bench-smoke \
-  --memagent-image logfwd:e2e \
+  --memagent-image fastforward:e2e \
   --results-dir bench/kind/results/local-smoke
 ```
 
@@ -124,10 +124,10 @@ Run only the infrastructure bootstrap path:
 python3 bench/kind/run.py \
   --phase infra \
   --profile smoke \
-  --collector logfwd \
+  --collector fastforward \
   --cpu-profile single \
   --cluster-name memagent-bench-infra \
-  --memagent-image logfwd:e2e \
+  --memagent-image fastforward:e2e \
   --results-dir bench/kind/results/local-infra
 ```
 
@@ -149,7 +149,7 @@ Useful flags:
 - `--ingest-mode`
   Selects the collector input path: `file` (default) or `otlp`.
 - `--collector-batch-target-bytes`
-  Applies a logfwd collector `batch_target_bytes` override for payload-size
+  Applies a fastforward collector `batch_target_bytes` override for payload-size
   experiments. The same knob can be supplied as
   `BENCH_COLLECTOR_BATCH_TARGET_BYTES`.
 
@@ -182,7 +182,7 @@ Current smoke runs should be interpreted as:
 - pass/fail is sink-outcome based for competitive scoring
 - integrity/rejection counters remain diagnostic-only and are still emitted for debugging
 - the result row also records producer-reported totals from the emitter
-  and sink `logfwd` diagnostics as extra diagnostics
+  and sink `fastforward` diagnostics as extra diagnostics
 - scores do not yet include parse-and-enrich overhead
 
 See [RESULT_SCHEMA.md](./RESULT_SCHEMA.md)

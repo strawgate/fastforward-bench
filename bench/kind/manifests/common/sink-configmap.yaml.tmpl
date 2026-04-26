@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: logfwd-capture-config
+  name: fastforward-capture-config
   namespace: ${NAMESPACE}
 data:
   config.yaml: |
@@ -14,7 +14,7 @@ data:
             listen: 0.0.0.0:4318
         outputs:
           - type: file
-            path: /var/lib/logfwd/capture.ndjson
+            path: /var/lib/fastforward/capture.ndjson
             format: json
   capture-stats.py: |
     import json
@@ -24,7 +24,7 @@ data:
     from threading import Lock
 
     benchmark_id = os.environ.get("BENCHMARK_ID")
-    capture_path = Path("/var/lib/logfwd/capture.ndjson")
+    capture_path = Path("/var/lib/fastforward/capture.ndjson")
     capture_lock = Lock()
     metrics = {
       "capture_rows_total": 0,

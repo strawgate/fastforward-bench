@@ -44,7 +44,7 @@ runs:
         for candidate in "${candidates[@]}"; do
           echo "Trying prebuilt image: $candidate"
           if docker pull "$candidate"; then
-            docker tag "$candidate" logfwd:e2e
+            docker tag "$candidate" fastforward:e2e
             exit 0
           fi
         done
@@ -58,5 +58,5 @@ runs:
           --build-arg CARGO_PROFILE_RELEASE_LTO=off \
           --build-arg CARGO_PROFILE_RELEASE_CODEGEN_UNITS=16 \
           --build-arg CARGO_PROFILE_RELEASE_DEBUG=0 \
-          -t logfwd:e2e \
+          -t fastforward:e2e \
           "${{ inputs.memagent-repo-root }}"
