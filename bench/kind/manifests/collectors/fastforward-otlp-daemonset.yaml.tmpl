@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fastforward-bench-collector
+  namespace: ${NAMESPACE}
+  labels:
+    app.kubernetes.io/name: fastforward-bench-collector
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: fastforward-bench-collector
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: fastforward-bench-collector
+    spec:
+      automountServiceAccountToken: false
+      tolerations:
+        - operator: Exists
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: fastforward
+          image: ${MEMAGENT_IMAGE}
+          imagePullPolicy: IfNotPresent
+          args: ["ff", "run", "--config", "/etc/fastforward/config.yaml"]
+          resources:
+            requests:
+              cpu: ${COLLECTOR_CPU_REQUEST}
+              memory: ${COLLECTOR_MEMORY_REQUEST}
+            limits:
+              cpu: ${COLLECTOR_CPU_LIMIT}
+              memory: ${COLLECTOR_MEMORY_LIMIT}
+          securityContext:
+            runAsNonRoot: false
+            runAsUser: 0
+            runAsGroup: 0
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          ports:
+            - name: otlp-http
+              containerPort: 4318
+            - name: diagnostics
+              containerPort: 9090
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: diagnostics
+            initialDelaySeconds: 3
+            periodSeconds: 3
+          volumeMounts:
+            - name: config
+              mountPath: /etc/fastforward
+              readOnly: true
+            - name: state
+              mountPath: /var/lib/fastforward
+      volumes:
+        - name: config
+          configMap:
+            name: fastforward-bench-collector-config
+        - name: state
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bench-collector
+  namespace: ${NAMESPACE}
+  labels:
+    app.kubernetes.io/name: fastforward-bench-collector
+spec:
+  selector:
+    app.kubernetes.io/name: fastforward-bench-collector
+  ports:
+    - name: otlp-http
+      port: 4318
+      targetPort: otlp-http

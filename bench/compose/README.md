@@ -10,10 +10,10 @@ the same collector adapters and output contracts for throughput checks.
 
 ## Design
 
-- Reuses the same `logfwd:e2e` image for:
+- Reuses the same `fastforward:e2e` image for:
   - benchmark generator
   - benchmark sink
-  - `logfwd` collector adapter
+  - `fastforward` collector adapter
 - Uses collector-specific images for competitor adapters:
   - `otel/opentelemetry-collector-contrib`
   - `docker.elastic.co/beats/filebeat`
@@ -25,9 +25,9 @@ the same collector adapters and output contracts for throughput checks.
 
 - phase: `smoke`
 - ingest modes:
-  - `file` for `logfwd`, `otelcol`, `filebeat`, `vector`
-  - `otlp` for `logfwd`, `otelcol`
-- collectors: `logfwd`, `otelcol`, `filebeat`, `vector`
+  - `file` for `fastforward`, `otelcol`, `filebeat`, `vector`
+  - `otlp` for `fastforward`, `otelcol`
+- collectors: `fastforward`, `otelcol`, `filebeat`, `vector`
 - profiles: `quick`, `smoke`, `default`
 - CPU profiles: `single`, `multi`
 
@@ -35,14 +35,14 @@ the same collector adapters and output contracts for throughput checks.
 
 ```bash
 python3 bench/compose/run.py \
-  --collector logfwd \
+  --collector fastforward \
   --ingest-mode file \
   --profile smoke \
   --cpu-profile single \
   --eps-per-sec 0 \
-  --results-dir bench/compose/results/local/logfwd-max
+  --results-dir bench/compose/results/local/fastforward-max
 ```
 
 - Set `--eps-per-sec 0` for max-throughput mode.
-- Set `--ingest-mode otlp` for OTLP ingest parity (`logfwd` and `otelcol`).
+- Set `--ingest-mode otlp` for OTLP ingest parity (`fastforward` and `otelcol`).
 - In CI, `benchkit-run.otlp.json` is stashed by Octo11y for aggregate reporting.

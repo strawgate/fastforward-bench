@@ -355,7 +355,7 @@ def collect_bench_samples(
     sink_target: str,
     collector_target: str,
     *,
-    sink_stats_kind: str = "logfwd",
+    sink_stats_kind: str = "fastforward",
     sink_stats_port: int = 9090,
     collector_stats_kind: str,
     collector_stats_port: int,
@@ -366,7 +366,7 @@ def collect_bench_samples(
     on_measure_start: Callable[[], None] | None = None,
     on_measure_complete: Callable[[], None] | None = None,
 ) -> tuple[list[StatsSample], list[StatsSample], list[StatsSample]]:
-    if sink_stats_kind == "logfwd":
+    if sink_stats_kind == "fastforward":
         sink_ready_check = fetch_stats
         def sink_fetch_sample(port: int) -> StatsSample:
             return _sample_from_payload(fetch_stats(port))
@@ -377,7 +377,7 @@ def collect_bench_samples(
     else:
         raise ValueError(f"unknown sink_stats_kind: {sink_stats_kind}")
 
-    if collector_stats_kind == "logfwd":
+    if collector_stats_kind == "fastforward":
         collector_ready_check = fetch_stats
         def collector_fetch_sample(port: int) -> StatsSample:
             return _sample_from_payload(fetch_stats(port))
@@ -559,11 +559,11 @@ def collect_sink_reported_stats(
     namespace: str,
     sink_pod: str,
     *,
-    sink_stats_kind: str = "logfwd",
+    sink_stats_kind: str = "fastforward",
     sink_stats_port: int = 9090,
 ) -> dict[str, object]:
     local_port = reserve_local_port()
-    if sink_stats_kind == "logfwd":
+    if sink_stats_kind == "fastforward":
         with PortForward(namespace, f"pod/{sink_pod}", local_port, sink_stats_port):
             return fetch_stats(local_port)
     if sink_stats_kind == "capture_reader":

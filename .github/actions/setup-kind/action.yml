@@ -8,7 +8,7 @@ inputs:
   image:
     description: Docker image to load into the cluster
     required: false
-    default: logfwd:e2e
+    default: fastforward:e2e
 
 runs:
   using: composite
@@ -28,7 +28,7 @@ runs:
       shell: bash
       run: |
         if ! kind get clusters | grep -q "^${{ inputs.cluster-name }}$"; then
-          kind create cluster --name "${{ inputs.cluster-name }}" --control-plane-cpus=4 --wait 60s
+          kind create cluster --name "${{ inputs.cluster-name }}" --wait 60s
         fi
 
     - name: Load image

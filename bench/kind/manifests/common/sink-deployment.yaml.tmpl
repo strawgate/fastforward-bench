@@ -1,25 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: logfwd-capture
+  name: fastforward-capture
   namespace: ${NAMESPACE}
   labels:
-    app.kubernetes.io/name: logfwd-capture
+    app.kubernetes.io/name: fastforward-capture
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: logfwd-capture
+      app.kubernetes.io/name: fastforward-capture
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: logfwd-capture
+        app.kubernetes.io/name: fastforward-capture
     spec:
       containers:
-        - name: logfwd
+        - name: fastforward
           image: ${MEMAGENT_IMAGE}
           imagePullPolicy: IfNotPresent
-          args: ["run", "--config", "/etc/logfwd/config.yaml"]
+          args: ["ff", "run", "--config", "/etc/fastforward/config.yaml"]
           resources:
             requests:
               cpu: ${SINK_CPU_REQUEST}
@@ -40,14 +40,14 @@ spec:
             periodSeconds: 3
           volumeMounts:
             - name: config
-              mountPath: /etc/logfwd
+              mountPath: /etc/fastforward
               readOnly: true
             - name: state
-              mountPath: /var/lib/logfwd
+              mountPath: /var/lib/fastforward
         - name: capture-reader
           image: python:3.12-alpine
           imagePullPolicy: IfNotPresent
-          command: ["python", "/etc/logfwd/capture-stats.py"]
+          command: ["python", "/etc/fastforward/capture-stats.py"]
           resources:
             requests:
               cpu: ${CAPTURE_READER_CPU_REQUEST}
@@ -69,27 +69,27 @@ spec:
             periodSeconds: 2
           volumeMounts:
             - name: state
-              mountPath: /var/lib/logfwd
+              mountPath: /var/lib/fastforward
             - name: config
-              mountPath: /etc/logfwd
+              mountPath: /etc/fastforward
               readOnly: true
       volumes:
         - name: config
           configMap:
-            name: logfwd-capture-config
+            name: fastforward-capture-config
         - name: state
           emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: logfwd-capture
+  name: fastforward-capture
   namespace: ${NAMESPACE}
   labels:
-    app.kubernetes.io/name: logfwd-capture
+    app.kubernetes.io/name: fastforward-capture
 spec:
   selector:
-    app.kubernetes.io/name: logfwd-capture
+    app.kubernetes.io/name: fastforward-capture
   ports:
     - name: otlp-http
       port: 4318

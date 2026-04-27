@@ -33,7 +33,7 @@ spec:
         - name: emitter
           image: ${MEMAGENT_IMAGE}
           imagePullPolicy: IfNotPresent
-          args: ["run", "--config", "/etc/logfwd/config.yaml"]
+          args: ["ff", "run", "--config", "/etc/fastforward/config.yaml"]
           resources:
             requests:
               cpu: ${EMITTER_CPU_REQUEST}
@@ -61,7 +61,7 @@ spec:
               value: "${EPS_PER_POD}"
           volumeMounts:
             - name: config
-              mountPath: /etc/logfwd
+              mountPath: /etc/fastforward
               readOnly: true
       volumes:
         - name: config

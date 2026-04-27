@@ -41,7 +41,7 @@ on:
           - ladder
           - ladder_and_max
           - max
-          - logfwd_max
+          - fastforward_max
       collector:
         description: collector adapter to benchmark
         required: false
@@ -49,7 +49,7 @@ on:
         default: all
         options:
           - all
-          - logfwd
+          - fastforward
           - otelcol
           - vector
           - filebeat
@@ -141,7 +141,7 @@ jobs:
                 echo 'workloads=[{"label":"t1","eps_per_sec":1},{"label":"t10","eps_per_sec":10},{"label":"t100","eps_per_sec":100},{"label":"t1k","eps_per_sec":1000},{"label":"t10k","eps_per_sec":10000},{"label":"t100k","eps_per_sec":100000},{"label":"t1m","eps_per_sec":1000000},{"label":"tmax","eps_per_sec":0}]' >>"$GITHUB_OUTPUT"
               fi
               ;;
-            max|logfwd_max)
+            max|fastforward_max)
               echo 'workloads=[{"label":"tmax","eps_per_sec":0}]' >>"$GITHUB_OUTPUT"
               ;;
             *)
@@ -150,12 +150,10 @@ jobs:
               ;;
           esac
 
-          if [[ "${TARGET_SET}" == "logfwd_max" ]]; then
-            echo 'collectors=["logfwd"]' >>"$GITHUB_OUTPUT"
-          elif [[ "${{ github.event_name }}" == "workflow_dispatch" && "${INPUT_COLLECTOR}" != "all" ]]; then
-            echo "collectors=[\"${INPUT_COLLECTOR}\"]" >>"$GITHUB_OUTPUT"
+          if [[ "${TARGET_SET}" == "fastforward_max" ]]; then
+            echo 'collectors=["fastforward"]' >>"$GITHUB_OUTPUT"
           else
-            echo 'collectors=["logfwd","otelcol","vector","filebeat"]' >>"$GITHUB_OUTPUT"
+            echo 'collectors=["fastforward","otelcol","vector","filebeat"]' >>"$GITHUB_OUTPUT"
           fi
           if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${INPUT_CPU_PROFILE}" != "all" ]]; then
             echo "cpu_profiles=[\"${INPUT_CPU_PROFILE}\"]" >>"$GITHUB_OUTPUT"
