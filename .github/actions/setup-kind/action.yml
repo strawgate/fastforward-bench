@@ -27,8 +27,15 @@ runs:
     - name: Create or reuse cluster
       shell: bash
       run: |
-        if ! kind get clusters | grep -q "^${{ inputs.cluster-name }}$"; then
+        set -x
+        echo "DEBUG: Docker info"
+        docker info || echo "DEBUG: docker info failed: $?"
+        echo "DEBUG: Checking if cluster '${{ inputs.cluster-name }}' exists..."
+        if ! kind get clusters 2>&1 | grep -q "^${{ inputs.cluster-name }}$"; then
+          echo "DEBUG: Cluster does not exist, creating..."
           kind create cluster --name "${{ inputs.cluster-name }}" --wait 60s
+        else
+          echo "DEBUG: Cluster already exists, skipping creation"
         fi
 
     - name: Load image
