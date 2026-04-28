@@ -2,12 +2,18 @@
 
 set -euo pipefail
 
+source "$(cd "$(dirname "$0")/../.." && pwd)/lib/common.sh"
+
+CLUSTER_NAME="${E2E_CLUSTER_NAME:-$SCENARIO_ID}"
+KUBE_CONTEXT="kind-${CLUSTER_NAME}"
+NAMESPACE="e2e-logfwd"
+
 python3 - <<'PY' >"$E2E_RESULTS_DIR/expected_rows.json"
 import json
 rows = [
     {
         "scenario": "kind-vlagent",
-        "source_id": "vlagent",
+        "source_id": "log-generator",
         "event_id": f"kind-vlagent:{i:04d}",
         "seq": i,
         "level": level,
@@ -18,14 +24,6 @@ rows = [
 print(json.dumps(rows, indent=2))
 PY
 
-kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" delete pod log-generator --ignore-not-found >/dev/null 2>&1 || true
-kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" apply -f "$SCENARIO_DIR/manifests/log-generator.yaml"
-kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" wait pod/log-generator --for=condition=Ready --timeout=60s
-sleep 5
-
-python3 "$REPO_ROOT/tests/e2e/lib/source_evidence.py" \
-    --mode json-lines \
-    --input "$E2E_RESULTS_DIR/expected_rows.json" \
-    --output "$E2E_RESULTS_DIR/source_rows.json" \
-    --scenario "$SCENARIO_ID" \
-    --source-id "vlagent"
+VLAGENT_POD="$(kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" get pods -l app.kubernetes.io/name=vlagent -o jsonpath='{.items[0].metadata.name}')"
+kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" wait pod/"$VLAGENT_POD" --for=condition=Ready --timeout=60s
+sleep 10

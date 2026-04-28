@@ -1,17 +1,18 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: logfwd
+  name: filebeat-bench-collector
+  namespace: ${NAMESPACE}
   labels:
-    app: logfwd
+    app.kubernetes.io/name: filebeat-bench-collector
 spec:
   selector:
     matchLabels:
-      app: logfwd
+      app.kubernetes.io/name: filebeat-bench-collector
   template:
     metadata:
       labels:
-        app: logfwd
+        app.kubernetes.io/name: filebeat-bench-collector
     spec:
       automountServiceAccountToken: false
       tolerations:
@@ -20,43 +21,35 @@ spec:
         seccompProfile:
           type: RuntimeDefault
       containers:
-        - name: logfwd
-          image: fastforward:e2e
+        - name: filebeat
+          image: ${COLLECTOR_IMAGE}
           imagePullPolicy: IfNotPresent
-          args: ["run", "--config", "/etc/logfwd/config.yaml"]
+          args: ["-e", "--strict.perms=false", "-c", "/etc/filebeat/filebeat.yml"]
+          resources:
+            requests:
+              cpu: ${COLLECTOR_CPU_REQUEST}
+              memory: ${COLLECTOR_MEMORY_REQUEST}
+            limits:
+              cpu: ${COLLECTOR_CPU_LIMIT}
+              memory: ${COLLECTOR_MEMORY_LIMIT}
           securityContext:
             runAsNonRoot: false
             runAsUser: 0
             runAsGroup: 0
             allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
+            readOnlyRootFilesystem: false
             capabilities:
               drop: ["ALL"]
-          resources:
-            requests:
-              cpu: "100m"
-              memory: "128Mi"
-            limits:
-              cpu: "500m"
-              memory: "256Mi"
-          ports:
-            - containerPort: 9090
-              name: diagnostics
-          readinessProbe:
-            httpGet:
-              path: /ready
-              port: diagnostics
-            initialDelaySeconds: 5
-            periodSeconds: 5
+
           volumeMounts:
             - name: varlog
               mountPath: /var/log
               readOnly: true
             - name: config
-              mountPath: /etc/logfwd
+              mountPath: /etc/filebeat
               readOnly: true
-            - name: state
-              mountPath: /var/lib/logfwd
+            - name: data
+              mountPath: /var/lib/filebeat
       volumes:
         - name: varlog
           hostPath:
@@ -64,6 +57,6 @@ spec:
             type: Directory
         - name: config
           configMap:
-            name: logfwd-config
-        - name: state
+            name: filebeat-bench-collector-config
+        - name: data
           emptyDir: {}

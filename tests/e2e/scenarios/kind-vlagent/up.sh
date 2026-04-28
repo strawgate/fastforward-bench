@@ -23,5 +23,5 @@ kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" apply -f "$SCENARIO_DIR/manife
 kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" apply -f "$SCENARIO_DIR/manifests/vlagent-daemonset.yaml"
 
 kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" wait deployment/capture-receiver --for=condition=available --timeout=120s
-kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" rollout status daemonset/logfwd --timeout=120s
 kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" rollout status daemonset/vlagent-bench-collector --timeout=120s
+kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" wait --for=jsonpath='{.status.numberReady}'=1 daemonset/vlagent-bench-collector --timeout=120s

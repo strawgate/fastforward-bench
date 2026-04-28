@@ -1,0 +1,112 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vlagent-bench-collector
+  namespace: ${NAMESPACE}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: vlagent-bench-collector-${NAMESPACE}
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: vlagent-bench-collector-${NAMESPACE}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: vlagent-bench-collector-${NAMESPACE}
+subjects:
+  - kind: ServiceAccount
+    name: vlagent-bench-collector
+    namespace: ${NAMESPACE}
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: vlagent-bench-collector
+  namespace: ${NAMESPACE}
+  labels:
+    app.kubernetes.io/name: vlagent-bench-collector
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: vlagent-bench-collector
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: vlagent-bench-collector
+    spec:
+      serviceAccountName: vlagent-bench-collector
+      automountServiceAccountToken: false
+      tolerations:
+        - operator: Exists
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: vlagent
+          image: ${COLLECTOR_IMAGE}
+          imagePullPolicy: IfNotPresent
+          args:
+            - --kubernetesCollector
+            - --loggerFormat=json
+            - --remoteWrite.url=http://fastforward-capture.${NAMESPACE}.svc.cluster.local:8081/ingest
+            - --tmpDataPath=/var/lib/vlagent
+            - --envflag.enable
+            - --kubernetesCollector.excludeFilter=kubernetes.pod_name:=%{HOSTNAME}
+          ports:
+            - name: http
+              containerPort: 9429
+              protocol: TCP
+          resources:
+            requests:
+              cpu: ${COLLECTOR_CPU_REQUEST}
+              memory: ${COLLECTOR_MEMORY_REQUEST}
+            limits:
+              cpu: ${COLLECTOR_CPU_LIMIT}
+              memory: ${COLLECTOR_MEMORY_LIMIT}
+          securityContext:
+            runAsNonRoot: false
+            runAsUser: 0
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 9429
+            initialDelaySeconds: 3
+            periodSeconds: 3
+          env:
+            - name: HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          volumeMounts:
+            - name: varlog
+              mountPath: /var/log
+              readOnly: true
+            - name: vlagent-data
+              mountPath: /var/lib/vlagent
+      volumes:
+        - name: varlog
+          hostPath:
+            path: /var/log
+            type: Directory
+        - name: vlagent-data
+          hostPath:
+            path: /var/lib/vlagent
+            type: DirectoryOrCreate

@@ -81,6 +81,35 @@ VECTOR_COLLECTOR = CollectorAdapter(
     sink_transport="http_ndjson",
 )
 
+FILEBEAT_COLLECTOR = CollectorAdapter(
+    name="filebeat",
+    benchmark_mode="baseline-pass-through",
+    file_config_template="collectors/filebeat-configmap.yaml.tmpl",
+    file_workload_template="collectors/filebeat-daemonset.yaml.tmpl",
+    rollout_kind="daemonset",
+    rollout_name="filebeat-bench-collector",
+    pod_selector="app.kubernetes.io/name=filebeat-bench-collector",
+    diagnostics_target_format="pod/{pod_name}",
+    collector_image="docker.elastic.co/beats/filebeat:8.17.3",
+    collector_stats_kind="fastforward",
+    sink_transport="http_ndjson",
+)
+
+VLAGENT_COLLECTOR = CollectorAdapter(
+    name="vlagent",
+    benchmark_mode="baseline-pass-through",
+    file_config_template="collectors/vlagent-configmap.yaml.tmpl",
+    file_workload_template="collectors/vlagent-daemonset.yaml.tmpl",
+    rollout_kind="daemonset",
+    rollout_name="vlagent-bench-collector",
+    pod_selector="app.kubernetes.io/name=vlagent-bench-collector",
+    diagnostics_target_format="pod/{pod_name}",
+    collector_image="victoriametrics/vlagent:v1.50.0",
+    collector_stats_kind="vlagent_json",
+    collector_stats_port=9429,
+    sink_transport="http_ndjson",
+)
+
 
 def get_collector_adapter(name: str) -> CollectorAdapter:
     if name == FASTFORWARD_COLLECTOR.name:
@@ -89,4 +118,8 @@ def get_collector_adapter(name: str) -> CollectorAdapter:
         return OTELCOL_COLLECTOR
     if name == VECTOR_COLLECTOR.name:
         return VECTOR_COLLECTOR
+    if name == FILEBEAT_COLLECTOR.name:
+        return FILEBEAT_COLLECTOR
+    if name == VLAGENT_COLLECTOR.name:
+        return VLAGENT_COLLECTOR
     raise NotImplementedError(f"collector not implemented yet in benchmark harness: {name}")

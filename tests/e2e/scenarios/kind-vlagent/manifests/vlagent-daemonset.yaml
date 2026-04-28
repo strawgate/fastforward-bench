@@ -45,6 +45,26 @@ spec:
       serviceAccountName: vlagent
       tolerations:
         - operator: Exists
+      initContainers:
+        - name: log-generator
+          image: busybox:1.36
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              echo '{"scenario":"kind-vlagent","source_id":"log-generator","event_id":"kind-vlagent:0001","message":"KIND_E2E_VLAGENT_MARKER_001","level":"INFO","seq":1}' >> /vlogs/test.log
+              echo '{"scenario":"kind-vlagent","source_id":"log-generator","event_id":"kind-vlagent:0002","message":"KIND_E2E_VLAGENT_MARKER_002","level":"INFO","seq":2}' >> /vlogs/test.log
+              echo '{"scenario":"kind-vlagent","source_id":"log-generator","event_id":"kind-vlagent:0003","message":"KIND_E2E_VLAGENT_MARKER_003","level":"WARN","seq":3}' >> /vlogs/test.log
+              echo '{"scenario":"kind-vlagent","source_id":"log-generator","event_id":"kind-vlagent:0004","message":"KIND_E2E_VLAGENT_MARKER_004","level":"INFO","seq":4}' >> /vlogs/test.log
+              echo '{"scenario":"kind-vlagent","source_id":"log-generator","event_id":"kind-vlagent:0005","message":"KIND_E2E_VLAGENT_MARKER_005","level":"ERROR","seq":5}' >> /vlogs/test.log
+              echo '{"scenario":"kind-vlagent","source_id":"log-generator","event_id":"kind-vlagent:0006","message":"KIND_E2E_VLAGENT_MARKER_006","level":"INFO","seq":6}' >> /vlogs/test.log
+              echo '{"scenario":"kind-vlagent","source_id":"log-generator","event_id":"kind-vlagent:0007","message":"KIND_E2E_VLAGENT_MARKER_007","level":"DEBUG","seq":7}' >> /vlogs/test.log
+              echo '{"scenario":"kind-vlagent","source_id":"log-generator","event_id":"kind-vlagent:0008","message":"KIND_E2E_VLAGENT_MARKER_008","level":"INFO","seq":8}' >> /vlogs/test.log
+              echo '{"scenario":"kind-vlagent","source_id":"log-generator","event_id":"kind-vlagent:0009","message":"KIND_E2E_VLAGENT_MARKER_009","level":"WARN","seq":9}' >> /vlogs/test.log
+              echo '{"scenario":"kind-vlagent","source_id":"log-generator","event_id":"kind-vlagent:0010","message":"KIND_E2E_VLAGENT_MARKER_010","level":"INFO","seq":10}' >> /vlogs/test.log
+          volumeMounts:
+            - name: e2e-vlogs
+              mountPath: /vlogs
       containers:
         - name: vlagent
           image: victoriametrics/vlagent:v1.50.0
@@ -52,7 +72,8 @@ spec:
           args:
             - --fileCollector.glob=/vlogs/test.log
             - --loggerFormat=json
-            - --remoteWrite.url=http://fastforward-capture.e2e-logfwd.svc.cluster.local:8081/ingest
+            - --httpListenAddr=:8429
+            - --remoteWrite.url=http://localhost:9999/import
             - --tmpDataPath=/var/lib/vlagent
           resources:
             requests:
