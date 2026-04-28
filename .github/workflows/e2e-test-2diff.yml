@@ -1,0 +1,25 @@
+name: E2E / TEST 2Diff
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize]
+    paths:
+      - '.github/workflows/e2e-test-2diff.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  j1:
+    uses: ./.github/workflows/e2e-kind-cri-smoke.yml
+    with:
+      memagent_ref: main
+    secrets: inherit
+  j2:
+    uses: ./.github/workflows/e2e-compose-redis.yml
+    with:
+      memagent_ref: main
+    secrets: inherit
