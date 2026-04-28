@@ -1,0 +1,18 @@
+name: E2E / Service Monitoring TEST2
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize]
+    paths:
+      - '.github/workflows/e2e-service-monitoring-test2.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-job:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo hello

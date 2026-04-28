@@ -1,0 +1,47 @@
+name: E2E / TEST Multi
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize]
+    paths:
+      - '.github/workflows/e2e-test-multi.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+  issues: write
+
+jobs:
+  kind-cri-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo hello
+
+  compose-redis:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo hello
+
+  compose-nginx:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo hello
+
+  compose-multiline:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo hello
+
+  otlp-oracle:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo hello
+
+  summarize:
+    if: always()
+    needs: [kind-cri-smoke, compose-redis, compose-nginx, compose-multiline, otlp-oracle]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo done

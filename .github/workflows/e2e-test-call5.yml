@@ -1,0 +1,40 @@
+name: E2E / TEST Call5
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize]
+    paths:
+      - '.github/workflows/e2e-test-call5.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  j1:
+    uses: ./.github/workflows/e2e-kind-cri-smoke.yml
+    with:
+      memagent_ref: main
+    secrets: inherit
+  j2:
+    uses: ./.github/workflows/e2e-kind-cri-smoke.yml
+    with:
+      memagent_ref: main
+    secrets: inherit
+  j3:
+    uses: ./.github/workflows/e2e-kind-cri-smoke.yml
+    with:
+      memagent_ref: main
+    secrets: inherit
+  j4:
+    uses: ./.github/workflows/e2e-kind-cri-smoke.yml
+    with:
+      memagent_ref: main
+    secrets: inherit
+  j5:
+    uses: ./.github/workflows/e2e-kind-cri-smoke.yml
+    with:
+      memagent_ref: main
+    secrets: inherit
