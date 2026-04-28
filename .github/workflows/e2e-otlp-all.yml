@@ -1,0 +1,37 @@
+name: E2E / otlp-all
+
+on:
+  workflow_call:
+    inputs:
+      memagent_ref:
+        description: memagent branch, tag, or SHA to test
+        required: false
+        type: string
+        default: main
+  workflow_dispatch:
+    inputs:
+      memagent_ref:
+        description: memagent branch, tag, or SHA to test
+        required: false
+        type: string
+        default: main
+
+permissions:
+  contents: read
+
+jobs:
+  otlp-output-oracle:
+    uses: ./.github/workflows/_scenario-otlp.yml
+    with:
+      scenario_id: otlp-output-oracle
+      timeout_minutes: 30
+      memagent_ref: ${{ inputs.memagent_ref || 'main' }}
+    secrets: inherit
+
+  otlp-input-oracle:
+    uses: ./.github/workflows/_scenario-otlp.yml
+    with:
+      scenario_id: otlp-input-oracle
+      timeout_minutes: 30
+      memagent_ref: ${{ inputs.memagent_ref || 'main' }}
+    secrets: inherit

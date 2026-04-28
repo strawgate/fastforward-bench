@@ -1,0 +1,78 @@
+name: E2E / compose-all
+
+on:
+  workflow_call:
+    inputs:
+      memagent_ref:
+        description: memagent branch, tag, or SHA to test
+        required: false
+        type: string
+        default: main
+  workflow_dispatch:
+    inputs:
+      memagent_ref:
+        description: memagent branch, tag, or SHA to test
+        required: false
+        type: string
+        default: main
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  compose-redis:
+    uses: ./.github/workflows/_scenario-compose.yml
+    with:
+      scenario_id: compose-redis
+      timeout_minutes: 20
+      memagent_ref: ${{ inputs.memagent_ref || 'main' }}
+    secrets: inherit
+
+  compose-memcached:
+    uses: ./.github/workflows/_scenario-compose.yml
+    with:
+      scenario_id: compose-memcached
+      timeout_minutes: 20
+      memagent_ref: ${{ inputs.memagent_ref || 'main' }}
+    secrets: inherit
+
+  compose-nginx:
+    uses: ./.github/workflows/_scenario-compose.yml
+    with:
+      scenario_id: compose-nginx
+      timeout_minutes: 20
+      memagent_ref: ${{ inputs.memagent_ref || 'main' }}
+    secrets: inherit
+
+  compose-synthetic-multiline:
+    uses: ./.github/workflows/_scenario-compose.yml
+    with:
+      scenario_id: compose-synthetic-multiline
+      timeout_minutes: 20
+      memagent_ref: ${{ inputs.memagent_ref || 'main' }}
+    secrets: inherit
+
+  compose-synthetic-burst:
+    uses: ./.github/workflows/_scenario-compose.yml
+    with:
+      scenario_id: compose-synthetic-burst
+      timeout_minutes: 20
+      memagent_ref: ${{ inputs.memagent_ref || 'main' }}
+    secrets: inherit
+
+  compose-synthetic-rotation:
+    uses: ./.github/workflows/_scenario-compose.yml
+    with:
+      scenario_id: compose-synthetic-rotation
+      timeout_minutes: 20
+      memagent_ref: ${{ inputs.memagent_ref || 'main' }}
+    secrets: inherit
+
+  compose-esql-input-oracle:
+    uses: ./.github/workflows/_scenario-compose.yml
+    with:
+      scenario_id: compose-esql-input-oracle
+      timeout_minutes: 20
+      memagent_ref: ${{ inputs.memagent_ref || 'main' }}
+    secrets: inherit
