@@ -1,0 +1,31 @@
+name: E2E / kind-vlagent
+
+on:
+  workflow_call:
+    inputs:
+      memagent_ref:
+        description: memagent branch, tag, or SHA to test
+        required: false
+        type: string
+        default: main
+  workflow_dispatch:
+    inputs:
+      memagent_ref:
+        description: memagent branch, tag, or SHA to test
+        required: false
+        type: string
+        default: main
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  kind-vlagent:
+    uses: ./.github/workflows/_scenario-kind.yml
+    with:
+      scenario_id: kind-vlagent
+      cluster_name: kind-vlagent
+      timeout_minutes: 25
+      memagent_ref: ${{ inputs.memagent_ref || 'main' }}
+    secrets: inherit
