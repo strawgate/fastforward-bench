@@ -37,15 +37,15 @@ spec:
             runAsUser: 0
             runAsGroup: 0
             allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
+            readOnlyRootFilesystem: false
             capabilities:
               drop: ["ALL"]
           readinessProbe:
-            httpGet:
-              path: /stats
+            tcpSocket:
               port: 5066
-            initialDelaySeconds: 3
-            periodSeconds: 3
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 60
           volumeMounts:
             - name: varlog
               mountPath: /var/log
