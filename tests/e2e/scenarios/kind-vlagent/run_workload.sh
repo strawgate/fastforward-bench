@@ -2,6 +2,12 @@
 
 set -euo pipefail
 
+source "$(cd "$(dirname "$0")/../.." && pwd)/lib/common.sh"
+
+CLUSTER_NAME="${E2E_CLUSTER_NAME:-$SCENARIO_ID}"
+KUBE_CONTEXT="kind-${CLUSTER_NAME}"
+NAMESPACE="e2e-logfwd"
+
 python3 - <<'PY' >"$E2E_RESULTS_DIR/expected_rows.json"
 import json
 rows = [
