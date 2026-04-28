@@ -21,7 +21,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: logfwd
-          image: logfwd:e2e
+          image: fastforward:e2e
           imagePullPolicy: IfNotPresent
           args: ["run", "--config", "/etc/logfwd/config.yaml"]
           securityContext:

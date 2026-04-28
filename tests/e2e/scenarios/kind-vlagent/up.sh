@@ -11,7 +11,7 @@ if ! kind get clusters 2>/dev/null | grep -q "^${CLUSTER_NAME}$"; then
     printf 'created\n' >"$E2E_RESULTS_DIR/cluster-created"
 fi
 
-kind load docker-image logfwd:e2e --name "$CLUSTER_NAME"
+kind load docker-image fastforward:e2e --name "$CLUSTER_NAME"
 
 kubectl --context "$KUBE_CONTEXT" delete namespace "$NAMESPACE" --ignore-not-found --wait=false >/dev/null 2>&1 || true
 kubectl --context "$KUBE_CONTEXT" create namespace "$NAMESPACE"
