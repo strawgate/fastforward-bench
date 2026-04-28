@@ -31,50 +31,14 @@ jobs:
       memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit
 
-  compose-redis:
-    uses: ./.github/workflows/e2e-compose-redis.yml
+  compose-all:
+    uses: ./.github/workflows/e2e-compose-all.yml
     with:
       memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit
 
-  compose-memcached:
-    uses: ./.github/workflows/e2e-compose-memcached.yml
-    with:
-      memagent_ref: ${{ inputs.memagent_ref || 'main' }}
-    secrets: inherit
-
-  compose-nginx:
-    uses: ./.github/workflows/e2e-compose-nginx.yml
-    with:
-      memagent_ref: ${{ inputs.memagent_ref || 'main' }}
-    secrets: inherit
-
-  compose-synthetic-multiline:
-    uses: ./.github/workflows/e2e-compose-synthetic-multiline.yml
-    with:
-      memagent_ref: ${{ inputs.memagent_ref || 'main' }}
-    secrets: inherit
-
-  compose-synthetic-burst:
-    uses: ./.github/workflows/e2e-compose-synthetic-burst.yml
-    with:
-      memagent_ref: ${{ inputs.memagent_ref || 'main' }}
-    secrets: inherit
-
-  compose-synthetic-rotation:
-    uses: ./.github/workflows/e2e-compose-synthetic-rotation.yml
-    with:
-      memagent_ref: ${{ inputs.memagent_ref || 'main' }}
-    secrets: inherit
-
-  otlp-output-oracle:
-    uses: ./.github/workflows/e2e-otlp-output-oracle.yml
-    with:
-      memagent_ref: ${{ inputs.memagent_ref || 'main' }}
-    secrets: inherit
-
-  otlp-input-oracle:
-    uses: ./.github/workflows/e2e-otlp-input-oracle.yml
+  otlp-all:
+    uses: ./.github/workflows/e2e-otlp-all.yml
     with:
       memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit
@@ -89,16 +53,11 @@ jobs:
     if: always()
     needs:
       - kind-cri-smoke
+      - compose-all
+      - otlp-all
       - kind-vlagent
-      - compose-redis
-      - compose-memcached
-      - compose-nginx
-      - compose-synthetic-multiline
-      - compose-synthetic-burst
-      - compose-synthetic-rotation
-      - otlp-output-oracle
-      - otlp-input-oracle
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v5
