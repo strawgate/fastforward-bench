@@ -188,7 +188,7 @@ def status_rank(status: str) -> int:
 
 
 def collector_rank(name: str) -> tuple[int, str]:
-    order = {"fastforward": 0, "otelcol": 1, "filebeat": 2, "vector": 3}
+    order = {"fastforward": 0, "otelcol": 1, "filebeat": 2, "vector": 3, "vlagent": 4}
     return (order.get(name, 99), name)
 
 
