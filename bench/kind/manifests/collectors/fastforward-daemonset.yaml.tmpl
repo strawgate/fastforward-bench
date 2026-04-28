@@ -24,7 +24,7 @@ spec:
         - name: fastforward
           image: ${MEMAGENT_IMAGE}
           imagePullPolicy: IfNotPresent
-          args: ["ff", "run", "--config", "/etc/fastforward/config.yaml"]
+          args: ["run", "--config", "/etc/fastforward/config.yaml"]
           resources:
             requests:
               cpu: ${COLLECTOR_CPU_REQUEST}
