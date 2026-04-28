@@ -1,7 +1,7 @@
 {
   "run": {
     "id": "24144401243-1--kind-bench-default-otlp-tmax-single-otelcol",
-    "timestamp": "2026-04-27T08:20:16.130Z",
+    "timestamp": "2026-04-28T08:00:14.960Z",
     "commit": "211d46c749d1509d3937ad07d11c8b72fdb54107",
     "ref": "refs/heads/master",
     "benchmarks": 0,
