@@ -79,10 +79,17 @@ jobs:
       memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit
 
+  kind-vlagent:
+    uses: ./.github/workflows/e2e-kind-vlagent.yml
+    with:
+      memagent_ref: ${{ inputs.memagent_ref || 'main' }}
+    secrets: inherit
+
   summarize:
     if: always()
     needs:
       - kind-cri-smoke
+      - kind-vlagent
       - compose-redis
       - compose-memcached
       - compose-nginx
