@@ -436,5 +436,5 @@ jobs:
           expected-ingest-modes: ${{ needs.plan.outputs.ingest_modes }}
           expected-workloads: ${{ needs.plan.outputs.workloads }}
           otlp-excluded-collectors: '["vector"]'
-          tmax-only-collectors: '["otelcol","vector"]'
+          tmax-only-collectors: '["otelcol","vector","filebeat","vlagent"]'
           non-gating-collectors: '["vector"]'
