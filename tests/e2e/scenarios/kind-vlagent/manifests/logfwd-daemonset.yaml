@@ -57,6 +57,8 @@ spec:
               readOnly: true
             - name: state
               mountPath: /var/lib/logfwd
+            - name: e2e-vlogs
+              mountPath: /var/log/e2e-vlogs
       volumes:
         - name: varlog
           hostPath:
@@ -67,3 +69,7 @@ spec:
             name: logfwd-config
         - name: state
           emptyDir: {}
+        - name: e2e-vlogs
+          hostPath:
+            path: /var/log/e2e-vlogs
+            type: DirectoryOrCreate

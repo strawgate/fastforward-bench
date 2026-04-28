@@ -13,8 +13,8 @@ data:
 
     input:
       type: file
-      path: /var/log/pods/**/*.log
-      format: cri
+      path: /var/log/e2e-vlogs/test.log
+      format: ndjson
 
     transform: >-
       SELECT scenario, source_id, event_id, seq, level, message

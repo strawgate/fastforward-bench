@@ -11,8 +11,8 @@ metadata:
   name: vlagent
 rules:
   - apiGroups: [""]
-    resources: ["pods", "namespaces", "nodes"]
-    verbs: ["list", "watch"]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -50,11 +50,10 @@ spec:
           image: victoriametrics/vlagent:v1.50.0
           imagePullPolicy: IfNotPresent
           args:
-            - --flagsFile=/etc/vlagent/flags
-            - --logFormat=json
-            - --logLevel=info
-            - --filePath=/vlogs/*.log
-            - --labels=app=vlagent,host.hostname={{Host}}
+            - --fileCollector.glob=/vlogs/test.log
+            - --loggerFormat=json
+            - --remoteWrite.url=http://fastforward-capture.e2e-logfwd.svc.cluster.local:8081/ingest
+            - --tmpDataPath=/var/lib/vlagent
           resources:
             requests:
               cpu: "10m"
@@ -63,8 +62,16 @@ spec:
               cpu: "100m"
               memory: "128Mi"
           volumeMounts:
-            - name: vlogs
+            - name: e2e-vlogs
               mountPath: /vlogs
+            - name: vlagent-data
+              mountPath: /var/lib/vlagent
       volumes:
-        - name: vlogs
-          emptyDir: {}
+        - name: e2e-vlogs
+          hostPath:
+            path: /var/log/e2e-vlogs
+            type: DirectoryOrCreate
+        - name: vlagent-data
+          hostPath:
+            path: /var/lib/vlagent
+            type: DirectoryOrCreate
