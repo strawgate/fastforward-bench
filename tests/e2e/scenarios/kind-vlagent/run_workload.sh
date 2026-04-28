@@ -13,7 +13,7 @@ import json
 rows = [
     {
         "scenario": "kind-vlagent",
-        "source_id": "vlagent",
+        "source_id": "log-generator",
         "event_id": f"kind-vlagent:{i:04d}",
         "seq": i,
         "level": level,
@@ -29,9 +29,10 @@ kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" apply -f "$SCENARIO_DIR/manife
 kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" wait pod/log-generator --for=condition=Ready --timeout=60s
 sleep 5
 
+kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" logs log-generator >"$E2E_RESULTS_DIR/log-generator-source.ndjson"
 python3 "$REPO_ROOT/tests/e2e/lib/source_evidence.py" \
     --mode json-lines \
-    --input "$E2E_RESULTS_DIR/expected_rows.json" \
+    --input "$E2E_RESULTS_DIR/log-generator-source.ndjson" \
     --output "$E2E_RESULTS_DIR/source_rows.json" \
     --scenario "$SCENARIO_ID" \
-    --source-id "vlagent"
+    --source-id "log-generator"

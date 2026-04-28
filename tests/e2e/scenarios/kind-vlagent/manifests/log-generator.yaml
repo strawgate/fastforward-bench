@@ -13,16 +13,16 @@ spec:
       args:
         - |
           sleep 5
-          echo '{"scenario":"kind-vlagent","source_id":"vlagent","event_id":"kind-vlagent:0001","message":"KIND_E2E_VLAGENT_MARKER_001","level":"INFO","seq":1}' >> /vlogs/test.log
-          echo '{"scenario":"kind-vlagent","source_id":"vlagent","event_id":"kind-vlagent:0002","message":"KIND_E2E_VLAGENT_MARKER_002","level":"INFO","seq":2}' >> /vlogs/test.log
-          echo '{"scenario":"kind-vlagent","source_id":"vlagent","event_id":"kind-vlagent:0003","message":"KIND_E2E_VLAGENT_MARKER_003","level":"WARN","seq":3}' >> /vlogs/test.log
-          echo '{"scenario":"kind-vlagent","source_id":"vlagent","event_id":"kind-vlagent:0004","message":"KIND_E2E_VLAGENT_MARKER_004","level":"INFO","seq":4}' >> /vlogs/test.log
-          echo '{"scenario":"kind-vlagent","source_id":"vlagent","event_id":"kind-vlagent:0005","message":"KIND_E2E_VLAGENT_MARKER_005","level":"ERROR","seq":5}' >> /vlogs/test.log
-          echo '{"scenario":"kind-vlagent","source_id":"vlagent","event_id":"kind-vlagent:0006","message":"KIND_E2E_VLAGENT_MARKER_006","level":"INFO","seq":6}' >> /vlogs/test.log
-          echo '{"scenario":"kind-vlagent","source_id":"vlagent","event_id":"kind-vlagent:0007","message":"KIND_E2E_VLAGENT_MARKER_007","level":"DEBUG","seq":7}' >> /vlogs/test.log
-          echo '{"scenario":"kind-vlagent","source_id":"vlagent","event_id":"kind-vlagent:0008","message":"KIND_E2E_VLAGENT_MARKER_008","level":"INFO","seq":8}' >> /vlogs/test.log
-          echo '{"scenario":"kind-vlagent","source_id":"vlagent","event_id":"kind-vlagent:0009","message":"KIND_E2E_VLAGENT_MARKER_009","level":"WARN","seq":9}' >> /vlogs/test.log
-          echo '{"scenario":"kind-vlagent","source_id":"vlagent","event_id":"kind-vlagent:0010","message":"KIND_E2E_VLAGENT_MARKER_010","level":"INFO","seq":10}' >> /vlogs/test.log
+          echo '{"scenario":"kind-vlagent","source_id":"log-generator","event_id":"kind-vlagent:0001","message":"KIND_E2E_VLAGENT_MARKER_001","level":"INFO","seq":1}' | tee -a /vlogs/test.log
+          echo '{"scenario":"kind-vlagent","source_id":"log-generator","event_id":"kind-vlagent:0002","message":"KIND_E2E_VLAGENT_MARKER_002","level":"INFO","seq":2}' | tee -a /vlogs/test.log
+          echo '{"scenario":"kind-vlagent","source_id":"log-generator","event_id":"kind-vlagent:0003","message":"KIND_E2E_VLAGENT_MARKER_003","level":"WARN","seq":3}' | tee -a /vlogs/test.log
+          echo '{"scenario":"kind-vlagent","source_id":"log-generator","event_id":"kind-vlagent:0004","message":"KIND_E2E_VLAGENT_MARKER_004","level":"INFO","seq":4}' | tee -a /vlogs/test.log
+          echo '{"scenario":"kind-vlagent","source_id":"log-generator","event_id":"kind-vlagent:0005","message":"KIND_E2E_VLAGENT_MARKER_005","level":"ERROR","seq":5}' | tee -a /vlogs/test.log
+          echo '{"scenario":"kind-vlagent","source_id":"log-generator","event_id":"kind-vlagent:0006","message":"KIND_E2E_VLAGENT_MARKER_006","level":"INFO","seq":6}' | tee -a /vlogs/test.log
+          echo '{"scenario":"kind-vlagent","source_id":"log-generator","event_id":"kind-vlagent:0007","message":"KIND_E2E_VLAGENT_MARKER_007","level":"DEBUG","seq":7}' | tee -a /vlogs/test.log
+          echo '{"scenario":"kind-vlagent","source_id":"log-generator","event_id":"kind-vlagent:0008","message":"KIND_E2E_VLAGENT_MARKER_008","level":"INFO","seq":8}' | tee -a /vlogs/test.log
+          echo '{"scenario":"kind-vlagent","source_id":"log-generator","event_id":"kind-vlagent:0009","message":"KIND_E2E_VLAGENT_MARKER_009","level":"WARN","seq":9}' | tee -a /vlogs/test.log
+          echo '{"scenario":"kind-vlagent","source_id":"log-generator","event_id":"kind-vlagent:0010","message":"KIND_E2E_VLAGENT_MARKER_010","level":"INFO","seq":10}' | tee -a /vlogs/test.log
           sleep 3600
       volumeMounts:
         - name: e2e-vlogs
