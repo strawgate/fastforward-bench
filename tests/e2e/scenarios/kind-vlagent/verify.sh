@@ -15,49 +15,53 @@ if [[ -z "$VLAGENT_POD" ]]; then
     exit 1
 fi
 
-tsbs_output=$(kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" exec "$VLAGENT_POD" -- \
-    wget -q -O - 'http://localhost:8429/api/v1/status/tsbs?pick=5m' 2>/dev/null || echo '{"total_series":0}')
+echo "Waiting for vlagent to ingest log file..."
+sleep 30
 
-total_series=$(echo "$tsbs_output" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('total_series', 0))" 2>/dev/null || echo 0)
+metrics_output=$(kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" exec "$VLAGENT_POD" -- \
+    wget -q -O - 'http://localhost:8429/metrics' 2>/dev/null || echo '')
 
-if (( total_series == 0 )); then
-    echo "ERROR: vlagent reports 0 total series (no data ingested)" >&2
-    echo "Vlagent debug output:" >&2
+echo "$metrics_output" >"$E2E_RESULTS_DIR/vlagent_metrics.txt"
+
+lines_ingested=$(echo "$metrics_output" | grep -E '^vl_lines_ingested_total' | awk '{print $2}' || echo 0)
+blocks_sent=$(echo "$metrics_output" | grep -E '^vm_remote_write_blocks_pushed_total' | awk '{print $2}' || echo 0)
+blocks_failed=$(echo "$metrics_output" | grep -E '^vm_remote_write_blocks_failed_total' | awk '{print $2}' || echo 0)
+dropped_total=$(echo "$metrics_output" | grep -E '^vl_lines_dropped_total' | awk '{print $2}' || echo 0)
+
+echo "Vlagent metrics: ingested=$lines_ingested sent=$blocks_sent failed=$blocks_failed dropped=$dropped_total"
+
+if (( lines_ingested == 0 )); then
+    echo "ERROR: vlagent reports 0 ingested lines" >&2
     kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" logs "$VLAGENT_POD" --tail=20 >&2 || true
     exit 1
 fi
 
-echo "Vlagent successfully ingested $total_series series in the last 5 minutes"
+echo "Vlagent successfully ingested $lines_ingested lines"
 
-kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" exec "$VLAGENT_POD" -- \
-    wget -q -O - 'http://localhost:8429/api/v1/series/count' >"$E2E_RESULTS_DIR/vlagent_series.json" 2>/dev/null || true
-
-echo "$total_series" >"$E2E_RESULTS_DIR/vlagent_total_series.txt"
-
-python3 - "$total_series" >"$E2E_RESULTS_DIR/result.json" <<'PY'
+python3 - "$lines_ingested" "$blocks_sent" "$blocks_failed" >"$E2E_RESULTS_DIR/result.json" <<'PY'
 import json
 import sys
 
-total_series = int(sys.argv[1])
+lines_ingested = int(sys.argv[1])
+blocks_sent = int(sys.argv[2])
+blocks_failed = int(sys.argv[3])
+
+passed = lines_ingested >= 10
 
 result = {
     "scenario": "kind-vlagent",
     "policy": "raw",
-    "passed": total_series > 0,
-    "expected_count": 0,
-    "actual_count": total_series,
-    "missing_count": 0,
+    "passed": passed,
+    "expected_count": 10,
+    "actual_count": lines_ingested,
+    "missing_count": max(0, 10 - lines_ingested),
     "duplicate_count": 0,
     "extra_count": 0,
     "order_violations": 0,
     "null_field_violations": 0,
     "source_checked": False,
     "source_passed": None,
-    "source_missing_count": 0,
-    "source_duplicate_count": 0,
-    "source_extra_count": 0,
-    "source_null_field_violations": 0,
-    "reason": None if total_series > 0 else "vlagent reported 0 series",
+    "reason": None if passed else f"vlagent ingested {lines_ingested} lines, expected >= 10",
     "compare_keys": [],
     "identity_keys": [],
     "expected_preview": [],
@@ -66,7 +70,9 @@ result = {
     "duplicate_preview": [],
     "extra_preview": [],
     "null_field_preview": [],
-    "vlagent_series": total_series,
+    "vlagent_lines_ingested": lines_ingested,
+    "vlagent_blocks_sent": blocks_sent,
+    "vlagent_blocks_failed": blocks_failed,
 }
 print(json.dumps(result, indent=2))
 PY
