@@ -50,6 +50,8 @@ on:
           - fastforward
           - otelcol
           - vector
+          - filebeat
+          - vlagent
       cpu_profile:
         description: CPU profile to benchmark
         required: false
@@ -155,7 +157,7 @@ jobs:
           if [[ "${TARGET_SET}" == "fastforward_max" ]]; then
             echo 'collectors=["fastforward"]' >>"$GITHUB_OUTPUT"
           else
-            echo 'collectors=["fastforward","otelcol","vector"]' >>"$GITHUB_OUTPUT"
+            echo 'collectors=["fastforward","otelcol","vector","filebeat","vlagent"]' >>"$GITHUB_OUTPUT"
           fi
           if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${INPUT_CPU_PROFILE}" != "all" ]]; then
             echo "cpu_profiles=[\"${INPUT_CPU_PROFILE}\"]" >>"$GITHUB_OUTPUT"
@@ -224,6 +226,50 @@ jobs:
             workload: {label: "t100k"}
           - collector: vector
             workload: {label: "t1m"}
+          - collector: filebeat
+            workload: {label: "profile-smoke"}
+          - collector: filebeat
+            workload: {label: "profile-quick"}
+          - collector: filebeat
+            workload: {label: "profile-default"}
+          - collector: filebeat
+            workload: {label: "t1"}
+          - collector: filebeat
+            workload: {label: "t10"}
+          - collector: filebeat
+            workload: {label: "t100"}
+          - collector: filebeat
+            workload: {label: "t1k"}
+          - collector: filebeat
+            workload: {label: "t10k"}
+          - collector: filebeat
+            workload: {label: "t100k"}
+          - collector: filebeat
+            workload: {label: "t1m"}
+          - collector: vlagent
+            workload: {label: "profile-smoke"}
+          - collector: vlagent
+            workload: {label: "profile-quick"}
+          - collector: vlagent
+            workload: {label: "profile-default"}
+          - collector: vlagent
+            workload: {label: "t1"}
+          - collector: vlagent
+            workload: {label: "t10"}
+          - collector: vlagent
+            workload: {label: "t100"}
+          - collector: vlagent
+            workload: {label: "t1k"}
+          - collector: vlagent
+            workload: {label: "t10k"}
+          - collector: vlagent
+            workload: {label: "t100k"}
+          - collector: vlagent
+            workload: {label: "t1m"}
+          - ingest_mode: otlp
+            collector: filebeat
+          - ingest_mode: otlp
+            collector: vlagent
     env:
       MEMAGENT_REPO_ROOT: ${{ github.workspace }}/memagent
       BENCH_PROFILE: ${{ needs.plan.outputs.bench_profile }}
@@ -389,6 +435,6 @@ jobs:
           expected-cpu-profiles: ${{ needs.plan.outputs.cpu_profiles }}
           expected-ingest-modes: ${{ needs.plan.outputs.ingest_modes }}
           expected-workloads: ${{ needs.plan.outputs.workloads }}
-          otlp-excluded-collectors: '["vector"]'
-          tmax-only-collectors: '["otelcol","vector"]'
+          otlp-excluded-collectors: '["vector","filebeat","vlagent"]'
+          tmax-only-collectors: '["otelcol","vector","filebeat","vlagent"]'
           non-gating-collectors: '["vector"]'

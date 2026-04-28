@@ -350,6 +350,21 @@ def fetch_vector_prometheus_sample(local_port: int) -> StatsSample:
     return _sample_from_vector_prometheus(fetch_text(local_port, "/metrics"))
 
 
+def _fetch_json(local_port: int, path: str) -> dict[str, object]:
+    with urllib.request.urlopen(f"http://127.0.0.1:{local_port}{path}", timeout=5) as response:
+        return json.loads(response.read().decode("utf-8"))
+
+
+def fetch_vlagent_sample(local_port: int) -> StatsSample:
+    payload = _fetch_json(local_port, "/stats")
+    return StatsSample(
+        timestamp=time.time(),
+        output_lines=int(payload.get("output_lines", 0) or 0),
+        rss_bytes=int(payload.get("rss_bytes", 0) or 0),
+        cpu_total_ms=int(payload.get("cpu_total_ms", 0) or 0),
+    )
+
+
 def collect_bench_samples(
     namespace: str,
     sink_target: str,
@@ -389,6 +404,10 @@ def collect_bench_samples(
         def collector_ready_check(port: int) -> str:
             return fetch_text(port, "/metrics")
         collector_fetch_sample = fetch_vector_prometheus_sample
+    elif collector_stats_kind == "vlagent_json":
+        def collector_ready_check(port: int) -> str:
+            return fetch_text(port, "/health")
+        collector_fetch_sample = fetch_vlagent_sample
     else:
         raise ValueError(f"unknown collector_stats_kind: {collector_stats_kind}")
 

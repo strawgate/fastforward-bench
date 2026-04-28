@@ -43,12 +43,19 @@ jobs:
       memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit
 
+  kind-vlagent:
+    uses: ./.github/workflows/e2e-kind-vlagent.yml
+    with:
+      memagent_ref: ${{ inputs.memagent_ref || 'main' }}
+    secrets: inherit
+
   summarize:
     if: always()
     needs:
       - kind-cri-smoke
       - compose-all
       - otlp-all
+      - kind-vlagent
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

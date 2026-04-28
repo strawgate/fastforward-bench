@@ -21,12 +21,8 @@ spec:
           command:
             - python
             - /opt/capture/capture_tcp.py
-            - --port
-            - "9000"
             - --output-dir
             - /artifacts
-          ports:
-            - containerPort: 9000
           volumeMounts:
             - name: capture-script
               mountPath: /opt/capture
@@ -45,6 +41,7 @@ kind: Service
 metadata:
   name: capture-receiver
 spec:
+  type: ClusterIP
   selector:
     app: capture-receiver
   ports:

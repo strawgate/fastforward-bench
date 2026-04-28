@@ -12,7 +12,7 @@ This repo owns:
 - the KIND competitive benchmark harness under `bench/kind/`
 
 This repo does **not** own the `memagent` product code. Workflows check out
-`strawgate/memagent` as the system under test and build `logfwd:e2e` from that
+`strawgate/memagent` as the system under test and build `fastforward:e2e` from that
 checkout.
 
 When `memagent_ref` points at `main` or a full
