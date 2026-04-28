@@ -1,0 +1,26 @@
+name: E2E / Service Monitoring (Smoke) TEST
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - '.github/workflows/e2e-service-monitoring-smoke-test.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: e2e-smoke-test-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  issues: write
+  actions: read
+  packages: read
+
+jobs:
+  kind-cri-smoke:
+    uses: ./.github/workflows/e2e-kind-cri-smoke.yml
+    with:
+      memagent_ref: main
+    secrets: inherit
