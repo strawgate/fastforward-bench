@@ -20,7 +20,7 @@ services:
       ES_JAVA_OPTS: "-Xms512m -Xmx512m"
 
   memagent:
-    image: logfwd:e2e
+    image: fastforward:e2e
     command: ["run", "--config", "/scenario/memagent.yaml"]
     depends_on:
       capture:

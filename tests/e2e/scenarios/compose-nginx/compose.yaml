@@ -24,7 +24,7 @@ services:
       retries: 20
 
   memagent:
-    image: logfwd:e2e
+    image: fastforward:e2e
     command: ["run", "--config", "/scenario/memagent.yaml"]
     depends_on:
       capture:

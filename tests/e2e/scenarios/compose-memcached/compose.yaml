@@ -23,7 +23,7 @@ services:
       - ${E2E_RESULTS_DIR:?}/logs:/logs
 
   memagent:
-    image: logfwd:e2e
+    image: fastforward:e2e
     command: ["run", "--config", "/scenario/memagent.yaml"]
     depends_on:
       capture:
