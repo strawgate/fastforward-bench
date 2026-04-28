@@ -1,0 +1,15 @@
+name: E2E / TEST Smoke3
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  compose-all:
+    uses: ./.github/workflows/e2e-compose-all.yml
+    with:
+      memagent_ref: main
+    secrets: inherit

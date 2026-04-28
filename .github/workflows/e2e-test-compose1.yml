@@ -1,0 +1,17 @@
+name: E2E / TEST Compose1
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  compose-redis:
+    uses: ./.github/workflows/_scenario-compose.yml
+    with:
+      scenario_id: compose-redis
+      timeout_minutes: 20
+      memagent_ref: main
+    secrets: inherit
