@@ -355,24 +355,6 @@ def _fetch_json(local_port: int, path: str) -> dict[str, object]:
         return json.loads(response.read().decode("utf-8"))
 
 
-def fetch_filebeat_sample(local_port: int) -> StatsSample:
-    payload = _fetch_json(local_port, "/stats")
-    beat = payload.get("beat", {})
-    cpu = beat.get("cpu", {})
-    cpu_total = cpu.get("total", {})
-    memstats = beat.get("memstats", {})
-    libbeat = payload.get("libbeat", {})
-    output = libbeat.get("output", {})
-    events = output.get("events", {})
-    cpu_ticks = int(cpu_total.get("ticks", 0) or 0)
-    return StatsSample(
-        timestamp=time.time(),
-        output_lines=int(events.get("acked", 0) or 0),
-        rss_bytes=int(memstats.get("rss", 0) or 0),
-        cpu_total_ms=cpu_ticks,
-    )
-
-
 def fetch_vlagent_sample(local_port: int) -> StatsSample:
     payload = _fetch_json(local_port, "/stats")
     return StatsSample(
@@ -422,10 +404,6 @@ def collect_bench_samples(
         def collector_ready_check(port: int) -> str:
             return fetch_text(port, "/metrics")
         collector_fetch_sample = fetch_vector_prometheus_sample
-    elif collector_stats_kind == "filebeat_json":
-        def collector_ready_check(port: int) -> str:
-            return fetch_text(port, "/")
-        collector_fetch_sample = fetch_filebeat_sample
     elif collector_stats_kind == "vlagent_json":
         def collector_ready_check(port: int) -> str:
             return fetch_text(port, "/health")

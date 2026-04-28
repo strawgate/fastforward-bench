@@ -91,8 +91,7 @@ FILEBEAT_COLLECTOR = CollectorAdapter(
     pod_selector="app.kubernetes.io/name=filebeat-bench-collector",
     diagnostics_target_format="pod/{pod_name}",
     collector_image="docker.elastic.co/beats/filebeat:8.17.3",
-    collector_stats_kind="filebeat_json",
-    collector_stats_port=5066,
+    collector_stats_kind="fastforward",
     sink_transport="http_ndjson",
 )
 
