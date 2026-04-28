@@ -40,12 +40,7 @@ spec:
             readOnlyRootFilesystem: false
             capabilities:
               drop: ["ALL"]
-          readinessProbe:
-            tcpSocket:
-              port: 5066
-            initialDelaySeconds: 5
-            periodSeconds: 5
-            failureThreshold: 60
+
           volumeMounts:
             - name: varlog
               mountPath: /var/log
