@@ -1,0 +1,40 @@
+name: E2E / TEST Nested
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize]
+    paths:
+      - '.github/workflows/e2e-test-nested.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  compose-redis:
+    uses: ./.github/workflows/e2e-compose-redis.yml
+    with:
+      memagent_ref: main
+    secrets: inherit
+  compose-nginx:
+    uses: ./.github/workflows/e2e-compose-nginx.yml
+    with:
+      memagent_ref: main
+    secrets: inherit
+  compose-multiline:
+    uses: ./.github/workflows/e2e-compose-synthetic-multiline.yml
+    with:
+      memagent_ref: main
+    secrets: inherit
+  compose-burst:
+    uses: ./.github/workflows/e2e-compose-synthetic-burst.yml
+    with:
+      memagent_ref: main
+    secrets: inherit
+  compose-rotation:
+    uses: ./.github/workflows/e2e-compose-synthetic-rotation.yml
+    with:
+      memagent_ref: main
+    secrets: inherit

@@ -1,0 +1,40 @@
+name: E2E / TEST SmokeLike
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize]
+    paths:
+      - '.github/workflows/e2e-test-smokelike.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  kind-cri-smoke:
+    uses: ./.github/workflows/e2e-kind-cri-smoke.yml
+    with:
+      memagent_ref: main
+    secrets: inherit
+  compose-redis:
+    uses: ./.github/workflows/e2e-compose-redis.yml
+    with:
+      memagent_ref: main
+    secrets: inherit
+  compose-nginx:
+    uses: ./.github/workflows/e2e-compose-nginx.yml
+    with:
+      memagent_ref: main
+    secrets: inherit
+  otlp-output-oracle:
+    uses: ./.github/workflows/e2e-otlp-output-oracle.yml
+    with:
+      memagent_ref: main
+    secrets: inherit
+  kind-vlagent:
+    uses: ./.github/workflows/e2e-kind-vlagent.yml
+    with:
+      memagent_ref: main
+    secrets: inherit
