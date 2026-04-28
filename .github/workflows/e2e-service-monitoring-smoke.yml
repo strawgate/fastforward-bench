@@ -42,26 +42,14 @@ jobs:
       memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit
 
-  compose-redis:
-    uses: ./.github/workflows/e2e-compose-redis.yml
+  compose-all:
+    uses: ./.github/workflows/e2e-compose-all.yml
     with:
       memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit
 
-  compose-nginx:
-    uses: ./.github/workflows/e2e-compose-nginx.yml
-    with:
-      memagent_ref: ${{ inputs.memagent_ref || 'main' }}
-    secrets: inherit
-
-  compose-synthetic-multiline:
-    uses: ./.github/workflows/e2e-compose-synthetic-multiline.yml
-    with:
-      memagent_ref: ${{ inputs.memagent_ref || 'main' }}
-    secrets: inherit
-
-  otlp-output-oracle:
-    uses: ./.github/workflows/e2e-otlp-output-oracle.yml
+  otlp-all:
+    uses: ./.github/workflows/e2e-otlp-all.yml
     with:
       memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit
@@ -70,11 +58,10 @@ jobs:
     if: always()
     needs:
       - kind-cri-smoke
-      - compose-redis
-      - compose-nginx
-      - compose-synthetic-multiline
-      - otlp-output-oracle
+      - compose-all
+      - otlp-all
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v5
