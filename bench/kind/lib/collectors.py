@@ -91,7 +91,7 @@ FILEBEAT_COLLECTOR = CollectorAdapter(
     pod_selector="app.kubernetes.io/name=filebeat-bench-collector",
     diagnostics_target_format="pod/{pod_name}",
     collector_image="docker.elastic.co/beats/filebeat:8.17.3",
-    collector_stats_kind="http_json",
+    collector_stats_kind="filebeat_json",
     collector_stats_port=5066,
     sink_transport="http_ndjson",
 )
@@ -106,7 +106,7 @@ VLAGENT_COLLECTOR = CollectorAdapter(
     pod_selector="app.kubernetes.io/name=vlagent-bench-collector",
     diagnostics_target_format="pod/{pod_name}",
     collector_image="victoriametrics/vlagent:v1.50.0",
-    collector_stats_kind="http_json",
+    collector_stats_kind="vlagent_json",
     collector_stats_port=9429,
     sink_transport="http_ndjson",
 )

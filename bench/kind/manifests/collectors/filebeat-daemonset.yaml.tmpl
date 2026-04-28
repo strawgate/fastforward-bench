@@ -42,7 +42,7 @@ spec:
               drop: ["ALL"]
           readinessProbe:
             httpGet:
-              path: /
+              path: /stats
               port: 5066
             initialDelaySeconds: 3
             periodSeconds: 3
