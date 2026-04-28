@@ -5,7 +5,7 @@ set -euo pipefail
 run_otlp_oracle_test() {
     local test_name="$1"
     set +e
-    cargo test -p logfwd-io --test it "$test_name" --manifest-path "$MEMAGENT_REPO_ROOT/Cargo.toml" -- --ignored --exact --nocapture \
+    cargo test -p ffwd-io --test it "$test_name" --manifest-path "$MEMAGENT_REPO_ROOT/Cargo.toml" -- --ignored --exact --nocapture \
         >"$E2E_RESULTS_DIR/test.log" 2>&1
     local status=$?
     set -e

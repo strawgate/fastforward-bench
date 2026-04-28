@@ -8,7 +8,7 @@ if [[ $# -ne 1 ]]; then
 fi
 
 SCENARIO_ID="$1"
-REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+REPO_ROOT="${REPO_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
 SCENARIO_DIR="$REPO_ROOT/tests/e2e/scenarios/$SCENARIO_ID"
 E2E_RESULTS_DIR="${E2E_RESULTS_DIR:-$REPO_ROOT/tests/e2e/results/$SCENARIO_ID}"
 

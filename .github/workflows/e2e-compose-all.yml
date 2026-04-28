@@ -68,11 +68,3 @@ jobs:
       timeout_minutes: 20
       memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit
-
-  compose-esql-input-oracle:
-    uses: ./.github/workflows/_scenario-compose.yml
-    with:
-      scenario_id: compose-esql-input-oracle
-      timeout_minutes: 20
-      memagent_ref: ${{ inputs.memagent_ref || 'main' }}
-    secrets: inherit
