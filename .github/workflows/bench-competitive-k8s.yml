@@ -435,6 +435,6 @@ jobs:
           expected-cpu-profiles: ${{ needs.plan.outputs.cpu_profiles }}
           expected-ingest-modes: ${{ needs.plan.outputs.ingest_modes }}
           expected-workloads: ${{ needs.plan.outputs.workloads }}
-          otlp-excluded-collectors: '["vector"]'
+          otlp-excluded-collectors: '["vector","filebeat","vlagent"]'
           tmax-only-collectors: '["otelcol","vector","filebeat","vlagent"]'
           non-gating-collectors: '["vector"]'
