@@ -33,7 +33,7 @@ spec:
         - name: emitter
           image: ${MEMAGENT_IMAGE}
           imagePullPolicy: IfNotPresent
-          args: ["ff", "run", "--config", "/etc/fastforward/config.yaml"]
+          args: ["run", "--config", "/etc/fastforward/config.yaml"]
           resources:
             requests:
               cpu: ${EMITTER_CPU_REQUEST}
