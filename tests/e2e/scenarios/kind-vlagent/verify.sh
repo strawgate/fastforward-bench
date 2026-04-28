@@ -18,7 +18,7 @@ fi
 echo "Waiting for vlagent to ingest log file..."
 sleep 30
 
-metrics_output=$(kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" exec "$VLAGENT_POD" -- \
+metrics_output=$(kubectl --context "$KUBE_CONTEXT" -n "$NAMESPACE" exec "$VLAGENT_POD" -c vlagent -- \
     wget -q -O - 'http://localhost:8429/metrics' 2>/dev/null || echo '')
 
 echo "$metrics_output" >"$E2E_RESULTS_DIR/vlagent_metrics.txt"
