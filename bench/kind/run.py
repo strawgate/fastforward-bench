@@ -112,32 +112,30 @@ class ResourcePlan:
 CPU_PROFILES: dict[str, CpuProfile] = {
     "single": CpuProfile(
         name="single",
-        # Allocator: collector=1.0, emitter=1.2, sink+capture=1.2 (3.4 cores total).
-        # Node budget 3.4 cores fits in 4-core GH runners with headroom.
+        # 2.0 cores: collector=1.0, sink=0.1, capture=0.02, emitter=0.06×5=0.3 (1.42 cores total).
         cluster_cpu_cores=2.0,
-        collector_cpu_mcpu_min=1000,
+        collector_cpu_mcpu_min=500,
         collector_cpu_mcpu_target=1000,
-        emitter_cpu_mcpu_per_pod=240,
-        sink_cpu_mcpu=1200,
+        emitter_cpu_mcpu_per_pod=60,
+        sink_cpu_mcpu=100,
         capture_reader_cpu_mcpu=20,
-        collector_memory_limit="1Gi",
-        emitter_memory_limit="256Mi",
-        sink_memory_limit="512Mi",
+        collector_memory_limit="512Mi",
+        emitter_memory_limit="96Mi",
+        sink_memory_limit="256Mi",
         capture_reader_memory_limit="128Mi",
     ),
     "multi": CpuProfile(
         name="multi",
-        # Same allocation as single (multi-core tests are disabled).
-        # Kept for CLI compatibility but uses identical CPU values.
+        # 3.0 cores: collector=2.0, sink=0.1, capture=0.02, emitter=0.06×5=0.3 (2.42 cores total).
         cluster_cpu_cores=3.0,
-        collector_cpu_mcpu_min=1000,
-        collector_cpu_mcpu_target=1000,
-        emitter_cpu_mcpu_per_pod=240,
-        sink_cpu_mcpu=1200,
+        collector_cpu_mcpu_min=500,
+        collector_cpu_mcpu_target=2000,
+        emitter_cpu_mcpu_per_pod=60,
+        sink_cpu_mcpu=100,
         capture_reader_cpu_mcpu=20,
-        collector_memory_limit="1Gi",
-        emitter_memory_limit="256Mi",
-        sink_memory_limit="512Mi",
+        collector_memory_limit="512Mi",
+        emitter_memory_limit="96Mi",
+        sink_memory_limit="256Mi",
         capture_reader_memory_limit="128Mi",
     ),
 }
@@ -285,7 +283,6 @@ def build_resource_plan(
     node_budget_mcpu = int(cpu_profile.cluster_cpu_cores * 1000)
     if node_allocatable_mcpu is not None:
         node_budget_mcpu = min(node_budget_mcpu, node_allocatable_mcpu)
-    node_budget_mcpu = min(node_budget_mcpu, 3800)
     sink_mcpu = cpu_profile.sink_cpu_mcpu
     capture_reader_mcpu = cpu_profile.capture_reader_cpu_mcpu
     collector_mcpu_min = cpu_profile.collector_cpu_mcpu_min
@@ -293,17 +290,23 @@ def build_resource_plan(
 
     capacity_probe = eps_per_pod >= 10_000 or unbounded_generator
     if capacity_probe:
-        # Allocator: collector=1.0, emitter=1.2, sink+capture=1.2 (3.4 cores).
-        # Never exceed 3.8 cores regardless of profile.
-        node_budget_mcpu = min(3400, 3800, node_allocatable_mcpu or 999999)
-        sink_mcpu = 1200
-        capture_reader_mcpu = 20
+        if cpu_profile.cluster_cpu_cores >= 3.0:
+            # Multi: 3.4 cores - collector=1.0, sink+capture=1.2, emitter=1.2
+            node_budget_mcpu = min(3400, node_allocatable_mcpu or 999999)
+            sink_mcpu = 1200
+            capture_reader_cpu_mcpu = 20
+        else:
+            # Single: 3.0 cores - collector=1.0, sink+capture=1.0, emitter=1.0
+            node_budget_mcpu = min(3000, node_allocatable_mcpu or 999999)
+            sink_mcpu = 900
+            capture_reader_cpu_mcpu = 100
         collector_mcpu_min = 1000
         collector_mcpu_target = 1000
 
     reserved_mcpu = sink_mcpu + capture_reader_mcpu
     if capacity_probe:
-        emitter_total_budget_mcpu = 1200
+        # Emitter gets remaining budget after collector and reserved
+        emitter_total_budget_mcpu = node_budget_mcpu - reserved_mcpu - collector_mcpu_target
         emitter_mcpu = max(cpu_profile.emitter_cpu_mcpu_per_pod, emitter_total_budget_mcpu // emitter_pods)
     else:
         emitter_mcpu = cpu_profile.emitter_cpu_mcpu_per_pod
