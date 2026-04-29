@@ -2,7 +2,7 @@
   "runs": [
     {
       "id": "24767474344-1--compose-bench-smoke-otlp-t1m-multi-logfwd",
-      "timestamp": "2026-04-29T07:56:11.783Z",
+      "timestamp": "2026-04-29T08:20:25.215Z",
       "commit": "5f1ef0b715d75216cb5c73ded4d732995ac189db",
       "ref": "main",
       "benchmarks": 0,
@@ -10,7 +10,7 @@
     },
     {
       "id": "24288179122-1--compose-bench-smoke-file-tmax-single-logfwd",
-      "timestamp": "2026-04-29T07:56:11.783Z",
+      "timestamp": "2026-04-29T08:20:25.215Z",
       "commit": "b7cfae07e7f91b3c8a29d8c0e4231273d696c644",
       "ref": "main",
       "benchmarks": 0,
@@ -18,7 +18,7 @@
     },
     {
       "id": "24245004450-1--kind-bench-smoke-otlp-tmax-single-otelcol",
-      "timestamp": "2026-04-29T07:56:11.783Z",
+      "timestamp": "2026-04-29T08:20:25.215Z",
       "commit": "033c577e29a2b31b84f9d358fbead1875cc74122",
       "ref": "refs/heads/master",
       "benchmarks": 0,
@@ -26,7 +26,7 @@
     },
     {
       "id": "24245004450-1--kind-bench-smoke-otlp-tmax-multi-otelcol",
-      "timestamp": "2026-04-29T07:56:11.783Z",
+      "timestamp": "2026-04-29T08:20:25.215Z",
       "commit": "033c577e29a2b31b84f9d358fbead1875cc74122",
       "ref": "refs/heads/master",
       "benchmarks": 0,
@@ -34,7 +34,7 @@
     },
     {
       "id": "24210944005-1--kind-bench-smoke-otlp-tmax-multi-otelcol",
-      "timestamp": "2026-04-29T07:56:11.783Z",
+      "timestamp": "2026-04-29T08:20:25.215Z",
       "commit": "c86112d2edde8540fde21f17a072b3adbcb9bdcc",
       "ref": "refs/heads/master",
       "benchmarks": 0,
@@ -42,7 +42,7 @@
     },
     {
       "id": "24205640997-1--kind-bench-smoke-file-tmax-multi-vector",
-      "timestamp": "2026-04-29T07:56:11.783Z",
+      "timestamp": "2026-04-29T08:20:25.215Z",
       "commit": "de440308d286a988a806839df0ef1540e6165620",
       "ref": "refs/heads/codex/kind-bench-max-eps-fixes",
       "benchmarks": 0,
@@ -50,7 +50,7 @@
     },
     {
       "id": "24205640997-1--kind-bench-smoke-file-tmax-multi-otelcol",
-      "timestamp": "2026-04-29T07:56:11.783Z",
+      "timestamp": "2026-04-29T08:20:25.215Z",
       "commit": "de440308d286a988a806839df0ef1540e6165620",
       "ref": "refs/heads/codex/kind-bench-max-eps-fixes",
       "benchmarks": 0,
@@ -58,7 +58,7 @@
     },
     {
       "id": "24205640997-1--kind-bench-smoke-file-tmax-multi-logfwd",
-      "timestamp": "2026-04-29T07:56:11.783Z",
+      "timestamp": "2026-04-29T08:20:25.215Z",
       "commit": "de440308d286a988a806839df0ef1540e6165620",
       "ref": "refs/heads/codex/kind-bench-max-eps-fixes",
       "benchmarks": 0,
@@ -66,7 +66,7 @@
     },
     {
       "id": "24205363010-1--kind-bench-smoke-file-tmax-multi-vector",
-      "timestamp": "2026-04-29T07:56:11.783Z",
+      "timestamp": "2026-04-29T08:20:25.215Z",
       "commit": "367668d3a6f67d8b38cd052b442c32c4aedff714",
       "ref": "refs/heads/codex/kind-bench-max-eps-fixes",
       "benchmarks": 0,
@@ -74,7 +74,7 @@
     },
     {
       "id": "24205363010-1--kind-bench-smoke-file-tmax-multi-otelcol",
-      "timestamp": "2026-04-29T07:56:11.783Z",
+      "timestamp": "2026-04-29T08:20:25.215Z",
       "commit": "367668d3a6f67d8b38cd052b442c32c4aedff714",
       "ref": "refs/heads/codex/kind-bench-max-eps-fixes",
       "benchmarks": 0,
@@ -82,7 +82,7 @@
     },
     {
       "id": "24205042842-1--kind-bench-smoke-file-tmax-multi-vector",
-      "timestamp": "2026-04-29T07:56:11.783Z",
+      "timestamp": "2026-04-29T08:20:25.215Z",
       "commit": "9dc8c1761dc274b224b1d5283936040a1f39e432",
       "ref": "refs/heads/codex/kind-bench-max-eps-fixes",
       "benchmarks": 0,
@@ -90,7 +90,7 @@
     },
     {
       "id": "24205042842-1--kind-bench-smoke-file-tmax-multi-logfwd",
-      "timestamp": "2026-04-29T07:56:11.783Z",
+      "timestamp": "2026-04-29T08:20:25.215Z",
       "commit": "9dc8c1761dc274b224b1d5283936040a1f39e432",
       "ref": "refs/heads/codex/kind-bench-max-eps-fixes",
       "benchmarks": 0,
@@ -98,7 +98,7 @@
     },
     {
       "id": "24204703470-1--kind-bench-smoke-file-tmax-multi-vector",
-      "timestamp": "2026-04-29T07:56:11.783Z",
+      "timestamp": "2026-04-29T08:20:25.215Z",
       "commit": "78971df42ea3d5460b36222673e8baca252eb654",
       "ref": "refs/heads/codex/kind-bench-max-eps-fixes",
       "benchmarks": 0,
@@ -106,7 +106,7 @@
     },
     {
       "id": "24204703470-1--kind-bench-smoke-file-tmax-multi-otelcol",
-      "timestamp": "2026-04-29T07:56:11.783Z",
+      "timestamp": "2026-04-29T08:20:25.214Z",
       "commit": "78971df42ea3d5460b36222673e8baca252eb654",
       "ref": "refs/heads/codex/kind-bench-max-eps-fixes",
       "benchmarks": 0,
@@ -114,7 +114,7 @@
     },
     {
       "id": "24204703470-1--kind-bench-smoke-file-tmax-multi-logfwd",
-      "timestamp": "2026-04-29T07:56:11.783Z",
+      "timestamp": "2026-04-29T08:20:25.214Z",
       "commit": "78971df42ea3d5460b36222673e8baca252eb654",
       "ref": "refs/heads/codex/kind-bench-max-eps-fixes",
       "benchmarks": 0,
@@ -122,7 +122,7 @@
     },
     {
       "id": "24200676718-1--kind-bench-smoke-file-tmax-multi-logfwd",
-      "timestamp": "2026-04-29T07:56:11.783Z",
+      "timestamp": "2026-04-29T08:20:25.214Z",
       "commit": "d999b4a2ba627536d6581e5694897bee399f3a7b",
       "ref": "refs/heads/codex/kind-bench-max-eps-fixes",
       "benchmarks": 0,
@@ -130,7 +130,7 @@
     },
     {
       "id": "24200236165-1--kind-bench-smoke-file-tmax-multi-logfwd",
-      "timestamp": "2026-04-29T07:56:11.783Z",
+      "timestamp": "2026-04-29T08:20:25.214Z",
       "commit": "f7b2b5b6cf91df49e2543da836c7cf8f215cd1c7",
       "ref": "refs/heads/codex/kind-bench-max-eps-fixes",
       "benchmarks": 0,
@@ -138,7 +138,7 @@
     },
     {
       "id": "24199885426-1--kind-bench-smoke-file-tmax-multi-logfwd",
-      "timestamp": "2026-04-29T07:56:11.783Z",
+      "timestamp": "2026-04-29T08:20:25.214Z",
       "commit": "b75937b53603e764b2a5ee805ae2778f10524f3b",
       "ref": "refs/heads/codex/kind-bench-max-eps-fixes",
       "benchmarks": 0,
@@ -146,7 +146,7 @@
     },
     {
       "id": "24197214811-1--kind-bench-smoke-file-t1m-multi-vector",
-      "timestamp": "2026-04-29T07:56:11.783Z",
+      "timestamp": "2026-04-29T08:20:25.214Z",
       "commit": "12c922c56223fc8eeea543bb296fb855c08fe51e",
       "ref": "refs/heads/master",
       "benchmarks": 0,
@@ -154,7 +154,7 @@
     },
     {
       "id": "24146309842-1--compose-bench-smoke-tmax-single-vector",
-      "timestamp": "2026-04-29T07:56:11.783Z",
+      "timestamp": "2026-04-29T08:20:25.214Z",
       "commit": "ab9a65b8cef21a8ec61f4d0df6249b21d46c629c",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -162,7 +162,7 @@
     },
     {
       "id": "24146309842-1--compose-bench-smoke-tmax-single-otelcol",
-      "timestamp": "2026-04-29T07:56:11.783Z",
+      "timestamp": "2026-04-29T08:20:25.214Z",
       "commit": "ab9a65b8cef21a8ec61f4d0df6249b21d46c629c",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -170,7 +170,7 @@
     },
     {
       "id": "24146309842-1--compose-bench-smoke-tmax-multi-vector",
-      "timestamp": "2026-04-29T07:56:11.783Z",
+      "timestamp": "2026-04-29T08:20:25.214Z",
       "commit": "ab9a65b8cef21a8ec61f4d0df6249b21d46c629c",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -178,7 +178,7 @@
     },
     {
       "id": "24146309842-1--compose-bench-smoke-tmax-multi-otelcol",
-      "timestamp": "2026-04-29T07:56:11.783Z",
+      "timestamp": "2026-04-29T08:20:25.214Z",
       "commit": "ab9a65b8cef21a8ec61f4d0df6249b21d46c629c",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -186,7 +186,7 @@
     },
     {
       "id": "24145951313-1--compose-bench-default-tmax-single-vector",
-      "timestamp": "2026-04-29T07:56:11.783Z",
+      "timestamp": "2026-04-29T08:20:25.214Z",
       "commit": "1f8dc3f713ae5248b5b6be971263a88a930d87bf",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -194,7 +194,7 @@
     },
     {
       "id": "24145951313-1--compose-bench-default-tmax-single-otelcol",
-      "timestamp": "2026-04-29T07:56:11.783Z",
+      "timestamp": "2026-04-29T08:20:25.214Z",
       "commit": "1f8dc3f713ae5248b5b6be971263a88a930d87bf",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -202,7 +202,7 @@
     },
     {
       "id": "24145951313-1--compose-bench-default-tmax-single-logfwd",
-      "timestamp": "2026-04-29T07:56:11.783Z",
+      "timestamp": "2026-04-29T08:20:25.214Z",
       "commit": "1f8dc3f713ae5248b5b6be971263a88a930d87bf",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -210,7 +210,7 @@
     },
     {
       "id": "24145951313-1--compose-bench-default-tmax-multi-vector",
-      "timestamp": "2026-04-29T07:56:11.783Z",
+      "timestamp": "2026-04-29T08:20:25.214Z",
       "commit": "1f8dc3f713ae5248b5b6be971263a88a930d87bf",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -218,7 +218,7 @@
     },
     {
       "id": "24145951313-1--compose-bench-default-tmax-multi-otelcol",
-      "timestamp": "2026-04-29T07:56:11.783Z",
+      "timestamp": "2026-04-29T08:20:25.214Z",
       "commit": "1f8dc3f713ae5248b5b6be971263a88a930d87bf",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -226,7 +226,7 @@
     },
     {
       "id": "24145951313-1--compose-bench-default-tmax-multi-logfwd",
-      "timestamp": "2026-04-29T07:56:11.783Z",
+      "timestamp": "2026-04-29T08:20:25.214Z",
       "commit": "1f8dc3f713ae5248b5b6be971263a88a930d87bf",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -234,7 +234,7 @@
     },
     {
       "id": "24145642713-1--compose-bench-default-tmax-single-vector",
-      "timestamp": "2026-04-29T07:56:11.783Z",
+      "timestamp": "2026-04-29T08:20:25.214Z",
       "commit": "98d023529c3f0ad499b28fd4f4eb2ad952369010",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -242,7 +242,7 @@
     },
     {
       "id": "24145642713-1--compose-bench-default-tmax-single-otelcol",
-      "timestamp": "2026-04-29T07:56:11.783Z",
+      "timestamp": "2026-04-29T08:20:25.214Z",
       "commit": "98d023529c3f0ad499b28fd4f4eb2ad952369010",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -250,7 +250,7 @@
     },
     {
       "id": "24145642713-1--compose-bench-default-tmax-single-logfwd",
-      "timestamp": "2026-04-29T07:56:11.783Z",
+      "timestamp": "2026-04-29T08:20:25.214Z",
       "commit": "98d023529c3f0ad499b28fd4f4eb2ad952369010",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -258,7 +258,7 @@
     },
     {
       "id": "24145642713-1--compose-bench-default-tmax-multi-vector",
-      "timestamp": "2026-04-29T07:56:11.782Z",
+      "timestamp": "2026-04-29T08:20:25.214Z",
       "commit": "98d023529c3f0ad499b28fd4f4eb2ad952369010",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -266,7 +266,7 @@
     },
     {
       "id": "24145642713-1--compose-bench-default-tmax-multi-otelcol",
-      "timestamp": "2026-04-29T07:56:11.782Z",
+      "timestamp": "2026-04-29T08:20:25.214Z",
       "commit": "98d023529c3f0ad499b28fd4f4eb2ad952369010",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -274,7 +274,7 @@
     },
     {
       "id": "24145642713-1--compose-bench-default-tmax-multi-logfwd",
-      "timestamp": "2026-04-29T07:56:11.782Z",
+      "timestamp": "2026-04-29T08:20:25.214Z",
       "commit": "98d023529c3f0ad499b28fd4f4eb2ad952369010",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -282,7 +282,7 @@
     },
     {
       "id": "24145498617-1--compose-bench-default-tmax-single-vector",
-      "timestamp": "2026-04-29T07:56:11.782Z",
+      "timestamp": "2026-04-29T08:20:25.214Z",
       "commit": "e07d8f397122df4c65287dbb1592173d94b5ea73",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -290,7 +290,7 @@
     },
     {
       "id": "24145498617-1--compose-bench-default-tmax-single-otelcol",
-      "timestamp": "2026-04-29T07:56:11.782Z",
+      "timestamp": "2026-04-29T08:20:25.214Z",
       "commit": "e07d8f397122df4c65287dbb1592173d94b5ea73",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -298,7 +298,7 @@
     },
     {
       "id": "24145498617-1--compose-bench-default-tmax-multi-vector",
-      "timestamp": "2026-04-29T07:56:11.782Z",
+      "timestamp": "2026-04-29T08:20:25.214Z",
       "commit": "e07d8f397122df4c65287dbb1592173d94b5ea73",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -306,7 +306,7 @@
     },
     {
       "id": "24145498617-1--compose-bench-default-tmax-multi-otelcol",
-      "timestamp": "2026-04-29T07:56:11.782Z",
+      "timestamp": "2026-04-29T08:20:25.214Z",
       "commit": "e07d8f397122df4c65287dbb1592173d94b5ea73",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -314,7 +314,7 @@
     },
     {
       "id": "24145498617-1--compose-bench-default-tmax-multi-logfwd",
-      "timestamp": "2026-04-29T07:56:11.782Z",
+      "timestamp": "2026-04-29T08:20:25.213Z",
       "commit": "e07d8f397122df4c65287dbb1592173d94b5ea73",
       "ref": "refs/heads/codex/bench-compose-smoke",
       "benchmarks": 0,
@@ -322,7 +322,7 @@
     },
     {
       "id": "24144401243-1--kind-bench-default-otlp-tmax-single-otelcol",
-      "timestamp": "2026-04-29T07:56:11.782Z",
+      "timestamp": "2026-04-29T08:20:25.213Z",
       "commit": "211d46c749d1509d3937ad07d11c8b72fdb54107",
       "ref": "refs/heads/master",
       "benchmarks": 0,
@@ -330,7 +330,7 @@
     },
     {
       "id": "24144401243-1--kind-bench-default-otlp-tmax-single-logfwd",
-      "timestamp": "2026-04-29T07:56:11.782Z",
+      "timestamp": "2026-04-29T08:20:25.213Z",
       "commit": "211d46c749d1509d3937ad07d11c8b72fdb54107",
       "ref": "refs/heads/master",
       "benchmarks": 0,
@@ -338,7 +338,7 @@
     },
     {
       "id": "24144349044-1--kind-bench-default-file-tmax-multi-otelcol",
-      "timestamp": "2026-04-29T07:56:11.782Z",
+      "timestamp": "2026-04-29T08:20:25.213Z",
       "commit": "211d46c749d1509d3937ad07d11c8b72fdb54107",
       "ref": "refs/heads/master",
       "benchmarks": 0,
@@ -346,7 +346,7 @@
     },
     {
       "id": "24122010683-1--kind-bench-smoke-otlp-tmax-single-otelcol",
-      "timestamp": "2026-04-29T07:56:11.782Z",
+      "timestamp": "2026-04-29T08:20:25.213Z",
       "commit": "211d46c749d1509d3937ad07d11c8b72fdb54107",
       "ref": "refs/heads/master",
       "benchmarks": 0,
@@ -354,7 +354,7 @@
     },
     {
       "id": "24122010683-1--kind-bench-smoke-otlp-tmax-single-logfwd",
-      "timestamp": "2026-04-29T07:56:11.782Z",
+      "timestamp": "2026-04-29T08:20:25.213Z",
       "commit": "211d46c749d1509d3937ad07d11c8b72fdb54107",
       "ref": "refs/heads/master",
       "benchmarks": 0,
@@ -362,7 +362,7 @@
     },
     {
       "id": "24122010683-1--kind-bench-smoke-otlp-tmax-multi-otelcol",
-      "timestamp": "2026-04-29T07:56:11.782Z",
+      "timestamp": "2026-04-29T08:20:25.213Z",
       "commit": "211d46c749d1509d3937ad07d11c8b72fdb54107",
       "ref": "refs/heads/master",
       "benchmarks": 0,
@@ -370,7 +370,7 @@
     },
     {
       "id": "24122010683-1--kind-bench-smoke-otlp-tmax-multi-logfwd",
-      "timestamp": "2026-04-29T07:56:11.782Z",
+      "timestamp": "2026-04-29T08:20:25.213Z",
       "commit": "211d46c749d1509d3937ad07d11c8b72fdb54107",
       "ref": "refs/heads/master",
       "benchmarks": 0,
@@ -378,7 +378,7 @@
     },
     {
       "id": "24111535469-1--kind-bench-smoke-file-profile-smoke-single-fluent-bit",
-      "timestamp": "2026-04-29T07:56:11.782Z",
+      "timestamp": "2026-04-29T08:20:25.213Z",
       "commit": "2b1fcaf8f24d906c29db6f300042811468451186",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -386,7 +386,7 @@
     },
     {
       "id": "24111336101-1--kind-bench-smoke-file-profile-smoke-single-fluent-bit",
-      "timestamp": "2026-04-29T07:56:11.782Z",
+      "timestamp": "2026-04-29T08:20:25.213Z",
       "commit": "2e5a8e342b95d109f04e2ab02634f6cd6537324a",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
@@ -394,7 +394,7 @@
     },
     {
       "id": "24110859427-1--kind-bench-smoke-otlp-t1m-single-logfwd",
-      "timestamp": "2026-04-29T07:56:11.781Z",
+      "timestamp": "2026-04-29T08:20:25.213Z",
       "commit": "7b844301676ff2219a1a762aea12f952bb77661a",
       "ref": "refs/heads/codex/eps-target-sweep",
       "benchmarks": 0,
