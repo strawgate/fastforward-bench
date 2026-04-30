@@ -1,4 +1,4 @@
-name: _scenario-kind
+name: Docker Compose Scenario
 
 on:
   workflow_call:
@@ -6,13 +6,10 @@ on:
       scenario_id:
         required: true
         type: string
-      cluster_name:
-        required: true
-        type: string
       timeout_minutes:
         required: false
         type: number
-        default: 25
+        default: 20
       memagent_ref:
         required: false
         type: string
@@ -30,7 +27,7 @@ jobs:
     env:
       MEMAGENT_REF: ${{ inputs.memagent_ref }}
       E2E_RESULTS_DIR: ${{ github.workspace }}/tests/e2e/results/${{ inputs.scenario_id }}
-      E2E_CLUSTER_NAME: ${{ inputs.cluster_name }}
+      REPO_ROOT: ${{ github.workspace }}
       MEMAGENT_REPO_ROOT: ${{ github.workspace }}/memagent
     steps:
       - uses: actions/checkout@v6
@@ -44,9 +41,9 @@ jobs:
         with:
           memagent-repo-root: memagent
           memagent-ref: ${{ env.MEMAGENT_REF }}
-      - uses: ./.github/actions/setup-kind
+      - uses: ./.github/actions/setup-compose
         with:
-          cluster-name: ${{ inputs.cluster_name }}
+          results-dir: ${{ env.E2E_RESULTS_DIR }}
       - name: Run scenario
         run: tests/e2e/run-scenario.sh "${{ inputs.scenario_id }}"
       - if: always()

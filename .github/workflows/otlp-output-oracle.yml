@@ -1,4 +1,4 @@
-name: E2E / compose-synthetic-burst
+name: OTLP: Output Oracle
 
 on:
   workflow_call:
@@ -18,13 +18,12 @@ on:
 
 permissions:
   contents: read
-  packages: read
 
 jobs:
-  compose-synthetic-burst:
-    uses: ./.github/workflows/_scenario-compose.yml
+  otlp-output-oracle:
+    uses: ./.github/workflows/_lib/otlp-scenario.yml
     with:
-      scenario_id: compose-synthetic-burst
-      timeout_minutes: 20
+      scenario_id: otlp-output-oracle
+      timeout_minutes: 30
       memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit

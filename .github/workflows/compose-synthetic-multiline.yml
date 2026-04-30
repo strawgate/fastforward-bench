@@ -1,4 +1,4 @@
-name: E2E / compose-synthetic-rotation
+name: Docker Compose: Synthetic Multiline
 
 on:
   workflow_call:
@@ -21,10 +21,10 @@ permissions:
   packages: read
 
 jobs:
-  compose-synthetic-rotation:
-    uses: ./.github/workflows/_scenario-compose.yml
+  compose-synthetic-multiline:
+    uses: ./.github/workflows/_lib/compose-scenario.yml
     with:
-      scenario_id: compose-synthetic-rotation
+      scenario_id: compose-synthetic-multiline
       timeout_minutes: 20
       memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit

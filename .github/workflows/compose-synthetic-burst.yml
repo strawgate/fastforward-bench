@@ -1,4 +1,4 @@
-name: E2E / compose-esql-input-oracle
+name: Docker Compose: Synthetic Burst
 
 on:
   workflow_call:
@@ -21,10 +21,10 @@ permissions:
   packages: read
 
 jobs:
-  compose-esql-input-oracle:
-    uses: ./.github/workflows/_scenario-compose.yml
+  compose-synthetic-burst:
+    uses: ./.github/workflows/_lib/compose-scenario.yml
     with:
-      scenario_id: compose-esql-input-oracle
-      timeout_minutes: 30
+      scenario_id: compose-synthetic-burst
+      timeout_minutes: 20
       memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit

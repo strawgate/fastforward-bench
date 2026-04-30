@@ -1,4 +1,4 @@
-name: E2E / compose-nginx
+name: Docker Compose: Memcached
 
 on:
   workflow_call:
@@ -21,10 +21,10 @@ permissions:
   packages: read
 
 jobs:
-  compose-nginx:
-    uses: ./.github/workflows/_scenario-compose.yml
+  compose-memcached:
+    uses: ./.github/workflows/_lib/compose-scenario.yml
     with:
-      scenario_id: compose-nginx
+      scenario_id: compose-memcached
       timeout_minutes: 20
       memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit
