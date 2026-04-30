@@ -1,4 +1,4 @@
-name: E2E / Service Monitoring (Full)
+name: Service: Correctness (Nightly)
 
 on:
   schedule:
@@ -26,25 +26,25 @@ env:
 
 jobs:
   kind-cri-smoke:
-    uses: ./.github/workflows/e2e-kind-cri-smoke.yml
+    uses: ./.github/workflows/kind-cri-smoke.yml
     with:
       memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit
 
   compose-all:
-    uses: ./.github/workflows/e2e-compose-all.yml
+    uses: ./.github/workflows/docker-compose-correctness.yml
     with:
       memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit
 
   otlp-all:
-    uses: ./.github/workflows/e2e-otlp-all.yml
+    uses: ./.github/workflows/otlp-correctness.yml
     with:
       memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit
 
   kind-vlagent:
-    uses: ./.github/workflows/e2e-kind-vlagent.yml
+    uses: ./.github/workflows/kind-vlagent.yml
     with:
       memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit
@@ -67,11 +67,11 @@ jobs:
         uses: ./.github/actions/summarize-and-report
         with:
           render-script: tests/e2e/lib/render_issue_summary.py
-          suite-name: E2E / Service Monitoring (Full)
+          suite-name: Service: Correctness (Nightly)
           suite-key: nightly
           memagent-ref: ${{ env.MEMAGENT_REF }}
-          artifact-name: e2e-nightly-summary
-          issue-title-base: E2E / Service Monitoring (Full) Report
-          issue-suite-key: e2e-nightly
-          issue-labels: live-suite-report,report:e2e,report:e2e-nightly
+          artifact-name: service-correctness-nightly-summary
+          issue-title-base: Service: Correctness (Nightly) Report
+          issue-suite-key: service-correctness-nightly
+          issue-labels: live-suite-report,report:e2e,report:service-correctness-nightly
           github-token: ${{ github.token }}

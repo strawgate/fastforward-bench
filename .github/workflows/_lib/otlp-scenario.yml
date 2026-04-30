@@ -1,4 +1,4 @@
-name: _scenario-compose
+name: OTLP Scenario
 
 on:
   workflow_call:
@@ -9,7 +9,7 @@ on:
       timeout_minutes:
         required: false
         type: number
-        default: 20
+        default: 30
       memagent_ref:
         required: false
         type: string
@@ -27,7 +27,6 @@ jobs:
     env:
       MEMAGENT_REF: ${{ inputs.memagent_ref }}
       E2E_RESULTS_DIR: ${{ github.workspace }}/tests/e2e/results/${{ inputs.scenario_id }}
-      REPO_ROOT: ${{ github.workspace }}
       MEMAGENT_REPO_ROOT: ${{ github.workspace }}/memagent
     steps:
       - uses: actions/checkout@v6
@@ -37,13 +36,7 @@ jobs:
           memagent-path: memagent
       - name: Validate scenario contract
         run: python3 tests/e2e/lib/check_scenarios.py --repo-root . --scenario-id "${{ inputs.scenario_id }}"
-      - uses: ./.github/actions/setup-memagent-build
-        with:
-          memagent-repo-root: memagent
-          memagent-ref: ${{ env.MEMAGENT_REF }}
-      - uses: ./.github/actions/setup-compose
-        with:
-          results-dir: ${{ env.E2E_RESULTS_DIR }}
+      - uses: dtolnay/rust-toolchain@stable
       - name: Run scenario
         run: tests/e2e/run-scenario.sh "${{ inputs.scenario_id }}"
       - if: always()

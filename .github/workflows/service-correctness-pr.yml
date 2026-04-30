@@ -1,4 +1,4 @@
-name: E2E / Service Monitoring (Smoke)
+name: Service: Correctness (PR)
 
 on:
   pull_request:
@@ -6,14 +6,12 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
     paths:
       - 'tests/e2e/**'
-      - '.github/workflows/e2e-*.yml'
-      - '.github/workflows/_scenario-*.yml'
-      - '.github/actions/collect-e2e-artifacts/**'
-      - '.github/actions/publish-e2e-summary/**'
-      - '.github/actions/checkout-memagent/**'
-      - '.github/actions/setup-compose/**'
-      - '.github/actions/setup-kind/**'
-      - '.github/actions/setup-memagent-build/**'
+      - '.github/workflows/compose-*.yml'
+      - '.github/workflows/kind-*.yml'
+      - '.github/workflows/otlp-*.yml'
+      - '.github/workflows/service-correctness-*.yml'
+      - '.github/workflows/_lib/*.yml'
+      - '.github/actions/**'
   workflow_dispatch:
     inputs:
       memagent_ref:
@@ -23,7 +21,7 @@ on:
         default: main
 
 concurrency:
-  group: e2e-smoke-${{ github.head_ref || github.run_id }}
+  group: e2e-pr-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
 permissions:
@@ -37,25 +35,25 @@ env:
 
 jobs:
   kind-cri-smoke:
-    uses: ./.github/workflows/e2e-kind-cri-smoke.yml
+    uses: ./.github/workflows/kind-cri-smoke.yml
     with:
       memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit
 
   compose-all:
-    uses: ./.github/workflows/e2e-compose-all.yml
+    uses: ./.github/workflows/docker-compose-correctness.yml
     with:
       memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit
 
   otlp-all:
-    uses: ./.github/workflows/e2e-otlp-all.yml
+    uses: ./.github/workflows/otlp-correctness.yml
     with:
       memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit
 
   kind-vlagent:
-    uses: ./.github/workflows/e2e-kind-vlagent.yml
+    uses: ./.github/workflows/kind-vlagent.yml
     with:
       memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit
@@ -78,11 +76,11 @@ jobs:
         uses: ./.github/actions/summarize-and-report
         with:
           render-script: tests/e2e/lib/render_issue_summary.py
-          suite-name: E2E / Service Monitoring (Smoke)
-          suite-key: smoke
+          suite-name: Service: Correctness (PR)
+          suite-key: pr
           memagent-ref: ${{ env.MEMAGENT_REF }}
-          artifact-name: e2e-smoke-summary
-          issue-title-base: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false) && 'E2E / Service Monitoring (Smoke) Report' || '' }}
-          issue-suite-key: e2e-smoke
-          issue-labels: live-suite-report,report:e2e,report:e2e-smoke
+          artifact-name: service-correctness-pr-summary
+          issue-title-base: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false) && 'Service: Correctness (PR) Report' || '' }}
+          issue-suite-key: service-correctness-pr
+          issue-labels: live-suite-report,report:e2e,report:service-correctness-pr
           github-token: ${{ github.token }}

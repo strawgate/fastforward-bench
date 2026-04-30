@@ -1,4 +1,4 @@
-name: E2E / compose-memcached
+name: KIND: CRI Log Format
 
 on:
   workflow_call:
@@ -21,10 +21,11 @@ permissions:
   packages: read
 
 jobs:
-  compose-memcached:
-    uses: ./.github/workflows/_scenario-compose.yml
+  kind-cri-smoke:
+    uses: ./.github/workflows/_lib/kind-scenario.yml
     with:
-      scenario_id: compose-memcached
-      timeout_minutes: 20
+      scenario_id: kind-cri-smoke
+      cluster_name: kind-cri-smoke
+      timeout_minutes: 25
       memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit

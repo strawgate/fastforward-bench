@@ -1,4 +1,4 @@
-name: E2E / otlp-all
+name: KIND: vlagent
 
 on:
   workflow_call:
@@ -21,18 +21,11 @@ permissions:
   packages: read
 
 jobs:
-  otlp-output-oracle:
-    uses: ./.github/workflows/_scenario-otlp.yml
+  kind-vlagent:
+    uses: ./.github/workflows/_lib/kind-scenario.yml
     with:
-      scenario_id: otlp-output-oracle
-      timeout_minutes: 30
-      memagent_ref: ${{ inputs.memagent_ref || 'main' }}
-    secrets: inherit
-
-  otlp-input-oracle:
-    uses: ./.github/workflows/_scenario-otlp.yml
-    with:
-      scenario_id: otlp-input-oracle
-      timeout_minutes: 30
+      scenario_id: kind-vlagent
+      cluster_name: kind-vlagent
+      timeout_minutes: 25
       memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit

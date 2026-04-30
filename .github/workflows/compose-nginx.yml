@@ -1,4 +1,4 @@
-name: E2E / kind-cri-smoke
+name: Docker Compose: Nginx
 
 on:
   workflow_call:
@@ -21,11 +21,10 @@ permissions:
   packages: read
 
 jobs:
-  kind-cri-smoke:
-    uses: ./.github/workflows/_scenario-kind.yml
+  compose-nginx:
+    uses: ./.github/workflows/_lib/compose-scenario.yml
     with:
-      scenario_id: kind-cri-smoke
-      cluster_name: kind-cri-smoke
-      timeout_minutes: 25
+      scenario_id: compose-nginx
+      timeout_minutes: 20
       memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit

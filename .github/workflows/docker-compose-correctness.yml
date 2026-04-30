@@ -1,4 +1,4 @@
-name: E2E / compose-all
+name: Docker Compose: Correctness
 
 on:
   workflow_call:
@@ -22,7 +22,7 @@ permissions:
 
 jobs:
   compose-redis:
-    uses: ./.github/workflows/_scenario-compose.yml
+    uses: ./.github/workflows/_lib/compose-scenario.yml
     with:
       scenario_id: compose-redis
       timeout_minutes: 20
@@ -30,7 +30,7 @@ jobs:
     secrets: inherit
 
   compose-memcached:
-    uses: ./.github/workflows/_scenario-compose.yml
+    uses: ./.github/workflows/_lib/compose-scenario.yml
     with:
       scenario_id: compose-memcached
       timeout_minutes: 20
@@ -38,7 +38,7 @@ jobs:
     secrets: inherit
 
   compose-nginx:
-    uses: ./.github/workflows/_scenario-compose.yml
+    uses: ./.github/workflows/_lib/compose-scenario.yml
     with:
       scenario_id: compose-nginx
       timeout_minutes: 20
@@ -46,7 +46,7 @@ jobs:
     secrets: inherit
 
   compose-synthetic-multiline:
-    uses: ./.github/workflows/_scenario-compose.yml
+    uses: ./.github/workflows/_lib/compose-scenario.yml
     with:
       scenario_id: compose-synthetic-multiline
       timeout_minutes: 20
@@ -54,7 +54,7 @@ jobs:
     secrets: inherit
 
   compose-synthetic-burst:
-    uses: ./.github/workflows/_scenario-compose.yml
+    uses: ./.github/workflows/_lib/compose-scenario.yml
     with:
       scenario_id: compose-synthetic-burst
       timeout_minutes: 20
@@ -62,7 +62,7 @@ jobs:
     secrets: inherit
 
   compose-synthetic-rotation:
-    uses: ./.github/workflows/_scenario-compose.yml
+    uses: ./.github/workflows/_lib/compose-scenario.yml
     with:
       scenario_id: compose-synthetic-rotation
       timeout_minutes: 20

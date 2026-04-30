@@ -1,4 +1,4 @@
-name: E2E / otlp-output-oracle
+name: Docker Compose: Redis
 
 on:
   workflow_call:
@@ -18,12 +18,13 @@ on:
 
 permissions:
   contents: read
+  packages: read
 
 jobs:
-  otlp-output-oracle:
-    uses: ./.github/workflows/_scenario-otlp.yml
+  compose-redis:
+    uses: ./.github/workflows/_lib/compose-scenario.yml
     with:
-      scenario_id: otlp-output-oracle
-      timeout_minutes: 30
+      scenario_id: compose-redis
+      timeout_minutes: 20
       memagent_ref: ${{ inputs.memagent_ref || 'main' }}
     secrets: inherit
