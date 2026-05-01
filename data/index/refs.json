@@ -2,35 +2,35 @@
   {
     "ref": "main",
     "latestRunId": "24767474344-1--compose-bench-smoke-otlp-t1m-multi-logfwd",
-    "latestTimestamp": "2026-05-01T07:57:17.333Z",
+    "latestTimestamp": "2026-05-01T08:19:14.871Z",
     "latestCommit": "5f1ef0b715d75216cb5c73ded4d732995ac189db",
     "runCount": 2
   },
   {
     "ref": "refs/heads/master",
     "latestRunId": "24245004450-1--kind-bench-smoke-otlp-tmax-single-otelcol",
-    "latestTimestamp": "2026-05-01T07:57:17.333Z",
+    "latestTimestamp": "2026-05-01T08:19:14.871Z",
     "latestCommit": "033c577e29a2b31b84f9d358fbead1875cc74122",
     "runCount": 11
   },
   {
     "ref": "refs/heads/codex/kind-bench-max-eps-fixes",
     "latestRunId": "24205640997-1--kind-bench-smoke-file-tmax-multi-vector",
-    "latestTimestamp": "2026-05-01T07:57:17.333Z",
+    "latestTimestamp": "2026-05-01T08:19:14.871Z",
     "latestCommit": "de440308d286a988a806839df0ef1540e6165620",
     "runCount": 13
   },
   {
     "ref": "refs/heads/codex/bench-compose-smoke",
     "latestRunId": "24146309842-1--compose-bench-smoke-tmax-single-vector",
-    "latestTimestamp": "2026-05-01T07:57:17.332Z",
+    "latestTimestamp": "2026-05-01T08:19:14.870Z",
     "latestCommit": "ab9a65b8cef21a8ec61f4d0df6249b21d46c629c",
     "runCount": 21
   },
   {
     "ref": "refs/heads/codex/eps-target-sweep",
     "latestRunId": "24111535469-1--kind-bench-smoke-file-profile-smoke-single-fluent-bit",
-    "latestTimestamp": "2026-05-01T07:57:17.331Z",
+    "latestTimestamp": "2026-05-01T08:19:14.869Z",
     "latestCommit": "2b1fcaf8f24d906c29db6f300042811468451186",
     "runCount": 3
   }
