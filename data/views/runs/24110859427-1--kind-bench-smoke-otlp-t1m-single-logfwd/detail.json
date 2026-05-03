@@ -1,7 +1,7 @@
 {
   "run": {
     "id": "24110859427-1--kind-bench-smoke-otlp-t1m-single-logfwd",
-    "timestamp": "2026-05-03T07:49:35.926Z",
+    "timestamp": "2026-05-03T08:16:27.019Z",
     "commit": "7b844301676ff2219a1a762aea12f952bb77661a",
     "ref": "refs/heads/codex/eps-target-sweep",
     "benchmarks": 0,
