@@ -1,7 +1,7 @@
 {
   "run": {
     "id": "24205640997-1--kind-bench-smoke-file-tmax-multi-vector",
-    "timestamp": "2026-05-16T08:17:07.238Z",
+    "timestamp": "2026-05-17T08:02:34.731Z",
     "commit": "de440308d286a988a806839df0ef1540e6165620",
     "ref": "refs/heads/codex/kind-bench-max-eps-fixes",
     "benchmarks": 0,
