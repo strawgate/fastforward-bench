@@ -1,7 +1,7 @@
 {
   "run": {
     "id": "24197214811-1--kind-bench-smoke-file-t1m-multi-vector",
-    "timestamp": "2026-05-30T08:05:52.533Z",
+    "timestamp": "2026-05-30T08:20:21.588Z",
     "commit": "12c922c56223fc8eeea543bb296fb855c08fe51e",
     "ref": "refs/heads/master",
     "benchmarks": 0,
