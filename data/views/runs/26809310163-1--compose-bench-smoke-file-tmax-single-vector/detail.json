@@ -1,0 +1,11 @@
+{
+  "run": {
+    "id": "26809310163-1--compose-bench-smoke-file-tmax-single-vector",
+    "timestamp": "2026-06-02T08:59:17.790Z",
+    "commit": "128ea8014fe6c682730844215e1a6e12139df686",
+    "ref": "main",
+    "benchmarks": 0,
+    "metrics": []
+  },
+  "metricSnapshots": []
+}
