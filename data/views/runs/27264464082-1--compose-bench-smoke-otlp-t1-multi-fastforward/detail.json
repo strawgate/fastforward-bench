@@ -1,7 +1,7 @@
 {
   "run": {
-    "id": "26809310163-1--compose-bench-smoke-file-tmax-single-vector",
-    "timestamp": "2026-06-10T08:50:36.087Z",
+    "id": "27264464082-1--compose-bench-smoke-otlp-t1-multi-fastforward",
+    "timestamp": "2026-06-10T08:50:36.504Z",
     "commit": "128ea8014fe6c682730844215e1a6e12139df686",
     "ref": "main",
     "benchmarks": 0,

@@ -1,7 +1,7 @@
 {
   "run": {
     "id": "24144349044-1--kind-bench-default-file-tmax-multi-otelcol",
-    "timestamp": "2026-06-10T08:35:19.082Z",
+    "timestamp": "2026-06-10T08:50:36.086Z",
     "commit": "211d46c749d1509d3937ad07d11c8b72fdb54107",
     "ref": "refs/heads/master",
     "benchmarks": 0,
