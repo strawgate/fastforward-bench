@@ -1,7 +1,7 @@
 {
   "run": {
     "id": "24144401243-1--kind-bench-default-otlp-tmax-single-logfwd",
-    "timestamp": "2026-07-06T08:55:44.005Z",
+    "timestamp": "2026-07-07T08:19:50.105Z",
     "commit": "211d46c749d1509d3937ad07d11c8b72fdb54107",
     "ref": "refs/heads/master",
     "benchmarks": 0,
