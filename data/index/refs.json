@@ -2,28 +2,28 @@
   {
     "ref": "main",
     "latestRunId": "29145678074-1--compose-bench-smoke-file-t1m-multi-fastforward",
-    "latestTimestamp": "2026-07-15T07:50:32.502Z",
+    "latestTimestamp": "2026-07-15T08:18:22.967Z",
     "latestCommit": "128ea8014fe6c682730844215e1a6e12139df686",
     "runCount": 10
   },
   {
     "ref": "refs/heads/master",
     "latestRunId": "24245004450-1--kind-bench-smoke-otlp-tmax-single-otelcol",
-    "latestTimestamp": "2026-07-15T07:50:32.502Z",
+    "latestTimestamp": "2026-07-15T08:18:22.967Z",
     "latestCommit": "033c577e29a2b31b84f9d358fbead1875cc74122",
     "runCount": 6
   },
   {
     "ref": "refs/heads/codex/kind-bench-max-eps-fixes",
     "latestRunId": "24205640997-1--kind-bench-smoke-file-tmax-multi-vector",
-    "latestTimestamp": "2026-07-15T07:50:32.501Z",
+    "latestTimestamp": "2026-07-15T08:18:22.966Z",
     "latestCommit": "de440308d286a988a806839df0ef1540e6165620",
     "runCount": 13
   },
   {
     "ref": "refs/heads/codex/bench-compose-smoke",
     "latestRunId": "24146309842-1--compose-bench-smoke-tmax-single-vector",
-    "latestTimestamp": "2026-07-15T07:50:32.501Z",
+    "latestTimestamp": "2026-07-15T08:18:22.966Z",
     "latestCommit": "ab9a65b8cef21a8ec61f4d0df6249b21d46c629c",
     "runCount": 21
   }
