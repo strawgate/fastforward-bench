@@ -1,0 +1,78 @@
+{
+  "resourceMetrics": [
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "benchkit.run_id",
+            "value": {
+              "stringValue": "30691382621-1--compose-bench-smoke-file-t1m-single-fastforward"
+            }
+          },
+          {
+            "key": "benchkit.kind",
+            "value": {
+              "stringValue": "hybrid"
+            }
+          },
+          {
+            "key": "benchkit.source_format",
+            "value": {
+              "stringValue": "otlp"
+            }
+          },
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "memagent-e2e.compose-bench"
+            }
+          },
+          {
+            "key": "benchkit.ref",
+            "value": {
+              "stringValue": "main"
+            }
+          },
+          {
+            "key": "benchkit.commit",
+            "value": {
+              "stringValue": "128ea8014fe6c682730844215e1a6e12139df686"
+            }
+          },
+          {
+            "key": "benchkit.workflow",
+            "value": {
+              "stringValue": "Bench / Competitive Throughput (Docker)"
+            }
+          },
+          {
+            "key": "benchkit.job",
+            "value": {
+              "stringValue": "compose-bench-smoke"
+            }
+          },
+          {
+            "key": "benchkit.run_attempt",
+            "value": {
+              "stringValue": "1"
+            }
+          },
+          {
+            "key": "benchkit.runner",
+            "value": {
+              "stringValue": "GitHub Actions 1000252659"
+            }
+          }
+        ]
+      },
+      "scopeMetrics": [
+        {
+          "metrics": [],
+          "scope": {
+            "name": "memagent-e2e.compose-bench"
+          }
+        }
+      ]
+    }
+  ]
+}
