@@ -1,7 +1,7 @@
 {
   "run": {
     "id": "27087444426-1--compose-bench-smoke-file-tmax-multi-filebeat",
-    "timestamp": "2026-08-03T08:50:17.137Z",
+    "timestamp": "2026-08-03T08:58:25.376Z",
     "commit": "128ea8014fe6c682730844215e1a6e12139df686",
     "ref": "main",
     "benchmarks": 0,
