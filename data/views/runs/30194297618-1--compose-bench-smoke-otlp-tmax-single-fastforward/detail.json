@@ -1,7 +1,7 @@
 {
   "run": {
     "id": "30194297618-1--compose-bench-smoke-otlp-tmax-single-fastforward",
-    "timestamp": "2026-08-12T08:06:32.463Z",
+    "timestamp": "2026-08-13T07:44:14.377Z",
     "commit": "128ea8014fe6c682730844215e1a6e12139df686",
     "ref": "main",
     "benchmarks": 0,
