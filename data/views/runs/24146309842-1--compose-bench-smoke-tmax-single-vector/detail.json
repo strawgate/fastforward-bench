@@ -1,7 +1,7 @@
 {
   "run": {
     "id": "24146309842-1--compose-bench-smoke-tmax-single-vector",
-    "timestamp": "2026-08-25T07:48:39.394Z",
+    "timestamp": "2026-08-26T07:34:14.170Z",
     "commit": "ab9a65b8cef21a8ec61f4d0df6249b21d46c629c",
     "ref": "refs/heads/codex/bench-compose-smoke",
     "benchmarks": 0,
