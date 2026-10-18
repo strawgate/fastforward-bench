@@ -1,7 +1,7 @@
 {
   "run": {
     "id": "24245004450-1--kind-bench-smoke-otlp-tmax-single-otelcol",
-    "timestamp": "2026-10-17T07:38:45.668Z",
+    "timestamp": "2026-10-18T07:30:33.330Z",
     "commit": "033c577e29a2b31b84f9d358fbead1875cc74122",
     "ref": "refs/heads/master",
     "benchmarks": 0,
