@@ -1,7 +1,7 @@
 {
   "run": {
     "id": "24146309842-1--compose-bench-smoke-tmax-multi-otelcol",
-    "timestamp": "2026-11-20T07:28:04.353Z",
+    "timestamp": "2026-11-20T07:35:38.229Z",
     "commit": "ab9a65b8cef21a8ec61f4d0df6249b21d46c629c",
     "ref": "refs/heads/codex/bench-compose-smoke",
     "benchmarks": 0,
